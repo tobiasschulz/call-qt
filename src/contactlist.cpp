@@ -3,6 +3,9 @@
 ContactList::ContactList(QObject *parent)
 		: QObject(parent) {
 }
+QString ContactList::id() const {
+	return "ContactList";
+}
 
 int ContactList::size() const {
 	return m_list.size();

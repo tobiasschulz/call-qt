@@ -1,15 +1,16 @@
 #include "server.h"
+#include "serverthread.h"
 #include "serverconnection.h"
+#include "config.h"
 
 Server::Server(QObject* parent)
 		: QTcpServer(parent) {
-	listen(QHostAddress::Any);
+	listen(QHostAddress::Any, Config::DEFAULT_PORT);
 }
 
 void Server::incomingConnection(qintptr socketDescriptor) {
-	ServerConnection* connection = new ServerConnection(this);
-	QTcpSocket* socket = new QTcpSocket(connection);
-	socket->setSocketDescriptor(socketDescriptor);
-	connection->setSocket(socket);
-	emit newConnection(connection);
+	ServerThread *thread = new ServerThread(socketDescriptor, this);
+	QObject::connect(thread, &ServerThread::finished, thread, &ServerThread::deleteLater);
+	thread->start();
 }
+

@@ -4,31 +4,40 @@
 #include "statusconnection.h"
 #include "contactlist.h"
 #include "config.h"
+#include "util.h"
 
-ContactScanner::ContactScanner(QObject* parent, ContactList* contacts)
+ContactScanner::ContactScanner(ContactList* contacts, QObject* parent)
 		: QThread(parent), m_contacts(contacts) {
+}
+QString ContactScanner::id() const {
+	return "ContactScanner";
 }
 
 void ContactScanner::run() {
-	qDebug() << "hello from worker thread " << thread()->currentThreadId();
+	log.debug("ContactScanner::run()");
 
-	foreach (const QString & host, Config::hosts_to_contact())
+	foreach (const QString & hostname, Config::hosts_to_contact())
 	{
 		StatusConnection* connection;
-		if (m_connections.contains(host)) {
-			connection = m_connections[host];
+		if (m_connections.contains(hostname)) {
+			connection = m_connections[hostname];
 		} else {
-			connection = new StatusConnection(QHostAddress(host), Config::DEFAULT_PORT);
+			QHostAddress hostaddr = NetworkUtil::parseHost(hostname);
+			connection = new StatusConnection(hostaddr, Config::DEFAULT_PORT);
 			QObject::connect(connection, &StatusConnection::readyRead, this, &ContactScanner::readyRead);
-			m_connections[host] = connection;
+			m_connections[hostname] = connection;
 		}
+
+		log.debug("connection: %1, state: %2", connection->id(), connection->isConnected() ? "true" : "false");
 	}
+
+	exec();
 }
 
 void ContactScanner::readyRead() {
-	qDebug() << "readyRead()";
+	log.debug("readyRead()");
 }
 
 void ContactScanner::displayError(QAbstractSocket::SocketError error) {
-	qDebug() << "displayError()" << error;
+	log.debug("displayError(%s)", Q(error));
 }

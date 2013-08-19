@@ -13,7 +13,6 @@ public:
 	Server(QObject* parent = 0);
 
 signals:
-	void newConnection(ServerConnection* connection);
 
 protected:
 	void incomingConnection(qintptr socketDescriptor);

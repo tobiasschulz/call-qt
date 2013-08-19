@@ -16,23 +16,31 @@ SOURCES += src/main.cpp \
     src/maingui.cpp \
     src/server.cpp \
     src/serverconnection.cpp \
+    src/serverthread.cpp \
+    src/statusconnection.cpp \
     src/contact.cpp \
     src/connection.cpp \
     src/contactmodel.cpp \
     src/contactlist.cpp \
     src/contactscanner.cpp \
-    src/config.cpp
+    src/config.cpp \
+    src/util.cpp \
+    src/log.cpp
 
 HEADERS  += \
     src/maingui.h \
     src/server.h \
     src/serverconnection.h \
+    src/serverthread.h \
+    src/statusconnection.h \
     src/contact.h \
     src/connection.h \
     src/contactmodel.h \
     src/contactlist.h \
     src/contactscanner.h \
-    src/config.h
+    src/config.h \
+    src/util.h \
+    src/log.h
 
 FORMS    += \
     ui/maingui.ui

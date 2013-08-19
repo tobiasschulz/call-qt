@@ -4,10 +4,11 @@
 #include <QObject>
 #include "contact.h"
 
-class ContactList: public QObject {
+class ContactList: public QObject, public Id {
 Q_OBJECT
 public:
 	explicit ContactList(QObject* parent = 0);
+	QString id() const;
 
 	int size() const;
 	const Contact& getContact(int index) const;

@@ -13,6 +13,8 @@ class ServerConnection: public Connection {
 Q_OBJECT
 
 public:
+	ServerConnection(QTcpSocket* socket, QObject* parent = 0);
+	virtual QString id() const;
 
 signals:
 

@@ -9,8 +9,11 @@ class StatusConnection: public Connection {
 Q_OBJECT
 
 public:
-	StatusConnection(QObject* parent, Contact contact);
-	StatusConnection(QObject* parent, QHostAddress host, quint16 port);signals:
+	StatusConnection(Contact* contact, QObject* parent = 0);
+	StatusConnection(QHostAddress host, quint16 port, QObject* parent = 0);
+	virtual QString id() const;
+
+signals:
 
 public slots:
 

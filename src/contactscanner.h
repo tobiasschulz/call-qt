@@ -4,13 +4,16 @@
 #include <QThread>
 #include <QTcpSocket>
 
+#include "log.h"
+
 class ContactList;
 class StatusConnection;
 
-class ContactScanner: public QThread {
+class ContactScanner: public QThread, public Id {
 Q_OBJECT
 public:
-	explicit ContactScanner(QObject* parent, ContactList* contacts);
+	explicit ContactScanner(ContactList* contacts, QObject* parent = 0);
+	QString id() const;
 
 signals:
 

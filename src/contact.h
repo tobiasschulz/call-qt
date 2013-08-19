@@ -4,16 +4,19 @@
 #include <QObject>
 #include <QHostAddress>
 
-class Contact: public QObject {
+#include "log.h"
+
+class Contact: public QObject, public Id {
 Q_OBJECT
 public:
-	explicit Contact(QObject* parent, QString username, QHostAddress host, quint16 port);
+	explicit Contact(QString username, QHostAddress host, quint16 port, QObject* parent = 0);
 
 	QString getUser() const;
 	QHostAddress getHost() const;
 	quint16 getPort() const;
 
 	QString toString() const;
+	QString id() const;
 
 	static const Contact INVALID_CONTACT;
 

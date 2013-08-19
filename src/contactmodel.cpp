@@ -5,7 +5,7 @@
 ContactModel::ContactModel(QObject* parent)
 		: QAbstractItemModel(parent), m_contacts(0) {
 	m_contacts = new ContactList(this);
-	m_scanner = new ContactScanner(this, m_contacts);
+	m_scanner = new ContactScanner(m_contacts, this);
 	m_scanner->start();
 }
 
