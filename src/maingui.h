@@ -5,7 +5,9 @@
 
 #include "contactmodel.h"
 #include "systemutil.h"
+#include "tab.h"
 #include "log.h"
+#include "terminal.h"
 
 namespace Ui {
 class Main;
@@ -20,11 +22,14 @@ public:
 	QString id() const;
 
 public slots:
-	void addTab(QWidget* widget, const QString& tabname);
+	void addTab(Tab* widget);
 	void openTab(const QString& tabname);
-	void openTab(QWidget* widget);
+	void openTab(Tab* widget);
 	void closeTab(const QString& tabname);
-	void closeTab(QWidget* widget);
+	void closeTab(Tab* widget);
+	void onTabChanged(int index);
+
+	void onContactSelected(const QModelIndex & index);
 
 	void onShowTerminalToggled(bool checked);
 	void onAbout();
@@ -32,8 +37,9 @@ public slots:
 
 private:
 	Ui::Main* ui;
-	ContactModel* contactmodel;
-	QHash<QString, QWidget*> tabhash;
+	ContactModel* m_contactmodel;
+	QHash<QString, Tab*> m_tabhash;
+	Terminal* m_terminal;
 };
 
 #endif // MAIN_H

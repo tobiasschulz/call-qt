@@ -41,3 +41,7 @@ long Config::uid() {
 long Config::uptime() {
 	return m_uptime;
 }
+
+QIcon Config::icon(QString iconname) {
+	return QIcon("img/" + iconname + ".png");
+}

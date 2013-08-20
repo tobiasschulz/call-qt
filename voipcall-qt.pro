@@ -27,7 +27,9 @@ SOURCES += src/main.cpp \
     src/networkutil.cpp \
     src/systemutil.cpp \
     src/log.cpp \
-    src/terminal.cpp
+    src/tab.cpp \
+    src/terminal.cpp \
+    src/chat.cpp
 
 HEADERS  += \
     src/maingui.h \
@@ -44,11 +46,14 @@ HEADERS  += \
     src/networkutil.h \
     src/systemutil.h \
     src/log.h \
-    src/terminal.h
+    src/tab.h \
+    src/terminal.h \
+    src/chat.h
 
 FORMS    += \
-    ui/maingui.ui\
-    ui/terminal.ui
+    ui/maingui.ui \
+    ui/terminal.ui \
+    ui/chat.ui
 
 RC_ICONS = img/icon.ico
 

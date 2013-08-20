@@ -12,6 +12,7 @@
 #include <QString>
 #include <QList>
 #include <QStringList>
+#include <QIcon>
 
 class Config: public QObject {
 Q_OBJECT
@@ -20,6 +21,7 @@ public:
 	static QStringList hosts_to_contact();
 	static long uid();
 	static long uptime();
+	static QIcon icon(QString iconname);
 
 	static int DEFAULT_PORT;
 	static int SOCKET_READ_TIMEOUT;

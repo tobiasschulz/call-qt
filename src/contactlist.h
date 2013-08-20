@@ -9,7 +9,7 @@
 class ContactList: public QObject, public Id {
 Q_OBJECT
 public:
-	explicit ContactList(QObject* parent = 0);
+	static ContactList* instance();
 	QString id() const;
 
 	void addContact(Contact contact);
@@ -27,8 +27,11 @@ public slots:
 	void onResetContacts();
 
 private:
+	explicit ContactList(QObject* parent = 0);
+
 	void buildSortedList();
 
+	static ContactList* m_instance;
 	QSet<Contact> m_set;
 	QList<Contact> m_list;
 };

@@ -4,6 +4,8 @@
 #include <QObject>
 #include <QAbstractItemModel>
 
+#include "contact.h"
+
 class ContactList;
 class ContactScanner;
 
@@ -19,8 +21,9 @@ public:
 	QModelIndex parent(const QModelIndex& child) const;
 
 	QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const;
-
 	bool setData(const QModelIndex& index, const QVariant& value, int role = Qt::DisplayRole);
+
+	const Contact& getContact(const QModelIndex& index) const;
 
 signals:
 	void resetContacts();
@@ -34,9 +37,7 @@ public slots:
 	void onResetContacts();
 
 private:
-	ContactList* m_contactlist;
 	ContactScanner* m_scanner;
-
 };
 
 #endif // CONTACTMODEL_H

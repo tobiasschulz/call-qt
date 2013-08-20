@@ -1,8 +1,24 @@
+#include <QMutex>
+
 #include "contactlist.h"
+
+ContactList* ContactList::m_instance;
 
 ContactList::ContactList(QObject *parent)
 		: QObject(parent), m_set(), m_list() {
 }
+
+ContactList* ContactList::instance() {
+	static QMutex mutex;
+	if (!m_instance) {
+		mutex.lock();
+		if (!m_instance)
+			m_instance = new ContactList;
+		mutex.unlock();
+	}
+	return m_instance;
+}
+
 QString ContactList::id() const {
 	return "ContactList";
 }
