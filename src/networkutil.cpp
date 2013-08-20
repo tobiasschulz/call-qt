@@ -1,5 +1,5 @@
 /*
- * util.cpp
+ * networkutil.cpp
  *
  *  Created on: 18.08.2013
  *      Author: tobias
@@ -10,8 +10,10 @@
 #include <QFile>
 #include <QTime>
 #include <QDate>
+#include <QMutex>
 
-#include "util.h"
+#include "networkutil.h"
+#include "systemutil.h"
 #include "config.h"
 
 // setsockopt -- has to be after Qt includes for Q_OS_WIN definition
@@ -25,11 +27,7 @@
 #include <unistd.h>
 #endif
 
-#include <iostream>
-using namespace std;
-
 const Log NetworkUtil::log(new StaticId("NetworkUtil"));
-const Log SystemUtil::log(new StaticId("SystemUtil"));
 
 QHostAddress NetworkUtil::parseHost(QString hostname) {
 	QHostAddress hostaddr(hostname);
@@ -49,7 +47,7 @@ QHostAddress NetworkUtil::parseHost(QString hostname) {
 }
 
 void NetworkUtil::writeHeaders(QTcpSocket* socket, Connection::Type type) {
-	writeLine(socket, "User: ", SystemUtil::getUserName());
+	writeLine(socket, "User: ", SystemUtil::instance()->getUserName());
 	writeLine(socket, "UID: ", QVariant::fromValue(Config::uid()));
 	writeLine(socket, "Uptime: ", QVariant::fromValue(Config::uptime()));
 
@@ -74,8 +72,16 @@ QHash<QString, QString>* NetworkUtil::readHeaders(QTcpSocket* socket) {
 
 	while (socket->isOpen() && socket->waitForReadyRead(Config::SOCKET_READ_TIMEOUT)) {
 		while (socket->canReadLine()) {
-			QString line = readLine(socket);
-			log.debug("line: %1", line);
+			QString line = readLine(socket).trimmed();
+			int index = line.indexOf(":");
+			if (index != -1 && index + 1 < line.size()) {
+				QString key = line.left(index).trimmed().toLower();
+				QString value = line.mid(index + 1).trimmed();
+				(*headers)[key] = value;
+				log.debug("%1=%2", key, value);
+			} else {
+				log.debug("invalid line: %1", line);
+			}
 			if (line.isEmpty()) {
 				return headers;
 			}
@@ -146,51 +152,5 @@ void NetworkUtil::setSocketTimeout(QTcpSocket* socket, int sec) {
 		log.debug("Failed to set SO_SNDTIMEO to %1 (linux)", sec);
 	}
 #endif
-}
-
-QString SystemUtil::getUserName() {
-	QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-	if (env.contains("USER")) {
-		return env.value("USER");
-	} else if (env.contains("USERNAME")) {
-		return env.value("USERNAME");
-	} else {
-		return "user";
-	}
-}
-
-void SystemUtil::messageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg) {
-	QString str = createLogMessage(type, context, msg);
-
-	std::cout << str.toLocal8Bit().constData();
-
-	QFile file("debug.log");
-	file.open(QIODevice::Append | QIODevice::Text);
-	QTextStream out(&file);
-	out.flush();
-}
-
-QString SystemUtil::createLogMessage(QtMsgType type, const QMessageLogContext &context, const QString &msg) {
-	QString str;
-	str += QDate::currentDate().toString("yyyy-MM-dd ");
-	str += QTime::currentTime().toString("hh:mm:ss ");
-
-	switch (type) {
-	case QtDebugMsg:
-		str += "(debug)";
-		break;
-	case QtWarningMsg:
-		str += "(warn) ";
-		break;
-	case QtCriticalMsg:
-		str += "(crit) ";
-		break;
-	case QtFatalMsg:
-		str += "(fatal)";
-		break;
-	}
-
-	str += "  " + msg + "\n";
-	return str;
 }
 

@@ -2,7 +2,7 @@
 
 #include "connection.h"
 #include "config.h"
-#include "util.h"
+#include "networkutil.h"
 
 Connection::Connection(QTcpSocket* socket, Type type, QObject* parent)
 		: QObject(parent), m_socket(0), m_contact(0), m_headers(0), m_type(type), m_description() {
@@ -63,11 +63,17 @@ void Connection::onConnected() {
 	m_socket->setSocketOption(QAbstractSocket::LowDelayOption, 1);
 	NetworkUtil::setSocketReuseAddr(m_socket);
 	NetworkUtil::setSocketTimeout(m_socket, Config::SOCKET_READ_TIMEOUT);
+	QHostAddress host = m_socket->peerAddress();
+	quint16 port = m_socket->peerPort();
 
 	log.debug("1");
 	NetworkUtil::writeHeaders(m_socket, m_type);
 	log.debug("2");
 	m_headers = NetworkUtil::readHeaders(m_socket);
+	log.debug("3");
+	QString user = m_headers->value("user", Contact::DEFAULT_USER_NAME);
+	m_contact = new Contact(user, host, port);
+	emit contactFound(m_contact);
 	log.debug("3");
 
 // QAbstractSocket::ConnectedState

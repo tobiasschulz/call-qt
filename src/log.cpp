@@ -8,8 +8,10 @@
 #include <QFile>
 #include <QTime>
 #include <QDate>
+#include <QHostAddress>
 
-#include "util.h"
+#include "log.h"
+#include "systemutil.h"
 #include "config.h"
 
 #include <iostream>

@@ -3,14 +3,20 @@
 #include "contactscanner.h"
 
 ContactModel::ContactModel(QObject* parent)
-		: QAbstractItemModel(parent), m_contacts(0) {
-	m_contacts = new ContactList(this);
-	m_scanner = new ContactScanner(m_contacts, this);
+		: QAbstractItemModel(parent), m_contactlist(0), m_scanner(0) {
+	m_contactlist = new ContactList(this);
+	QObject::connect(m_contactlist, &ContactList::beginInsertItems, this, &ContactModel::beginInsertItems);
+	QObject::connect(m_contactlist, &ContactList::endInsertItems, this, &ContactModel::endInsertItems);
+	QObject::connect(m_contactlist, &ContactList::beginRemoveItems, this, &ContactModel::beginRemoveItems);
+	QObject::connect(m_contactlist, &ContactList::endRemoveItems, this, &ContactModel::endRemoveItems);
+	QObject::connect(m_contactlist, &ContactList::changeItems, this, &ContactModel::changeItems);
+	m_scanner = new ContactScanner(m_contactlist, this);
+	QObject::connect(this, &ContactModel::resetContacts, m_scanner, &ContactScanner::onResetContacts);
 	m_scanner->start();
 }
 
 int ContactModel::rowCount(const QModelIndex& parent) const {
-	return m_contacts && !parent.isValid() ? m_contacts->size() : 0;
+	return m_contactlist && !parent.isValid() ? m_contactlist->size() : 0;
 }
 
 int ContactModel::columnCount(const QModelIndex& parent) const {
@@ -29,8 +35,8 @@ QModelIndex ContactModel::parent(const QModelIndex& child) const {
 
 QVariant ContactModel::data(const QModelIndex& index, int role) const {
 	if (index.isValid() && role == Qt::DisplayRole) {
-		if (m_contacts && index.row() < m_contacts->size()) {
-			const Contact& contact = m_contacts->getContact(index.row());
+		if (m_contactlist && index.row() < m_contactlist->size()) {
+			const Contact& contact = m_contactlist->getContact(index.row());
 			QVariant value = contact.toString();
 			return value;
 		} else {
@@ -49,6 +55,11 @@ bool ContactModel::setData(const QModelIndex& index, const QVariant& value, int 
 	// emit dataChanged(index, index);
 	// return true;
 	return false;
+}
+
+void ContactModel::onResetContacts() {
+	m_contactlist->onResetContacts();
+	emit resetContacts();
 }
 
 void ContactModel::beginInsertItems(int start, int end) {

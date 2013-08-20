@@ -3,10 +3,14 @@
 
 #include "server.h"
 #include "maingui.h"
-#include "util.h"
+#include "systemutil.h"
+
+void messageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg) {
+	SystemUtil::instance()->messageOutput(type, context, msg);
+}
 
 int main(int argv, char** args) {
-	qInstallMessageHandler(SystemUtil::messageOutput);
+	qInstallMessageHandler(messageHandler);
 	qDebug() << "starting app";
 
 	QApplication app(argv, args);

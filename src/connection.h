@@ -29,6 +29,7 @@ public:
 	bool isConnected();
 
 signals:
+	void contactFound(Contact*);
 	void readyRead();
 	void connected();
 	void disconnected();

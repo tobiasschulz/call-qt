@@ -1,12 +1,12 @@
 /*
- * util.h
+ * networkutil.h
  *
  *  Created on: 18.08.2013
  *      Author: tobias
  */
 
-#ifndef UTIL_H
-#define UTIL_H
+#ifndef NETWORKUTIL_H
+#define NETWORKUTIL_H
 
 #include <QObject>
 #include <QString>
@@ -34,17 +34,4 @@ private:
 	static const Log log;
 };
 
-class SystemUtil: public QObject {
-Q_OBJECT
-
-public:
-	static QString getUserName();
-	static void messageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg);
-
-private:
-	static QString createLogMessage(QtMsgType type, const QMessageLogContext &context, const QString &msg);
-
-	static const Log log;
-};
-
-#endif /* UTIL_H */
+#endif /* NETWORKUTIL_H */

@@ -23,6 +23,7 @@ public:
 	bool setData(const QModelIndex& index, const QVariant& value, int role = Qt::DisplayRole);
 
 signals:
+	void resetContacts();
 
 public slots:
 	void beginInsertItems(int start, int end);
@@ -30,9 +31,10 @@ public slots:
 	void beginRemoveItems(int start, int end);
 	void endRemoveItems();
 	void changeItems(int start, int end);
+	void onResetContacts();
 
 private:
-	ContactList* m_contacts;
+	ContactList* m_contactlist;
 	ContactScanner* m_scanner;
 
 };

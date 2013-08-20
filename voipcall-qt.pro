@@ -8,7 +8,7 @@ QT       += core gui multimedia network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = voipcall-qt
+TARGET = call-qt
 TEMPLATE = app
 
 
@@ -24,8 +24,10 @@ SOURCES += src/main.cpp \
     src/contactlist.cpp \
     src/contactscanner.cpp \
     src/config.cpp \
-    src/util.cpp \
-    src/log.cpp
+    src/networkutil.cpp \
+    src/systemutil.cpp \
+    src/log.cpp \
+    src/terminal.cpp
 
 HEADERS  += \
     src/maingui.h \
@@ -39,13 +41,18 @@ HEADERS  += \
     src/contactlist.h \
     src/contactscanner.h \
     src/config.h \
-    src/util.h \
-    src/log.h
+    src/networkutil.h \
+    src/systemutil.h \
+    src/log.h \
+    src/terminal.h
 
 FORMS    += \
-    ui/maingui.ui
-    
-    
+    ui/maingui.ui\
+    ui/terminal.ui
+
+RC_ICONS = img/icon.ico
+
+
 Release:DESTDIR = bin
 Release:OBJECTS_DIR = build/release/obj
 Release:MOC_DIR = build/release/.moc
