@@ -29,7 +29,7 @@
 
 const Log NetworkUtil::log(new StaticId("NetworkUtil"));
 
-QHostAddress NetworkUtil::parseHost(QString hostname) {
+QHostAddress NetworkUtil::parseHostname(QString hostname) {
 	QHostAddress hostaddr(hostname);
 
 	if (hostaddr.protocol() == QAbstractSocket::IPv4Protocol || hostaddr.protocol() == QAbstractSocket::IPv6Protocol) {
@@ -44,6 +44,11 @@ QHostAddress NetworkUtil::parseHost(QString hostname) {
 	}
 
 	return hostaddr;
+}
+
+QString NetworkUtil::parseAddress(QHostAddress address) {
+	QHostInfo info = QHostInfo::fromName(address.toString());
+	return info.hostName();
 }
 
 void NetworkUtil::writeHeaders(QTcpSocket* socket, Connection::Type type) {

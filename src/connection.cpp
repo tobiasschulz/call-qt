@@ -27,7 +27,7 @@ void Connection::connect(QTcpSocket* socket) {
 	setSocket(socket);
 }
 void Connection::connect(Contact contact) {
-	connect(contact.getHost(), contact.getPort());
+	connect(contact.host(), contact.port());
 }
 void Connection::connect(QHostAddress hostaddr, quint16 port) {
 	log.debug("connect(QHostAddress, quint16)");

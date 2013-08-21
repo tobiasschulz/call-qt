@@ -20,7 +20,8 @@ class NetworkUtil: public QObject {
 Q_OBJECT
 
 public:
-	static QHostAddress parseHost(QString);
+	static QHostAddress parseHostname(QString);
+	static QString parseAddress(QHostAddress);
 	static void writeHeaders(QTcpSocket* socket, Connection::Type type);
 	static QHash<QString, QString>* readHeaders(QTcpSocket* socket);
 	static bool writeLine(QTcpSocket* socket, QVariant str1);

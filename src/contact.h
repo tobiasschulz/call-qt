@@ -15,9 +15,10 @@ public:
 	Contact& operator=(const Contact& other);
 	bool operator==(const Contact& other) const;
 
-	QString getUser() const;
-	QHostAddress getHost() const;
-	quint16 getPort() const;
+	QString user() const;
+	QHostAddress host() const;
+	QString hostname() const;
+	quint16 port() const;
 
 	QString toString() const;
 	QString id() const;
@@ -34,6 +35,7 @@ public slots:
 private:
 	QString m_user;
 	QHostAddress m_host;
+	QString m_hostname;
 	quint16 m_port;
 };
 

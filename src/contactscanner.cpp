@@ -52,7 +52,7 @@ void ContactScanner::scanNow() {
 }
 
 StatusConnection* ContactScanner::connect(QString hostname, quint16 port) {
-	QHostAddress hostaddr = NetworkUtil::parseHost(hostname);
+	QHostAddress hostaddr = NetworkUtil::parseHostname(hostname);
 	StatusConnection* connection = new StatusConnection(hostaddr, Config::DEFAULT_PORT);
 	QObject::connect(connection, &StatusConnection::contactFound, ContactList::instance(), &ContactList::addContact);
 	return connection;

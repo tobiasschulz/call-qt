@@ -123,7 +123,9 @@ void Main::onTabChanged(int index) {
 	if (index != -1) {
 		QWidget* widget = ui->tabs->widget(index);
 		if (widget) {
-			emit ((Tab*) widget)->focus();
+			Tab* tab = (Tab*) widget;
+			emit tab->focus();
+			this->setWindowTitle(tab->tabname());
 		}
 	}
 }
