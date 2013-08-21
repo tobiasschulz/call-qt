@@ -34,7 +34,9 @@ signals:
 	void readyRead();
 	void connected();
 	void disconnected();
-	void error(QAbstractSocket::SocketError);
+	void socketError(Contact, QString error);
+	void socketError(QString error);
+	void connectFailed(QString error);
 	void close();
 
 public slots:

@@ -39,6 +39,7 @@ private:
 	quint16 m_port;
 };
 
+
 uint qHash(const Contact& c);
 bool compareContacts(const Contact& left, const Contact& right);
 

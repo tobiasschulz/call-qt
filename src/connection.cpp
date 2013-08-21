@@ -60,12 +60,16 @@ void Connection::setSocket(QTcpSocket* socket) {
 }
 
 void Connection::onConnectTimeout() {
-	log.debug("onConnectTimeout()");
-	onError(QAbstractSocket::SocketTimeoutError);
+	m_socket->abort();
+	m_socket->close();
+	log.debug("connectFailed(Connect Timeout)");
+	emit connectFailed("Connect Timeout");
 }
 void Connection::onReadTimeout() {
-	log.debug("onReadTimeout()");
-	onError(QAbstractSocket::SocketTimeoutError);
+	m_socket->abort();
+	m_socket->close();
+	log.debug("socketError(Read Timeout)");
+	emit socketError("Read Timeout");
 }
 
 bool Connection::isConnected() {
@@ -110,9 +114,17 @@ void Connection::onDisconnected() {
 }
 
 void Connection::onError(QAbstractSocket::SocketError err) {
-	readtimer.stop();
-	log.debug("Connection::onError(%1)", m_socket->errorString());
+	QString errString = m_socket->errorString();
+	log.debug("Connection::onError(%1)", errString);
 	m_socket->abort();
 	m_socket->close();
-	emit error(err);
+	//emit error(err);
+	if (connecttimer.isActive()) {
+		connecttimer.stop();
+		emit connectFailed("Socket Error: " + errString);
+	} else if (readtimer.isActive()) {
+		readtimer.stop();
+		emit socketError("Socket Error: " + errString);
+	}
 }
+
