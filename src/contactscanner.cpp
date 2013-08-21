@@ -7,23 +7,27 @@
 #include "config.h"
 #include "networkutil.h"
 
-ContactScanner::ContactScanner(ContactList* contactlist, QObject* parent)
-		: QThread(parent), m_contactlist(contactlist) {
+ContactScanner::ContactScanner(QObject* parent)
+		: QThread(parent) {
 }
+
 QString ContactScanner::id() const {
 	return "ContactScanner";
 }
 
 void ContactScanner::run() {
 	QTimer *timer = new QTimer();
-	QObject::connect(timer, SIGNAL(timeout()), this, SLOT(scan()));
+	QObject::connect(timer, SIGNAL(timeout()), this, SLOT(scanNow()));
 	timer->start(30000);
-	scan();
 
 	exec();
 }
 
-void ContactScanner::scan() {
+void ContactScanner::scanSoon() {
+	QTimer::singleShot(500, this, SLOT(scanNow()));
+}
+
+void ContactScanner::scanNow() {
 	log.debug("scan()");
 
 	foreach (const QString & hostname, Config::hosts_to_contact())
@@ -50,21 +54,8 @@ void ContactScanner::scan() {
 StatusConnection* ContactScanner::connect(QString hostname, quint16 port) {
 	QHostAddress hostaddr = NetworkUtil::parseHost(hostname);
 	StatusConnection* connection = new StatusConnection(hostaddr, Config::DEFAULT_PORT);
-	QObject::connect(connection, &StatusConnection::readyRead, this, &ContactScanner::onReadyRead);
-	QObject::connect(connection, &StatusConnection::contactFound, this, &ContactScanner::onContactFound);
+	QObject::connect(connection, &StatusConnection::contactFound, ContactList::instance(), &ContactList::addContact);
 	return connection;
-}
-
-void ContactScanner::onContactFound(Contact* contact) {
-	log.debug("onContactFound(%1)", contact->toString());
-	m_contactlist->addContact(*contact);
-}
-void ContactScanner::onResetContacts() {
-	scan();
-}
-
-void ContactScanner::onReadyRead() {
-	log.debug("onReadyRead()");
 }
 
 void ContactScanner::onDisplayError(QAbstractSocket::SocketError error) {

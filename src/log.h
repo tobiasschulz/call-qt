@@ -26,6 +26,8 @@ public:
 	//Log(Id* id, QObject* parent);
 
 	static QString print(QTcpSocket* socket);
+	static QString print(Id* id);
+	static QString print(const Id& id);
 
 	void debug(QString format) const;
 	void debug(QString format, QVariant arg1) const;
@@ -46,7 +48,7 @@ public:
 	virtual ~Id() {
 	}
 
-	virtual QString id() const = 0;
+	virtual QString id() const;
 
 protected:
 	Log log;

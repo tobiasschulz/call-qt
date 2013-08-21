@@ -52,11 +52,14 @@ void SystemUtil::messageOutput(QtMsgType type, const QMessageLogContext &context
 
 	std::cout << str.toLocal8Bit().constData();
 
-	QFile file("debug.log");
-	file.open(QIODevice::Append | QIODevice::Text);
-	QTextStream out(&file);
-	out << str;
-	out.flush();
+	static QTextStream* out = 0;
+	if (out == 0) {
+		QFile file("debug.log");
+		file.open(QIODevice::Append | QIODevice::Text);
+		out = new QTextStream(&file);
+	}
+	*out << str;
+	out->flush();
 
 	emit newLogMessage(str);
 }

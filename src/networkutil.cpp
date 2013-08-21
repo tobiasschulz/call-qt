@@ -74,16 +74,18 @@ QHash<QString, QString>* NetworkUtil::readHeaders(QTcpSocket* socket) {
 		while (socket->canReadLine()) {
 			QString line = readLine(socket).trimmed();
 			int index = line.indexOf(":");
+
 			if (index != -1 && index + 1 < line.size()) {
 				QString key = line.left(index).trimmed().toLower();
 				QString value = line.mid(index + 1).trimmed();
 				(*headers)[key] = value;
-				log.debug("%1=%2", key, value);
-			} else {
-				log.debug("invalid line: %1", line);
-			}
-			if (line.isEmpty()) {
+				log.debug("Header: %1=%2", key, value);
+
+			} else if (line.isEmpty()) {
 				return headers;
+
+			} else {
+				log.debug("Invalid header: '%1'", line);
 			}
 		}
 	}
@@ -135,10 +137,14 @@ void NetworkUtil::setSocketTimeout(QTcpSocket* socket, int sec) {
 #if defined(Q_OS_WIN)
 	unsigned int timeout = sec * 1000;
 	if (-1 == setsockopt(socket->socketDescriptor(), SOL_SOCKET, SO_RCVTIMEO, (char *) &timeout, sizeof(timeout))) {
-		log.debug("Failed to set SO_RCVTIMEO to %1 (windows)", sec);
+		log.debug("Failed: set SO_RCVTIMEO to %1 (windows)", sec);
+	} else {
+		log.debug("Success: set SO_RCVTIMEO to %1 (windows)", sec);
 	}
 	if (-1 == setsockopt(socket->socketDescriptor(), SOL_SOCKET, SO_SNDTIMEO, (char *) &timeout, sizeof(timeout))) {
-		log.debug("Failed to set SO_SNDTIMEO to %1 (windows)", sec);
+		log.debug("Failed: set SO_SNDTIMEO to %1 (windows)", sec);
+	} else {
+		log.debug("Success: set SO_SNDTIMEO to %1 (windows)", sec);
 	}
 #else
 	struct timeval timeout;
@@ -146,11 +152,21 @@ void NetworkUtil::setSocketTimeout(QTcpSocket* socket, int sec) {
 	timeout.tv_usec = 0;
 
 	if (setsockopt(socket->socketDescriptor(), SOL_SOCKET, SO_RCVTIMEO, (char *) &timeout, sizeof(timeout)) < 0) {
-		log.debug("Failed to set SO_RCVTIMEO to %1 (linux)", sec);
+		log.debug("Failed: set SO_RCVTIMEO to %1 (linux)", sec);
+	} else {
+		log.debug("Success: set SO_RCVTIMEO to %1 (linux)", sec);
 	}
 	if (setsockopt(socket->socketDescriptor(), SOL_SOCKET, SO_SNDTIMEO, (char *) &timeout, sizeof(timeout)) < 0) {
-		log.debug("Failed to set SO_SNDTIMEO to %1 (linux)", sec);
+		log.debug("Failed: set SO_SNDTIMEO to %1 (linux)", sec);
+	} else {
+		log.debug("Success: set SO_SNDTIMEO to %1 (linux)", sec);
 	}
 #endif
+}
+
+void NetworkUtil::setStandardSocketOptions(QTcpSocket* socket) {
+	socket->setSocketOption(QAbstractSocket::LowDelayOption, 1);
+	NetworkUtil::setSocketReuseAddr(socket);
+	NetworkUtil::setSocketTimeout(socket, Config::SOCKET_READ_TIMEOUT);
 }
 

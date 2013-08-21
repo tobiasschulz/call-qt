@@ -20,12 +20,12 @@ Main::Main(QWidget* parent)
 	m_contactmodel = new ContactModel(this);
 	ui->contactlist->setModel(m_contactmodel);
 	QObject::connect(ui->contactlist, &QListView::clicked, this, &Main::onContactSelected);
+	QObject::connect(this, &Main::shown, m_contactmodel, &ContactModel::onResetContacts);
 
 	// terminal
 	m_terminal = new Terminal(this);
 	addTab(m_terminal);
 	QObject::connect(ui->actionShowTerminal, &QAction::toggled, this, &Main::onShowTerminalToggled);
-	QObject::connect(SystemUtil::instance(), &SystemUtil::newLogMessage, m_terminal, &Terminal::printLogMessage);
 
 	// menu
 	QObject::connect(ui->actionReloadContacts, &QAction::triggered, m_contactmodel, &ContactModel::resetContacts);
@@ -39,6 +39,11 @@ Main::Main(QWidget* parent)
 
 QString Main::id() const {
 	return "Main";
+}
+
+void Main::show() {
+	QMainWindow::show();
+	emit shown();
 }
 
 void Main::onShowTerminalToggled(bool checked) {
@@ -58,10 +63,15 @@ void Main::onAboutQt() {
 }
 
 void Main::addTab(Tab* widget) {
+	setUpdatesEnabled(false);
 	if (widget) {
-		m_tabhash[widget->tabname()] = widget;
-		ui->tabs->addTab(widget, widget->tabicon(), widget->tabname());
+		int index = ui->tabs->indexOf(widget);
+		if (index == -1) {
+			m_tabhash[widget->tabname()] = widget;
+			ui->tabs->addTab(widget, widget->tabicon(), widget->tabname());
+		}
 	}
+	setUpdatesEnabled(true);
 }
 
 void Main::openTab(const QString& tabname) {
@@ -71,17 +81,21 @@ void Main::openTab(const QString& tabname) {
 }
 
 void Main::openTab(Tab* widget) {
+	setUpdatesEnabled(false);
 	if (!m_tabhash.contains(widget->tabname())) {
 		addTab(widget);
 	}
 
 	int index = ui->tabs->indexOf(widget);
-	if (index != -1 && index != ui->tabs->currentIndex()) {
+	if (index == -1) {
+		index = ui->tabs->addTab(widget, widget->tabicon(), widget->tabname());
 		ui->tabs->setCurrentIndex(index);
+	} else if (index == ui->tabs->currentIndex()) {
+		// already selected
 	} else {
-		index = ui->tabs->addTab(widget, widget->tabname());
 		ui->tabs->setCurrentIndex(index);
 	}
+	setUpdatesEnabled(true);
 }
 
 void Main::closeTab(const QString& tabname) {
@@ -94,6 +108,7 @@ void Main::closeTab(const QString& tabname) {
 }
 
 void Main::closeTab(Tab* widget) {
+	setUpdatesEnabled(false);
 	int index = ui->tabs->indexOf(widget);
 	if (index != -1) {
 		log.debug("close tab <widget=%1>...", widget->metaObject()->className());
@@ -101,13 +116,14 @@ void Main::closeTab(Tab* widget) {
 	} else {
 		log.debug("close tab <widget=%1>: error: widget not found.", widget->metaObject()->className());
 	}
+	setUpdatesEnabled(true);
 }
 
 void Main::onTabChanged(int index) {
 	if (index != -1) {
 		QWidget* widget = ui->tabs->widget(index);
 		if (widget) {
-			widget->setFocus();
+			emit ((Tab*) widget)->focus();
 		}
 	}
 }

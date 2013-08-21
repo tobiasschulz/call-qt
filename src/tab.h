@@ -18,6 +18,9 @@ public:
 
 	virtual QString id() const = 0;
 
+signals:
+	void focus();
+
 private:
 	const QString m_tabname;
 	const QIcon m_tabicon;

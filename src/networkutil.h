@@ -29,6 +29,7 @@ public:
 	static QString readLine(QTcpSocket* socket);
 	static void setSocketReuseAddr(QTcpSocket* socket);
 	static void setSocketTimeout(QTcpSocket* socket, int timeout);
+	static void setStandardSocketOptions(QTcpSocket* socket);
 
 private:
 	static const Log log;

@@ -1,18 +1,26 @@
 #include "contact.h"
 #include "config.h"
 
-const QString Contact::DEFAULT_USER_NAME("nobody");
-const Contact Contact::INVALID_CONTACT(DEFAULT_USER_NAME, QHostAddress(), 0);
+const QString Contact::INVALID_USER("nobody");
+const QHostAddress Contact::INVALID_HOST;
+const quint16 Contact::INVALID_PORT = 0;
+const Contact Contact::INVALID_CONTACT;
 
 Contact::Contact(QString user, QHostAddress host, quint16 port, QObject* parent)
 		: QObject(parent), m_user(user), m_host(host), m_port(port) {
 }
-Contact::Contact(const Contact &other)
-		: QObject(other.parent()), m_user(other.m_user), m_host(other.m_host), m_port(other.m_port) {
+Contact::Contact(QObject* parent)
+		: QObject(parent), m_user(INVALID_USER), m_host(INVALID_HOST), m_port(INVALID_PORT) {
 }
-Contact& Contact::operator=(const Contact& other) {
+Contact::Contact(const Contact& other)
+		: QObject(other.parent()) { //, m_user(other.m_user), m_host(other.m_host), m_port(other.m_port) {
 	m_user = other.m_user;
 	m_host = other.m_host;
+	m_port = other.m_port;
+}
+Contact& Contact::operator=(const Contact& other) {
+	m_user = QString(other.m_user);
+	m_host = QHostAddress(other.m_host);
 	m_port = other.m_port;
 	return *this;
 }

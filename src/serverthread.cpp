@@ -7,6 +7,7 @@
 
 #include "serverthread.h"
 #include "serverconnection.h"
+#include "contactlist.h"
 
 ServerThread::ServerThread(int socketDescriptor, QObject *parent)
 		: QThread(parent), socketDescriptor(socketDescriptor) {
@@ -19,6 +20,9 @@ void ServerThread::run() {
 		return;
 	}
 	ServerConnection* connection = new ServerConnection(socket, socket);
+	QObject::connect(connection, &ServerConnection::contactFound, ContactList::instance(), &ContactList::addContact);
+	QObject::connect(connection, &ServerConnection::disconnected, this, &ServerThread::quit);
+	QObject::connect(this, &ServerThread::finished, socket, &QTcpSocket::close);
 
 	/*
 	 QByteArray block;
@@ -33,6 +37,6 @@ void ServerThread::run() {
 	 socket->disconnectFromHost();
 	 socket->waitForDisconnected();
 	 */
-	socket->waitForDisconnected();
+	exec();
 }
 

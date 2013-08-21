@@ -10,7 +10,8 @@ class Contact: public QObject, public Id {
 Q_OBJECT
 public:
 	explicit Contact(QString username, QHostAddress host, quint16 port, QObject* parent = 0);
-	Contact(const Contact &other);
+	explicit Contact(QObject* parent = 0);
+	Contact(const Contact& other);
 	Contact& operator=(const Contact& other);
 	bool operator==(const Contact& other) const;
 
@@ -22,7 +23,9 @@ public:
 	QString id() const;
 
 	static const Contact INVALID_CONTACT;
-	static const QString DEFAULT_USER_NAME;
+	static const QString INVALID_USER;
+	static const QHostAddress INVALID_HOST;
+	static const quint16 INVALID_PORT;
 
 signals:
 

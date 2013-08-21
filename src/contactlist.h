@@ -4,6 +4,8 @@
 #include <QObject>
 #include <QList>
 #include <QSet>
+#include <QMutex>
+
 #include "contact.h"
 
 class ContactList: public QObject, public Id {
@@ -12,7 +14,6 @@ public:
 	static ContactList* instance();
 	QString id() const;
 
-	void addContact(Contact contact);
 	const Contact& getContact(int index) const;
 	int size() const;
 
@@ -24,6 +25,7 @@ signals:
 	void changeItems(int start, int end);
 
 public slots:
+	void addContact(Contact contact);
 	void onResetContacts();
 
 private:
@@ -34,6 +36,7 @@ private:
 	static ContactList* m_instance;
 	QSet<Contact> m_set;
 	QList<Contact> m_list;
+	static QMutex m_mutex;
 };
 
 #endif // CONTACTLIST_H

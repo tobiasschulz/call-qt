@@ -5,6 +5,9 @@
 
 Server::Server(QObject* parent)
 		: QTcpServer(parent) {
+}
+
+void Server::start() {
 	listen(QHostAddress::Any, Config::DEFAULT_PORT);
 }
 

@@ -24,6 +24,12 @@ Log::Log(Id* id)
 QString Log::print(QTcpSocket* socket) {
 	return (QString("%1:%2").arg((socket)->localAddress().toString(), QString::number((socket)->localPort())));
 }
+QString Log::print(Id* id) {
+	return id->id();
+}
+QString Log::print(const Id& id) {
+	return id.id();
+}
 
 void Log::debug(QString format) const {
 	qDebug("[%s]: %s", Q(m_id->id()), Q(format));
@@ -53,6 +59,9 @@ void Log::debug(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVa
 
 Id::Id()
 		: log(this) {
+}
+QString Id::id() const {
+	return "This should be implemented!";
 }
 
 StaticId::StaticId(QString id)

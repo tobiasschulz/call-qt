@@ -9,7 +9,7 @@ class StatusConnection: public Connection {
 Q_OBJECT
 
 public:
-	StatusConnection(Contact* contact, QObject* parent = 0);
+	StatusConnection(const Contact& contact, QObject* parent = 0);
 	StatusConnection(QHostAddress host, quint16 port, QObject* parent = 0);
 	virtual QString id() const;
 

@@ -21,6 +21,11 @@ public:
 	~Main();
 	QString id() const;
 
+	void show();
+
+signals:
+	void shown();
+
 public slots:
 	void addTab(Tab* widget);
 	void openTab(const QString& tabname);

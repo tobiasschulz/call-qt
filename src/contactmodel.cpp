@@ -12,8 +12,9 @@ ContactModel::ContactModel(QObject* parent)
 	QObject::connect(m_contactlist, &ContactList::endRemoveItems, this, &ContactModel::endRemoveItems);
 	QObject::connect(m_contactlist, &ContactList::changeItems, this, &ContactModel::changeItems);
 
-	m_scanner = new ContactScanner(m_contactlist, this);
-	QObject::connect(this, &ContactModel::resetContacts, m_scanner, &ContactScanner::onResetContacts);
+	m_scanner = new ContactScanner(this);
+	QObject::connect(this, &ContactModel::resetContacts, m_contactlist, &ContactList::onResetContacts);
+	QObject::connect(this, &ContactModel::resetContacts, m_scanner, &ContactScanner::scanSoon);
 	m_scanner->start();
 }
 
@@ -73,7 +74,6 @@ bool ContactModel::setData(const QModelIndex& index, const QVariant& value, int 
 }
 
 void ContactModel::onResetContacts() {
-	ContactList::instance()->onResetContacts();
 	emit resetContacts();
 }
 

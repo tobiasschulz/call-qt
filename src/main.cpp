@@ -3,6 +3,7 @@
 
 #include "server.h"
 #include "maingui.h"
+#include "contact.h"
 #include "systemutil.h"
 
 void messageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg) {
@@ -10,6 +11,7 @@ void messageHandler(QtMsgType type, const QMessageLogContext &context, const QSt
 }
 
 int main(int argv, char** args) {
+	qRegisterMetaType<Contact>("Contact");
 	qInstallMessageHandler(messageHandler);
 	qDebug() << "starting app";
 
@@ -17,6 +19,7 @@ int main(int argv, char** args) {
 	app.setApplicationName("Audio Device Test");
 	Server server;
 	Main main;
+	QObject::connect(&main, &Main::shown, &server, &Server::start);
 	main.show();
 	return app.exec();
 }

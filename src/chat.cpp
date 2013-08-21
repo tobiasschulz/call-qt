@@ -1,4 +1,5 @@
 #include <QMutex>
+#include <QTimer>
 
 #include "chat.h"
 #include "ui_chat.h"
@@ -22,6 +23,10 @@ Chat* Chat::instance(const Contact& contact) {
 Chat::Chat(const Contact& contact, QWidget *parent)
 		: Tab("Chat", Config::icon("user-available"), parent), ui(new Ui::Chat), m_contact(contact) {
 	ui->setupUi(this);
+
+	// QObject::connect(this, &Chat::focus, ui->chatinput, static_cast<void (QLineEdit::*)()>(&QLineEdit::setFocus));
+	QObject::connect(this, SIGNAL(focus()), ui->chatinput, SLOT(setFocus()));
+	QTimer::singleShot(0, ui->chatinput, SLOT(setFocus()));
 }
 
 Chat::~Chat() {
