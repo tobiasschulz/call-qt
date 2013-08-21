@@ -10,7 +10,7 @@ Q_OBJECT
 
 public:
 	StatusConnection(const Contact& contact, QObject* parent = 0);
-	StatusConnection(QHostAddress host, quint16 port, QObject* parent = 0);
+	StatusConnection(const Host& host, QObject* parent = 0);
 	virtual QString id() const;
 
 signals:

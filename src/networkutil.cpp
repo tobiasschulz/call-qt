@@ -28,6 +28,22 @@
 #endif
 
 const Log NetworkUtil::log(new StaticId("NetworkUtil"));
+NetworkUtil* NetworkUtil::m_instance;
+
+NetworkUtil::NetworkUtil(QObject *parent)
+		: QObject(parent) {
+}
+
+NetworkUtil* NetworkUtil::instance() {
+	static QMutex mutex;
+	if (!m_instance) {
+		mutex.lock();
+		if (!m_instance)
+			m_instance = new NetworkUtil;
+		mutex.unlock();
+	}
+	return m_instance;
+}
 
 QHostAddress NetworkUtil::parseHostname(QString hostname) {
 	QHostAddress hostaddr(hostname);

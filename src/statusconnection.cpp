@@ -2,13 +2,13 @@
 #include "connection.h"
 
 StatusConnection::StatusConnection(const Contact& contact, QObject* parent)
-		: Connection(contact, STATUS, parent) {
-	connect(contact);
+		: Connection(STATUS, parent) {
+	connect(contact.host());
 	QObject::connect(this, &Connection::connected, this, &Connection::close);
 }
-StatusConnection::StatusConnection(QHostAddress host, quint16 port, QObject* parent)
-		: Connection(host, port, STATUS, parent) {
-	connect(host, port);
+StatusConnection::StatusConnection(const Host& host, QObject* parent)
+		: Connection(STATUS, parent) {
+	connect(host);
 	QObject::connect(this, &Connection::connected, this, &Connection::close);
 }
 QString StatusConnection::id() const {

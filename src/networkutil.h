@@ -20,19 +20,28 @@ class NetworkUtil: public QObject {
 Q_OBJECT
 
 public:
-	static QHostAddress parseHostname(QString);
-	static QString parseAddress(QHostAddress);
-	static void writeHeaders(QTcpSocket* socket, Connection::Type type);
-	static QHash<QString, QString>* readHeaders(QTcpSocket* socket);
-	static bool writeLine(QTcpSocket* socket, QVariant str1);
-	static bool writeLine(QTcpSocket* socket, QVariant str1, QVariant str2);
-	static bool writeLine(QTcpSocket* socket, QVariant str1, QVariant str2, QVariant str3);
-	static QString readLine(QTcpSocket* socket);
-	static void setSocketReuseAddr(QTcpSocket* socket);
-	static void setSocketTimeout(QTcpSocket* socket, int timeout);
-	static void setStandardSocketOptions(QTcpSocket* socket);
+	static NetworkUtil* instance();
+
+	QHostAddress parseHostname(QString);
+	QString parseAddress(QHostAddress);
+	void writeHeaders(QTcpSocket* socket, Connection::Type type);
+	QHash<QString, QString>* readHeaders(QTcpSocket* socket);
+	bool writeLine(QTcpSocket* socket, QVariant str1);
+	bool writeLine(QTcpSocket* socket, QVariant str1, QVariant str2);
+	bool writeLine(QTcpSocket* socket, QVariant str1, QVariant str2, QVariant str3);
+	QString readLine(QTcpSocket* socket);
+	void setSocketReuseAddr(QTcpSocket* socket);
+	void setSocketTimeout(QTcpSocket* socket, int timeout);
+	void setStandardSocketOptions(QTcpSocket* socket);
 
 private:
+	explicit NetworkUtil(QObject *parent = 0);
+	NetworkUtil(const NetworkUtil &); // hide copy constructor
+	NetworkUtil& operator=(const NetworkUtil &); // hide assign op
+	// we leave just the declarations, so the compiler will warn us
+	// if we try to use those two functions by accident
+	static NetworkUtil* m_instance;
+
 	static const Log log;
 };
 

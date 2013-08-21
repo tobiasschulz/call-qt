@@ -4,38 +4,26 @@
 #include "config.h"
 #include "networkutil.h"
 
-Connection::Connection(QTcpSocket* socket, Type type, QObject* parent)
+Connection::Connection(Type type, QObject* parent)
 		: QObject(parent), m_socket(0), m_contact(Contact::INVALID_CONTACT), m_headers(0), m_type(type), m_description(), connecttimer(
 				this), readtimer(this) {
-	m_description = Log::print(socket);
-}
-Connection::Connection(const Contact& contact, Type type, QObject* parent)
-		: QObject(parent), m_socket(0), m_contact(contact), m_headers(0), m_type(type), m_description(), connecttimer(
-				this), readtimer(this) {
-	m_description = Log::print(contact);
-}
-Connection::Connection(QHostAddress hostaddr, quint16 port, Type type, QObject* parent)
-		: QObject(parent), m_socket(0), m_contact(Contact::INVALID_CONTACT), m_headers(0), m_type(type), m_description(), connecttimer(
-				this), readtimer(this) {
-	m_description = QString("%1:%2").arg(hostaddr.toString(), QString::number(port));
 }
 
 void Connection::connect(QTcpSocket* socket) {
+	m_description = Log::print(socket);
 	log.debug("connect(QTcpSocket*)");
 
 	// set socket
 	setSocket(socket);
 }
-void Connection::connect(Contact contact) {
-	connect(contact.host(), contact.port());
-}
-void Connection::connect(QHostAddress hostaddr, quint16 port) {
+void Connection::connect(Host host) {
+	m_description = Log::print(host);
 	log.debug("connect(QHostAddress, quint16)");
 
 	// connect
 	setSocket(new QTcpSocket(this));
 	m_socket->abort();
-	m_socket->connectToHost(hostaddr, port);
+	m_socket->connectToHost(host.address(), host.port());
 
 	// start connect timer
 	QObject::connect(&connecttimer, &QTimer::timeout, this, &Connection::onConnectTimeout);
@@ -88,14 +76,14 @@ void Connection::onConnected() {
 	connecttimer.stop();
 	log.debug("onConnected()");
 
-	NetworkUtil::setStandardSocketOptions(m_socket);
+	NetworkUtil::instance()->setStandardSocketOptions(m_socket);
 
 	QObject::connect(m_socket, &QTcpSocket::readyRead, this, &Connection::onReadyRead);
 	QObject::connect(&readtimer, &QTimer::timeout, this, &Connection::onReadTimeout);
 	readtimer.start(Config::SOCKET_READ_TIMEOUT);
 
-	NetworkUtil::writeHeaders(m_socket, m_type);
-	m_headers = NetworkUtil::readHeaders(m_socket);
+	NetworkUtil::instance()->writeHeaders(m_socket, m_type);
+	m_headers = NetworkUtil::instance()->readHeaders(m_socket);
 
 	QHostAddress host = m_socket->peerAddress();
 	quint16 port = m_socket->peerPort();

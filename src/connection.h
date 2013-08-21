@@ -17,13 +17,10 @@ public:
 		STATUS, SERVER, CALL, CHAT, PING
 	};
 
-	Connection(QTcpSocket* socket, Type type, QObject* parent = 0);
-	Connection(const Contact& contact, Type type, QObject* parent = 0);
-	Connection(QHostAddress hostaddr, quint16 port, Type type, QObject* parent = 0);
+	Connection(Type type, QObject* parent = 0);
 
 	void connect(QTcpSocket* socket);
-	void connect(Contact contact);
-	void connect(QHostAddress hostaddr, quint16 port);
+	void connect(Host host);
 
 	virtual QString id() const = 0;
 
