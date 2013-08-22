@@ -55,7 +55,7 @@ void Main::onShowTerminalToggled(bool checked) {
 }
 
 void Main::onAbout() {
-	QMessageBox::about(this, "About", "");
+	QMessageBox::about(this, "About",  "Version " + QCoreApplication::applicationVersion());
 }
 
 void Main::onAboutQt() {
@@ -125,7 +125,7 @@ void Main::onTabChanged(int index) {
 		if (widget) {
 			Tab* tab = (Tab*) widget;
 			emit tab->focus();
-			this->setWindowTitle(tab->tabname() + " - Version " + QCoreApplication::applicationVersion());
+			this->setWindowTitle(tab->tabname() + " - Build " + QCoreApplication::applicationVersion());
 		}
 	}
 }
