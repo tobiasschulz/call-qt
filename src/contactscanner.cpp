@@ -2,13 +2,24 @@
 #include "QTimer"
 
 #include "contactscanner.h"
-#include "statusconnection.h"
+#include "connection.h"
+#include "pingclient.h"
 #include "contactlist.h"
 #include "config.h"
 #include "networkutil.h"
 
 ContactScanner::ContactScanner(QObject* parent)
-		: QThread(parent) {
+		: QThread(parent), m_connections(), m_hosts(), m_hosts_mutex() {
+	m_hosts << Config::hosts_to_contact();
+	QObject::connect(ContactList::instance(), &ContactList::hostOnline, this, &ContactScanner::increasePriority);
+}
+
+void ContactScanner::increasePriority(Host host) {
+	m_hosts_mutex.lock();
+	if (m_hosts.contains(host))
+		m_hosts.removeAll(host);
+	m_hosts.prepend(host);
+	m_hosts_mutex.unlock();
 }
 
 QString ContactScanner::id() const {
@@ -18,7 +29,7 @@ QString ContactScanner::id() const {
 void ContactScanner::run() {
 	QTimer *timer = new QTimer();
 	QObject::connect(timer, SIGNAL(timeout()), this, SLOT(scanNow()));
-	timer->start(30000);
+	timer->start(Config::CONTACT_SCAN_INTERVAL);
 
 	exec();
 }
@@ -30,32 +41,17 @@ void ContactScanner::scanSoon() {
 void ContactScanner::scanNow() {
 	log.debug("scan()");
 
-	foreach (const QString & hostname, Config::hosts_to_contact())
+	int interval = Config::CONTACT_SCAN_INTERVAL / m_hosts.size();
+	int i = 0;
+	foreach (const Host & host, m_hosts)
 	{
-		StatusConnection* connection;
-		if (m_connections.contains(hostname)) {
-			connection = m_connections[hostname];
-
-			if (!connection->isConnected()) {
-				delete connection;
-				connection = connect(hostname, Config::DEFAULT_PORT);
-				m_connections[hostname] = connection;
-			}
-
-		} else {
-			connection = connect(hostname, Config::DEFAULT_PORT);
-			m_connections[hostname] = connection;
+		if (!m_connections.contains(host)) {
+			m_connections[host] = new PingClient(host, this);
 		}
-
-		log.debug("connection: %1, state: %2", connection->id(), connection->isConnected() ? "true" : "false");
+		int after = interval * (i / 10);
+		QTimer::singleShot(after, m_connections[host], SLOT(ping()));
+		log.debug("pingclient: %1 (after %2 ms)", Log::print(m_connections[host]), after);
 	}
-}
-
-StatusConnection* ContactScanner::connect(QString hostname, quint16 port) {
-	QHostAddress hostaddr = NetworkUtil::instance()->parseHostname(hostname);
-	StatusConnection* connection = new StatusConnection(Host(hostaddr, Config::DEFAULT_PORT));
-	QObject::connect(connection, &StatusConnection::contactFound, ContactList::instance(), &ContactList::addContact);
-	return connection;
 }
 
 void ContactScanner::onDisplayError(QAbstractSocket::SocketError error) {

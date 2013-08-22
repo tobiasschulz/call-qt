@@ -5,11 +5,15 @@
 #include "networkutil.h"
 
 Connection::Connection(Type type, QObject* parent)
-		: QObject(parent), m_socket(0), m_contact(Contact::INVALID_CONTACT), m_headers(0), m_type(type), m_description(), connecttimer(
-				this), readtimer(this) {
+		: QObject(parent), m_socket(0), m_host(), m_contact(Contact::INVALID_CONTACT), m_headers(0), m_type(type), m_description(
+				"?"), m_connecttimer(this), m_readtimer(this) {
+}
+QString Connection::id() const {
+	return "Connection<" + m_description + ">";
 }
 
 void Connection::connect(QTcpSocket* socket) {
+	m_host = Host(socket->peerAddress(), socket->peerPort());
 	m_description = Log::print(socket);
 	log.debug("connect(QTcpSocket*)");
 
@@ -17,6 +21,7 @@ void Connection::connect(QTcpSocket* socket) {
 	setSocket(socket);
 }
 void Connection::connect(Host host) {
+	m_host = host;
 	m_description = Log::print(host);
 	log.debug("connect(QHostAddress, quint16)");
 
@@ -26,9 +31,9 @@ void Connection::connect(Host host) {
 	m_socket->connectToHost(host.address(), host.port());
 
 	// start connect timer
-	QObject::connect(&connecttimer, &QTimer::timeout, this, &Connection::onConnectTimeout);
-	connecttimer.setSingleShot(true);
-	connecttimer.start(Config::SOCKET_CONNECT_TIMEOUT);
+	QObject::connect(&m_connecttimer, &QTimer::timeout, this, &Connection::onConnectTimeout);
+	m_connecttimer.setSingleShot(true);
+	m_connecttimer.start(Config::SOCKET_CONNECT_TIMEOUT);
 }
 
 void Connection::setSocket(QTcpSocket* socket) {
@@ -51,13 +56,14 @@ void Connection::onConnectTimeout() {
 	m_socket->abort();
 	m_socket->close();
 	log.debug("connectFailed(Connect Timeout)");
-	emit connectFailed("Connect Timeout");
+	emit connectFailed("Connect Timeout", m_host);
+	emit hostOffline(m_host);
 }
 void Connection::onReadTimeout() {
 	m_socket->abort();
 	m_socket->close();
 	log.debug("socketError(Read Timeout)");
-	emit socketError("Read Timeout");
+	emit socketError("Read Timeout", m_host);
 }
 
 bool Connection::isConnected() {
@@ -65,22 +71,22 @@ bool Connection::isConnected() {
 }
 
 void Connection::onReadyRead() {
-	if (readtimer.isActive()) {
-		readtimer.start(Config::SOCKET_READ_TIMEOUT);
+	if (m_readtimer.isActive()) {
+		m_readtimer.start(Config::SOCKET_READ_TIMEOUT);
 	}
 	log.debug("onReadyRead()");
 	emit readyRead();
 }
 
 void Connection::onConnected() {
-	connecttimer.stop();
+	m_connecttimer.stop();
 	log.debug("onConnected()");
 
 	NetworkUtil::instance()->setStandardSocketOptions(m_socket);
 
 	QObject::connect(m_socket, &QTcpSocket::readyRead, this, &Connection::onReadyRead);
-	QObject::connect(&readtimer, &QTimer::timeout, this, &Connection::onReadTimeout);
-	readtimer.start(Config::SOCKET_READ_TIMEOUT);
+	QObject::connect(&m_readtimer, &QTimer::timeout, this, &Connection::onReadTimeout);
+	m_readtimer.start(Config::SOCKET_READ_TIMEOUT);
 
 	NetworkUtil::instance()->writeHeaders(m_socket, m_type);
 	m_headers = NetworkUtil::instance()->readHeaders(m_socket);
@@ -93,10 +99,11 @@ void Connection::onConnected() {
 	emit contactFound(m_contact);
 
 	emit connected();
+	emit hostOnline(m_host);
 }
 
 void Connection::onDisconnected() {
-	readtimer.stop();
+	m_readtimer.stop();
 	log.debug("onDisconnected()");
 	emit disconnected();
 }
@@ -107,12 +114,12 @@ void Connection::onError(QAbstractSocket::SocketError err) {
 	m_socket->abort();
 	m_socket->close();
 	//emit error(err);
-	if (connecttimer.isActive()) {
-		connecttimer.stop();
-		emit connectFailed("Socket Error: " + errString);
-	} else if (readtimer.isActive()) {
-		readtimer.stop();
-		emit socketError("Socket Error: " + errString);
+	if (m_connecttimer.isActive()) {
+		m_connecttimer.stop();
+		emit connectFailed("Socket Error: " + errString, m_host);
+	} else if (m_readtimer.isActive()) {
+		m_readtimer.stop();
+		emit socketError("Socket Error: " + errString, m_host);
 	}
 }
 

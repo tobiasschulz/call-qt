@@ -68,7 +68,12 @@ private:
 	Host m_host;
 };
 
-uint qHash(const Contact& c);
 bool compareContacts(const Contact& left, const Contact& right);
+
+QDataStream &operator<<(QDataStream &out, const Host &myObj);
+QDataStream &operator>>(QDataStream &in, Host &myObj);
+
+QDataStream &operator<<(QDataStream &out, const Contact &myObj);
+QDataStream &operator>>(QDataStream &in, Contact &myObj);
 
 #endif // CONTACT_H

@@ -1,6 +1,7 @@
 #include "contactmodel.h"
 #include "contactlist.h"
 #include "contactscanner.h"
+#include "config.h"
 
 ContactModel::ContactModel(QObject* parent)
 		: QAbstractItemModel(parent), m_scanner(0) {
@@ -37,11 +38,18 @@ QModelIndex ContactModel::parent(const QModelIndex& child) const {
 }
 
 QVariant ContactModel::data(const QModelIndex& index, int role) const {
-	if (index.isValid() && role == Qt::DisplayRole) {
-		if (index.row() < ContactList::instance()->size()) {
-			const Contact& contact = ContactList::instance()->getContact(index.row());
+	if (index.isValid() && index.row() < ContactList::instance()->size()) {
+		const Contact& contact = ContactList::instance()->getContact(index.row());
+
+		if (role == Qt::DisplayRole) {
 			QVariant value = contact.toString();
 			return value;
+		} else if (role == Qt::DecorationRole) {
+			if (ContactList::instance()->isHostOnline(contact.host())) {
+				return Config::icon("user-available");
+			} else {
+				return Config::icon("user-offline");
+			}
 		} else {
 			return QVariant();
 		}

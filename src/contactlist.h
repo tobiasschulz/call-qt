@@ -17,7 +17,12 @@ public:
 	const Contact& getContact(int index) const;
 	int size() const;
 
+	bool isHostOnline(Host host);
+
 signals:
+	void hostOnline(Host host);
+	void hostOffline(Host host);
+
 	void beginInsertItems(int start, int end);
 	void endInsertItems();
 	void beginRemoveItems(int start, int end);
@@ -27,6 +32,8 @@ signals:
 public slots:
 	void addContact(Contact contact);
 	void onResetContacts();
+	void setHostOnline(Host host);
+	void setHostOffline(Host host);
 
 private:
 	explicit ContactList(QObject* parent = 0);
@@ -35,6 +42,7 @@ private:
 
 	static ContactList* m_instance;
 	QSet<Contact> m_set;
+	QSet<Host> m_onlinehosts;
 	QList<Contact> m_list;
 	static QMutex m_mutex;
 };

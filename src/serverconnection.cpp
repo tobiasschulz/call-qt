@@ -2,7 +2,6 @@
 
 ServerConnection::ServerConnection(QTcpSocket* socket, QObject* parent)
 		: Connection(SERVER, parent) {
-	connect(socket);
 }
 QString ServerConnection::id() const {
 	return "ServerConnection<" + m_description + ">";

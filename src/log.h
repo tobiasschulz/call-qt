@@ -63,4 +63,6 @@ private:
 	QString m_id;
 };
 
+uint qHash(const Id& c);
+
 #endif /* LOG_H */

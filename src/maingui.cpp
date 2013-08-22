@@ -125,7 +125,7 @@ void Main::onTabChanged(int index) {
 		if (widget) {
 			Tab* tab = (Tab*) widget;
 			emit tab->focus();
-			this->setWindowTitle(tab->tabname());
+			this->setWindowTitle(tab->tabname() + " - Version " + QCoreApplication::applicationVersion());
 		}
 	}
 }

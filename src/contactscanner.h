@@ -3,12 +3,13 @@
 
 #include <QThread>
 #include <QTcpSocket>
+#include <QMutex>
 
 #include "contact.h"
 #include "log.h"
 
 class ContactList;
-class StatusConnection;
+class PingClient;
 
 class ContactScanner: public QThread, public Id {
 Q_OBJECT
@@ -21,14 +22,16 @@ signals:
 public slots:
 	void scanSoon();
 	void scanNow();
+	void increasePriority(Host host);
 
 	void onDisplayError(QAbstractSocket::SocketError);
 
 private:
-	StatusConnection* connect(QString hostname, quint16 port);
 	void run();
 
-	QHash<QString, StatusConnection *> m_connections;
+	QHash<Host, PingClient *> m_connections;
+	QList<Host> m_hosts;
+	QMutex m_hosts_mutex;
 
 };
 

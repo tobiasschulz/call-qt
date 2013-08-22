@@ -6,7 +6,7 @@
  */
 
 #include "serverthread.h"
-#include "serverconnection.h"
+#include "connection.h"
 #include "contactlist.h"
 
 ServerThread::ServerThread(int socketDescriptor, QObject *parent)
@@ -19,9 +19,10 @@ void ServerThread::run() {
 		emit error(socket->error());
 		return;
 	}
-	ServerConnection* connection = new ServerConnection(socket, socket);
-	QObject::connect(connection, &ServerConnection::contactFound, ContactList::instance(), &ContactList::addContact);
-	QObject::connect(connection, &ServerConnection::disconnected, this, &ServerThread::quit);
+	Connection* connection = new Connection(Connection::SERVER, socket);
+	connection->connect(socket);
+	QObject::connect(connection, &Connection::contactFound, ContactList::instance(), &ContactList::addContact);
+	QObject::connect(connection, &Connection::disconnected, this, &ServerThread::quit);
 	QObject::connect(this, &ServerThread::finished, socket, &QTcpSocket::close);
 
 	/*

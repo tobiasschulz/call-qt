@@ -71,3 +71,6 @@ QString StaticId::id() const {
 	return m_id;
 }
 
+uint qHash(const Id& c) {
+	return qHash(c.id());
+}

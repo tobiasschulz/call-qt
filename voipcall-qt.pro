@@ -4,20 +4,17 @@
 #
 #-------------------------------------------------
 
-QT       += core gui multimedia network
-
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+QT       += core gui widgets multimedia network
 
 TARGET = call-qt
 TEMPLATE = app
-
 
 SOURCES += src/main.cpp \
     src/maingui.cpp \
     src/server.cpp \
     src/serverconnection.cpp \
     src/serverthread.cpp \
-    src/statusconnection.cpp \
+    src/pingclient.cpp \
     src/contact.cpp \
     src/connection.cpp \
     src/contactmodel.cpp \
@@ -29,14 +26,15 @@ SOURCES += src/main.cpp \
     src/log.cpp \
     src/tab.cpp \
     src/terminal.cpp \
-    src/chat.cpp
+    src/chat.cpp \
+    src/version.cpp
 
 HEADERS  += \
     src/maingui.h \
     src/server.h \
     src/serverconnection.h \
     src/serverthread.h \
-    src/statusconnection.h \
+    src/pingclient.h \
     src/contact.h \
     src/connection.h \
     src/contactmodel.h \
@@ -70,3 +68,7 @@ Debug:MOC_DIR = build/debug/.moc
 Debug:RCC_DIR = build/debug/.rcc
 Debug:UI_DIR = build/debug/.ui
 
+# The application version                                                          ## VERSION
+VERSION = 0.14                                                                      ## VERSION
+# Define the preprocessor macro to get the application version in our application. ## VERSION
+DEFINES += APP_VERSION=\\\"$$VERSION\\\"                                           ## VERSION

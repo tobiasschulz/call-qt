@@ -106,10 +106,50 @@ QString Contact::id() const {
 	return "Contact<" + m_user + "@" + m_host.toString() + ":" + QString::number(m_host.port()) + ">";
 }
 
-uint qHash(const Contact& c) {
-	return qHash(c.id());
-}
 bool compareContacts(const Contact& left, const Contact& right) {
 	return left.id() < right.id();
 }
 
+QDataStream& operator<<(QDataStream& out, const Host& myObj) {
+	out << QString("Host") << myObj.address() << myObj.hostname() << quint32(myObj.port());
+	return out;
+}
+QDataStream& operator>>(QDataStream& in, Host& myObj) {
+	QHostAddress address;
+	QString hostname;
+	quint32 port;
+	QString type;
+	in >> type;
+	if (type == "Host") {
+		in >> address >> hostname >> port;
+		if (!hostname.isEmpty()) {
+			QHostAddress currentAddress = NetworkUtil::instance()->parseHostname(hostname);
+			myObj = Host(currentAddress, port);
+		} else {
+			myObj = Host(address, port);
+		}
+	} else {
+		qDebug() << "Error in deserialization of type Host: invalid type '" + type + "'!";
+		myObj = Contact::INVALID_HOST;
+	}
+	return in;
+}
+
+QDataStream& operator<<(QDataStream& out, const Contact& myObj) {
+	out << QString("Contact") << myObj.user() << myObj.host();
+	return out;
+}
+QDataStream& operator>>(QDataStream& in, Contact& myObj) {
+	QString user;
+	Host host;
+	QString type;
+	in >> type;
+	if (type == "Contact") {
+		in >> user >> host;
+		myObj = Contact(user, host);
+	} else {
+		qDebug() << "Error in deserialization of type Contact: invalid type '" + type + "'!";
+		myObj = Contact::INVALID_CONTACT;
+	}
+	return in;
+}

@@ -1,3 +1,3 @@
 #!/bin/bash
 
-make -j4 && ./call-qt
+./compile.sh && ./call-qt

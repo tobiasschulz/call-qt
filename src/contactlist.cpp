@@ -4,7 +4,7 @@ ContactList* ContactList::m_instance;
 QMutex ContactList::m_mutex;
 
 ContactList::ContactList(QObject *parent)
-		: QObject(parent), m_set(), m_list() {
+		: QObject(parent), m_set(), m_onlinehosts(), m_list() {
 }
 
 ContactList* ContactList::instance() {
@@ -27,14 +27,17 @@ void ContactList::addContact(Contact contact) {
 	m_set << contact;
 	buildSortedList();
 }
+
 const Contact& ContactList::getContact(int index) const {
 	return index < m_list.size() ? m_list.at(index) : Contact::INVALID_CONTACT;
 }
+
 int ContactList::size() const {
 	int size = 0;
 	size = m_list.size();
 	return size;
 }
+
 void ContactList::buildSortedList() {
 	emit this->beginInsertItems(0, m_set.size());
 	m_mutex.lock();
@@ -43,9 +46,29 @@ void ContactList::buildSortedList() {
 	m_mutex.unlock();
 	emit this->endInsertItems();
 }
+
 void ContactList::onResetContacts() {
 	emit this->beginRemoveItems(0, m_set.size());
 	m_set.clear();
 	buildSortedList();
 	emit this->endInsertItems();
 }
+
+void ContactList::setHostOnline(Host host) {
+	if (!m_onlinehosts.contains(host)) {
+		m_onlinehosts << host;
+		emit hostOnline(host);
+	}
+}
+
+void ContactList::setHostOffline(Host host) {
+	if (m_onlinehosts.contains(host)) {
+		m_onlinehosts.remove(host);
+		emit hostOffline(host);
+	}
+}
+
+bool ContactList::isHostOnline(Host host) {
+	return m_onlinehosts.contains(host);
+}
+

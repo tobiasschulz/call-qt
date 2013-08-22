@@ -22,18 +22,19 @@ public:
 	void connect(QTcpSocket* socket);
 	void connect(Host host);
 
-	virtual QString id() const = 0;
+	virtual QString id() const;
 
 	bool isConnected();
 
 signals:
 	void contactFound(Contact);
+	void hostOnline(Host);
+	void hostOffline(Host);
 	void readyRead();
 	void connected();
 	void disconnected();
-	void socketError(Contact, QString error);
-	void socketError(QString error);
-	void connectFailed(QString error);
+	void socketError(QString error, Host host = Contact::INVALID_HOST);
+	void connectFailed(QString error, Host host = Contact::INVALID_HOST);
 	void close();
 
 public slots:
@@ -48,12 +49,13 @@ protected:
 	void setSocket(QTcpSocket* socket);
 
 	QTcpSocket* m_socket;
+	Host m_host;
 	Contact m_contact;
 	QHash<QString, QString>* m_headers;
 	Type m_type;
 	QString m_description;
-	QTimer connecttimer;
-	QTimer readtimer;
+	QTimer m_connecttimer;
+	QTimer m_readtimer;
 };
 
 #endif // CONNECTION_H

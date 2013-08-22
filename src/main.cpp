@@ -5,13 +5,21 @@
 #include "maingui.h"
 #include "contact.h"
 #include "systemutil.h"
+#include "config.h"
 
 void messageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg) {
 	SystemUtil::instance()->messageOutput(type, context, msg);
 }
 
 int main(int argv, char** args) {
+	QCoreApplication::setOrganizationName("Tobias Schulz");
+	QCoreApplication::setOrganizationDomain("tobias-schulz.eu");
+	QCoreApplication::setApplicationName("Call Qt");
+	QCoreApplication::setApplicationVersion(Config::version());
+	qRegisterMetaType<Host>("Host");
+	qRegisterMetaTypeStreamOperators<Host>("Host");
 	qRegisterMetaType<Contact>("Contact");
+	qRegisterMetaTypeStreamOperators<Contact>("Contact");
 	qInstallMessageHandler(messageHandler);
 	qDebug() << "starting app";
 

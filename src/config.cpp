@@ -8,16 +8,18 @@
 #include <QDateTime>
 
 #include "config.h"
+#include "networkutil.h"
 
 int Config::DEFAULT_PORT = 4000;
 int Config::SOCKET_READ_TIMEOUT = 7000;
 int Config::SOCKET_CONNECT_TIMEOUT = 2000;
+int Config::CONTACT_SCAN_INTERVAL = 60000;
 long Config::m_uid = 0;
 long Config::m_uptime = QDateTime::currentMSecsSinceEpoch();
 
-QStringList Config::hosts_to_contact() {
+QStringList Config::hostnames_to_contact() {
 	QStringList list;
-	if (0)
+	if (1)
 		list << "127.0.0.1";
 	else
 		list << "127.0.0.1" << "192.168.223.3" << "192.168.223.5" << "192.168.223.7" << "192.168.223.9"
@@ -27,6 +29,18 @@ QStringList Config::hosts_to_contact() {
 				<< "192.168.25.101" << "192.168.25.102" << "192.168.25.103" << "dsl-ka.tobias-schulz.eu"
 				<< "dsl-hg.tobias-schulz.eu" << "freehal.net";
 	return list;
+}
+
+QList<Host> Config::hosts_to_contact() {
+	QList<Host> hosts;
+	for (int i = 0; i <= 5; ++i) {
+		foreach (const QString & hostname, hostnames_to_contact())
+		{
+			QHostAddress hostaddr = NetworkUtil::instance()->parseHostname(hostname);
+			hosts << Host(hostaddr, Config::DEFAULT_PORT + i * 10);
+		}
+	}
+	return hosts;
 }
 
 long Config::uid() {
