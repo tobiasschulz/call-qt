@@ -15,15 +15,9 @@ class ServerThread: public QThread {
 Q_OBJECT
 
 public:
-	ServerThread(int socketDescriptor, QObject *parent);
+	ServerThread(QObject *parent = 0);
 
 	void run();
-
-signals:
-	void error(QTcpSocket::SocketError socketError);
-
-private:
-	int socketDescriptor;
 };
 
 #endif /* SERVERTHREAD_H */

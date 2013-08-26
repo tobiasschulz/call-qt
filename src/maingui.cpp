@@ -1,5 +1,7 @@
 #include <QDesktopWidget>
 #include <QMessageBox>
+#include <QVariant>
+#include <QSettings>
 
 #include "maingui.h"
 #include "ui_maingui.h"
@@ -10,9 +12,13 @@ Main::Main(QWidget* parent)
 		: QMainWindow(parent), ui(new Ui::Main), m_contactmodel(0), m_tabhash(), m_terminal(0) {
 
 	ui->setupUi(this);
+
+	// settings
+	QSettings settings;
+
 	// window icon, size and position
 	this->setWindowIcon(Config::icon("icon"));
-	this->resize(900, 400);
+	resize(settings.value("window/size", QSize(900, 400)).toSize());
 	this->setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, this->size(),
 	qApp->desktop()->availableGeometry()));
 
@@ -26,6 +32,8 @@ Main::Main(QWidget* parent)
 	m_terminal = new Terminal(this);
 	addTab(m_terminal);
 	QObject::connect(ui->actionShowTerminal, &QAction::toggled, this, &Main::onShowTerminalToggled);
+	bool showTerminal = settings.value("window/show-terminal", true).toBool();
+	ui->actionShowTerminal->setChecked(showTerminal);
 
 	// menu
 	QObject::connect(ui->actionReloadContacts, &QAction::triggered, m_contactmodel, &ContactModel::resetContacts);
@@ -52,10 +60,18 @@ void Main::onShowTerminalToggled(bool checked) {
 	} else {
 		closeTab(m_terminal);
 	}
+	QSettings settings;
+	settings.setValue("window/show-terminal", checked);
+}
+
+void Main::resizeEvent(QResizeEvent* event) {
+	QMainWindow::resizeEvent(event);
+	QSettings settings;
+	settings.setValue("window/size", event->size());
 }
 
 void Main::onAbout() {
-	QMessageBox::about(this, "About",  "Version " + QCoreApplication::applicationVersion());
+	QMessageBox::about(this, "About", "Version " + QCoreApplication::applicationVersion());
 }
 
 void Main::onAboutQt() {
@@ -125,7 +141,7 @@ void Main::onTabChanged(int index) {
 		if (widget) {
 			Tab* tab = (Tab*) widget;
 			emit tab->focus();
-			this->setWindowTitle(tab->tabname() + " - Build " + QCoreApplication::applicationVersion());
+			this->setWindowTitle(tab->tabname() + " - Build #" + Config::build());
 		}
 	}
 }

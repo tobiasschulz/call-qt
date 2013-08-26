@@ -49,6 +49,7 @@ public:
 	}
 
 	virtual QString id() const;
+	virtual const Id& fromId(QString) const;
 
 protected:
 	Log log;
@@ -61,6 +62,12 @@ public:
 
 private:
 	QString m_id;
+};
+
+class InvalidId: public Id {
+public:
+	InvalidId();
+	QString id() const;
 };
 
 uint qHash(const Id& c);

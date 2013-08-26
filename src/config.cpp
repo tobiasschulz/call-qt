@@ -20,7 +20,7 @@ long Config::m_uptime = QDateTime::currentMSecsSinceEpoch();
 QStringList Config::hostnames_to_contact() {
 	QStringList list;
 	if (1)
-		list << "127.0.0.1";
+		list << "127.0.0.1" << "dsl-ka.tobias-schulz.eu";
 	else
 		list << "127.0.0.1" << "192.168.223.3" << "192.168.223.5" << "192.168.223.7" << "192.168.223.9"
 				<< "192.168.223.150" << "192.168.223.151" << "192.168.223.152" << "192.168.223.153" << "192.168.223.154"
@@ -36,8 +36,9 @@ QList<Host> Config::hosts_to_contact() {
 	for (int i = 0; i <= 5; ++i) {
 		foreach (const QString & hostname, hostnames_to_contact())
 		{
-			QHostAddress hostaddr = NetworkUtil::instance()->parseHostname(hostname);
-			hosts << Host(hostaddr, Config::DEFAULT_PORT + i * 10);
+			//QHostAddress hostaddr = NetworkUtil::instance()->parseHostname(hostname);
+			//hosts << Host(hostaddr, Config::DEFAULT_PORT + i * 10);
+			hosts << Host(hostname, Config::DEFAULT_PORT + i * 10);
 		}
 	}
 	return hosts;

@@ -26,6 +26,7 @@ public:
 	static long uptime();
 	static QIcon icon(QString iconname);
 	static QString version();
+	static QString build();
 
 	static int DEFAULT_PORT;
 	static int SOCKET_READ_TIMEOUT;

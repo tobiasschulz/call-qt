@@ -2,6 +2,7 @@
 #define MAIN_H
 
 #include <QMainWindow>
+#include <QResizeEvent>
 
 #include "contactmodel.h"
 #include "systemutil.h"
@@ -22,6 +23,7 @@ public:
 	QString id() const;
 
 	void show();
+	void resizeEvent(QResizeEvent* event);
 
 signals:
 	void shown();

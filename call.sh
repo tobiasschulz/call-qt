@@ -11,7 +11,7 @@ function newversion() {
 VERSION = 0.$VERSION                                                                      ## VERSION
 # Define the preprocessor macro to get the application version in our application. ## VERSION
 DEFINES += APP_VERSION=\\\\\"\$\$VERSION\\\\\"                                           ## VERSION
-DEFINES += APP_BUILD=\\\\\"\$VERSION\\\\\"                                             ## VERSION
+DEFINES += APP_BUILD=\\\\\"$VERSION\\\\\"                                             ## VERSION
 EOT
 	touch src/version.cpp
 }
@@ -19,6 +19,7 @@ EOT
 function compile() {
 	# compile
 	make -j4
+	return $?
 }
 
 function debug() {
@@ -39,14 +40,11 @@ function commit() {
 if [ "x$1" = "xgdb" ] || [ "x$1" = "xdebug" ]
 then
 	newversion
-	compile
-	debug
+	compile && debug
 elif [ "x$1" = "xcommit" ]
 then
-	compile
 	commit
 else
 	newversion
-	compile
-	run
+	compile && run
 fi

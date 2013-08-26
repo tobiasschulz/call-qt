@@ -11,6 +11,14 @@
 #define APP_VERSION "unknown"
 #endif
 
+#ifndef APP_BUILD
+#define APP_BUILD "unknown"
+#endif
+
 QString Config::version() {
 	return APP_VERSION;
+}
+
+QString Config::build() {
+	return APP_BUILD;
 }

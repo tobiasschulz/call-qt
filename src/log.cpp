@@ -63,12 +63,21 @@ Id::Id()
 QString Id::id() const {
 	return "This should be implemented!";
 }
+const Id& Id::fromId(QString str) const {
+	return InvalidId();
+}
 
 StaticId::StaticId(QString id)
 		: m_id(id) {
 }
 QString StaticId::id() const {
 	return m_id;
+}
+
+InvalidId::InvalidId() {
+}
+QString InvalidId::id() const {
+	return "invalid";
 }
 
 uint qHash(const Id& c) {

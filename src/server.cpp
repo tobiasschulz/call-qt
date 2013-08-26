@@ -1,6 +1,6 @@
 #include "server.h"
-#include "serverthread.h"
 #include "serverconnection.h"
+#include "serverconnectionthread.h"
 #include "config.h"
 
 Server::Server(QObject* parent)
@@ -12,8 +12,8 @@ void Server::start() {
 }
 
 void Server::incomingConnection(qintptr socketDescriptor) {
-	ServerThread *thread = new ServerThread(socketDescriptor, this);
-	QObject::connect(thread, &ServerThread::finished, thread, &ServerThread::deleteLater);
+	ServerConnectionThread *thread = new ServerConnectionThread(socketDescriptor, this);
+	QObject::connect(thread, &ServerConnectionThread::finished, thread, &ServerConnectionThread::deleteLater);
 	thread->start();
 }
 

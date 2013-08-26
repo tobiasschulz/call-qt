@@ -13,6 +13,7 @@ SOURCES += src/main.cpp \
     src/maingui.cpp \
     src/server.cpp \
     src/serverconnection.cpp \
+    src/serverconnectionthread.cpp \
     src/serverthread.cpp \
     src/pingclient.cpp \
     src/contact.cpp \
@@ -22,6 +23,7 @@ SOURCES += src/main.cpp \
     src/contactscanner.cpp \
     src/config.cpp \
     src/networkutil.cpp \
+    src/dnscache.cpp \
     src/systemutil.cpp \
     src/log.cpp \
     src/tab.cpp \
@@ -33,6 +35,7 @@ HEADERS  += \
     src/maingui.h \
     src/server.h \
     src/serverconnection.h \
+    src/serverconnectionthread.h \
     src/serverthread.h \
     src/pingclient.h \
     src/contact.h \
@@ -42,6 +45,7 @@ HEADERS  += \
     src/contactscanner.h \
     src/config.h \
     src/networkutil.h \
+    src/dnscache.h \
     src/systemutil.h \
     src/log.h \
     src/tab.h \
@@ -69,6 +73,7 @@ Debug:RCC_DIR = build/debug/.rcc
 Debug:UI_DIR = build/debug/.ui
 
 # The application version                                                          ## VERSION
-VERSION = 0.16                                                                      ## VERSION
+VERSION = 0.129                                                                      ## VERSION
 # Define the preprocessor macro to get the application version in our application. ## VERSION
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"                                           ## VERSION
+DEFINES += APP_BUILD=\\\"129\\\"                                             ## VERSION
