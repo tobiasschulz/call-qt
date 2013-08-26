@@ -31,10 +31,12 @@ const Log NetworkUtil::log(new StaticId("NetworkUtil"));
 NetworkUtil* NetworkUtil::m_instance;
 
 NetworkUtil::NetworkUtil(QObject *parent)
-		: QObject(parent) {
+		: QObject(parent)
+{
 }
 
-NetworkUtil* NetworkUtil::instance() {
+NetworkUtil* NetworkUtil::instance()
+{
 	static QMutex mutex;
 	if (!m_instance) {
 		mutex.lock();
@@ -45,10 +47,12 @@ NetworkUtil* NetworkUtil::instance() {
 	return m_instance;
 }
 
-QHostAddress NetworkUtil::parseHostname(QString hostname) {
+QHostAddress NetworkUtil::parseHostname(QString hostname)
+{
 	QHostAddress hostaddr(hostname);
 
-	if (hostaddr.protocol() == QAbstractSocket::IPv4Protocol || hostaddr.protocol() == QAbstractSocket::IPv6Protocol) {
+	if (hostaddr.protocol() == QAbstractSocket::IPv4Protocol
+			|| hostaddr.protocol() == QAbstractSocket::IPv6Protocol) {
 		log.debug("Valid IPv4 address.");
 
 	} else {
@@ -62,12 +66,14 @@ QHostAddress NetworkUtil::parseHostname(QString hostname) {
 	return hostaddr;
 }
 
-QString NetworkUtil::parseAddress(QHostAddress address) {
+QString NetworkUtil::parseAddress(QHostAddress address)
+{
 	QHostInfo info = QHostInfo::fromName(address.toString());
 	return info.hostName();
 }
 
-void NetworkUtil::writeHeaders(QTcpSocket* socket, Connection::Type type) {
+void NetworkUtil::writeHeaders(QTcpSocket* socket, Connection::Type type)
+{
 	writeLine(socket, "User: ", SystemUtil::instance()->getUserName());
 	writeLine(socket, "UID: ", QVariant::fromValue(Config::uid()));
 	writeLine(socket, "Uptime: ", QVariant::fromValue(Config::uptime()));
@@ -88,7 +94,8 @@ void NetworkUtil::writeHeaders(QTcpSocket* socket, Connection::Type type) {
 
 }
 
-QHash<QString, QString>* NetworkUtil::readHeaders(QTcpSocket* socket) {
+QHash<QString, QString>* NetworkUtil::readHeaders(QTcpSocket* socket)
+{
 	QHash<QString, QString>* headers = new QHash<QString, QString>;
 
 	while (socket->isOpen() && socket->waitForReadyRead(Config::SOCKET_READ_TIMEOUT)) {
@@ -114,22 +121,26 @@ QHash<QString, QString>* NetworkUtil::readHeaders(QTcpSocket* socket) {
 	return headers;
 }
 
-bool NetworkUtil::writeLine(QTcpSocket* socket, QVariant line) {
+bool NetworkUtil::writeLine(QTcpSocket* socket, QVariant line)
+{
 	socket->write(line.toString().toLocal8Bit());
 	socket->write("\n");
 	socket->flush();
 	return socket->waitForBytesWritten();
 }
 
-bool NetworkUtil::writeLine(QTcpSocket* socket, QVariant str1, QVariant str2) {
+bool NetworkUtil::writeLine(QTcpSocket* socket, QVariant str1, QVariant str2)
+{
 	return writeLine(socket, str1.toString() + str2.toString());
 }
 
-bool NetworkUtil::writeLine(QTcpSocket* socket, QVariant str1, QVariant str2, QVariant str3) {
+bool NetworkUtil::writeLine(QTcpSocket* socket, QVariant str1, QVariant str2, QVariant str3)
+{
 	return writeLine(socket, str1.toString() + str2.toString() + str3.toString());
 }
 
-QString NetworkUtil::readLine(QTcpSocket* socket) {
+QString NetworkUtil::readLine(QTcpSocket* socket)
+{
 	char buf[32 * 1024];
 	qint64 lineLength = socket->readLine(buf, sizeof(buf));
 	if (lineLength != -1) {
@@ -139,7 +150,8 @@ QString NetworkUtil::readLine(QTcpSocket* socket) {
 	}
 }
 
-void NetworkUtil::setSocketReuseAddr(QTcpSocket* socket) {
+void NetworkUtil::setSocketReuseAddr(QTcpSocket* socket)
+{
 	int reuse_addr_val = 1;
 #if defined(Q_OS_WIN)
 	int ret = setsockopt(m_tcpSocket->socketDescriptor(), SOL_SOCKET,
@@ -154,7 +166,8 @@ void NetworkUtil::setSocketReuseAddr(QTcpSocket* socket) {
 	}
 }
 
-void NetworkUtil::setSocketTimeout(QTcpSocket* socket, int sec) {
+void NetworkUtil::setSocketTimeout(QTcpSocket* socket, int sec)
+{
 #if defined(Q_OS_WIN)
 	unsigned int timeout = sec * 1000;
 	if (-1 == setsockopt(socket->socketDescriptor(), SOL_SOCKET, SO_RCVTIMEO, (char *) &timeout, sizeof(timeout))) {
@@ -172,12 +185,14 @@ void NetworkUtil::setSocketTimeout(QTcpSocket* socket, int sec) {
 	timeout.tv_sec = sec;
 	timeout.tv_usec = 0;
 
-	if (setsockopt(socket->socketDescriptor(), SOL_SOCKET, SO_RCVTIMEO, (char *) &timeout, sizeof(timeout)) < 0) {
+	if (setsockopt(socket->socketDescriptor(), SOL_SOCKET, SO_RCVTIMEO, (char *) &timeout, sizeof(timeout))
+			< 0) {
 		log.debug("Failed: set SO_RCVTIMEO to %1 (linux)", sec);
 	} else {
 		log.debug("Success: set SO_RCVTIMEO to %1 (linux)", sec);
 	}
-	if (setsockopt(socket->socketDescriptor(), SOL_SOCKET, SO_SNDTIMEO, (char *) &timeout, sizeof(timeout)) < 0) {
+	if (setsockopt(socket->socketDescriptor(), SOL_SOCKET, SO_SNDTIMEO, (char *) &timeout, sizeof(timeout))
+			< 0) {
 		log.debug("Failed: set SO_SNDTIMEO to %1 (linux)", sec);
 	} else {
 		log.debug("Success: set SO_SNDTIMEO to %1 (linux)", sec);
@@ -185,7 +200,8 @@ void NetworkUtil::setSocketTimeout(QTcpSocket* socket, int sec) {
 #endif
 }
 
-void NetworkUtil::setStandardSocketOptions(QTcpSocket* socket) {
+void NetworkUtil::setStandardSocketOptions(QTcpSocket* socket)
+{
 	socket->setSocketOption(QAbstractSocket::LowDelayOption, 1);
 	NetworkUtil::setSocketReuseAddr(socket);
 	NetworkUtil::setSocketTimeout(socket, Config::SOCKET_READ_TIMEOUT);

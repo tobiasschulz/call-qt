@@ -16,7 +16,8 @@
 
 #include "contact.h"
 
-class Config: public QObject {
+class Config: public QObject
+{
 Q_OBJECT
 
 public:

@@ -9,7 +9,8 @@
 
 static const int MaxBufferSize = 1024;
 
-class ServerConnection: public Connection {
+class ServerConnection: public Connection
+{
 Q_OBJECT
 
 public:

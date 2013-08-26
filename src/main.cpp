@@ -9,11 +9,13 @@
 #include "dnscache.h"
 #include "config.h"
 
-void messageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg) {
+void messageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg)
+{
 	SystemUtil::instance()->messageOutput(type, context, msg);
 }
 
-int main(int argv, char** args) {
+int main(int argv, char** args)
+{
 	QCoreApplication::setOrganizationName("Tobias Schulz");
 	QCoreApplication::setOrganizationDomain("tobias-schulz.eu");
 	QCoreApplication::setApplicationName("Call Qt");

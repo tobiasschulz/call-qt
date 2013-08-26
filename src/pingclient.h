@@ -1,11 +1,12 @@
-#ifndef STATUSCONNECTION_H
-#define STATUSCONNECTION_H
+#ifndef PINGCLIENT_H
+#define PINGCLIENT_H
 
 #include <QObject>
 
 #include "connection.h"
 
-class PingClient: public QObject, public Id {
+class PingClient: public QObject, public Id
+{
 Q_OBJECT
 
 public:
@@ -23,4 +24,4 @@ private:
 	Connection* m_connection;
 };
 
-#endif // STATUSCONNECTION_H
+#endif // PINGCLIENT_H

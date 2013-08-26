@@ -14,7 +14,8 @@
 
 #include "log.h"
 
-class SystemUtil: public QObject {
+class SystemUtil: public QObject
+{
 Q_OBJECT
 
 public:

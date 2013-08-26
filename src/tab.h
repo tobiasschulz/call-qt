@@ -7,7 +7,8 @@
 
 #include "log.h"
 
-class Tab: public QWidget, public Id {
+class Tab: public QWidget, public Id
+{
 Q_OBJECT
 
 public:

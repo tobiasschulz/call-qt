@@ -5,14 +5,17 @@
 #include "networkutil.h"
 
 Connection::Connection(Type type, QObject* parent)
-		: QObject(parent), m_socket(0), m_host(), m_contact(Contact::INVALID_CONTACT), m_headers(0), m_type(type), m_description(
-				"?"), m_connecttimer(this), m_readtimer(this) {
+		: QObject(parent), m_socket(0), m_host(), m_contact(Contact::INVALID_CONTACT), m_headers(0),
+			m_type(type), m_description("?"), m_connecttimer(this), m_readtimer(this)
+{
 }
-QString Connection::id() const {
+QString Connection::id() const
+{
 	return "Connection<" + m_description + ">";
 }
 
-void Connection::connect(QTcpSocket* socket) {
+void Connection::connect(QTcpSocket* socket)
+{
 	m_host = Host(socket->peerAddress(), socket->peerPort());
 	m_description = Log::print(socket);
 	log.debug("connect(QTcpSocket*)");
@@ -20,7 +23,8 @@ void Connection::connect(QTcpSocket* socket) {
 	// set socket
 	setSocket(socket);
 }
-void Connection::connect(Host host) {
+void Connection::connect(Host host)
+{
 	m_host = host;
 	m_description = Log::print(host);
 	log.debug("connect(QHostAddress, quint16)");
@@ -36,7 +40,8 @@ void Connection::connect(Host host) {
 	m_connecttimer.start(Config::SOCKET_CONNECT_TIMEOUT);
 }
 
-void Connection::setSocket(QTcpSocket* socket) {
+void Connection::setSocket(QTcpSocket* socket)
+{
 	this->m_socket = socket;
 
 	QObject::connect(this, &Connection::close, m_socket, &QTcpSocket::abort);
@@ -52,25 +57,29 @@ void Connection::setSocket(QTcpSocket* socket) {
 	}
 }
 
-void Connection::onConnectTimeout() {
+void Connection::onConnectTimeout()
+{
 	m_socket->abort();
 	m_socket->close();
 	log.debug("connectFailed(Connect Timeout)");
 	emit connectFailed("Connect Timeout", m_host);
 	emit hostOffline(m_host);
 }
-void Connection::onReadTimeout() {
+void Connection::onReadTimeout()
+{
 	m_socket->abort();
 	m_socket->close();
 	log.debug("socketError(Read Timeout)");
 	emit socketError("Read Timeout", m_host);
 }
 
-bool Connection::isConnected() {
+bool Connection::isConnected() const
+{
 	return m_socket->state() == QAbstractSocket::ConnectedState;
 }
 
-void Connection::onReadyRead() {
+void Connection::onReadyRead()
+{
 	if (m_readtimer.isActive()) {
 		m_readtimer.start(Config::SOCKET_READ_TIMEOUT);
 	}
@@ -78,7 +87,8 @@ void Connection::onReadyRead() {
 	emit readyRead();
 }
 
-void Connection::onConnected() {
+void Connection::onConnected()
+{
 	m_connecttimer.stop();
 	log.debug("onConnected()");
 
@@ -93,22 +103,33 @@ void Connection::onConnected() {
 
 	QHostAddress host = m_socket->peerAddress();
 	quint16 port = m_socket->peerPort();
+	m_host = Host(host, port);
 	QString user = m_headers->value("user", Contact::INVALID_USER);
-
-	m_contact = Contact(user, host, port);
+	m_contact = Contact(user, m_host);
 	emit contactFound(m_contact);
 
 	emit connected();
 	emit hostOnline(m_host);
 }
 
-void Connection::onDisconnected() {
+Host Connection::host() const
+{
+	return m_host;
+}
+Contact Connection::contact() const
+{
+	return m_contact;
+}
+
+void Connection::onDisconnected()
+{
 	m_readtimer.stop();
 	log.debug("onDisconnected()");
 	emit disconnected();
 }
 
-void Connection::onError(QAbstractSocket::SocketError err) {
+void Connection::onError(QAbstractSocket::SocketError err)
+{
 	QString errString = m_socket->errorString();
 	log.debug("Connection::onError(%1)", errString);
 	m_socket->abort();

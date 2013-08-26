@@ -16,7 +16,8 @@
 
 #include "connection.h"
 
-class NetworkUtil: public QObject {
+class NetworkUtil: public QObject
+{
 Q_OBJECT
 
 public:

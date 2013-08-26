@@ -12,7 +12,8 @@
 #include "networkutil.h"
 
 template<typename T>
-QStringList serializeList(QList<T> list) {
+QStringList serializeList(QList<T> list)
+{
 	QStringList list2;
 	foreach (T obj, list)
 	{
@@ -22,7 +23,8 @@ QStringList serializeList(QList<T> list) {
 }
 
 template<typename T>
-QList<T> deserializeList(QStringList list) {
+QList<T> deserializeList(QStringList list)
+{
 	QList<T> list2;
 	foreach (QString str, list)
 	{
@@ -34,10 +36,12 @@ QList<T> deserializeList(QStringList list) {
 }
 
 ContactScanner::ContactScanner(QObject* parent)
-		: QThread(parent), m_connections(), m_unknownhosts(), m_knownhosts(), m_hosts_mutex() {
+		: QThread(parent), m_connections(), m_unknownhosts(), m_knownhosts(), m_hosts_mutex()
+{
 }
 
-void ContactScanner::increasePriority(Host host) {
+void ContactScanner::increasePriority(Host host)
+{
 	m_hosts_mutex.lock();
 	if (m_unknownhosts.contains(host))
 		m_unknownhosts.removeAll(host);
@@ -50,16 +54,20 @@ void ContactScanner::increasePriority(Host host) {
 	settings.setValue("contacts/known-hosts", serializeList(m_knownhosts));
 }
 
-QString ContactScanner::id() const {
+QString ContactScanner::id() const
+{
 	return "ContactScanner";
 }
 
-void ContactScanner::run() {
+void ContactScanner::run()
+{
 	m_unknownhosts << Config::hosts_to_contact();
-	QObject::connect(ContactList::instance(), &ContactList::hostOnline, this, &ContactScanner::increasePriority);
+	QObject::connect(ContactList::instance(), &ContactList::hostOnline, this,
+			&ContactScanner::increasePriority);
 
 	QSettings settings;
-	m_knownhosts = deserializeList<Host>(settings.value("contacts/known-hosts", QStringList()).toStringList());
+	m_knownhosts = deserializeList<Host>(
+			settings.value("contacts/known-hosts", QStringList()).toStringList());
 	foreach (const Host& host, m_knownhosts)
 	{
 		log.debug("known host: %1", Log::print(host));
@@ -74,11 +82,13 @@ void ContactScanner::run() {
 	exec();
 }
 
-void ContactScanner::scanSoon() {
+void ContactScanner::scanSoon()
+{
 	QTimer::singleShot(500, this, SLOT(scanNow()));
 }
 
-void ContactScanner::scanNow() {
+void ContactScanner::scanNow()
+{
 	log.debug("scan()");
 
 	foreach (const Host & host, m_knownhosts)
@@ -104,6 +114,7 @@ void ContactScanner::scanNow() {
 	}
 }
 
-void ContactScanner::onDisplayError(QAbstractSocket::SocketError error) {
+void ContactScanner::onDisplayError(QAbstractSocket::SocketError error)
+{
 	log.debug("onDisplayError(%s)", Q(error));
 }

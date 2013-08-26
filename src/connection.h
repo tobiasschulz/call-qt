@@ -9,11 +9,13 @@
 #include "contact.h"
 #include "log.h"
 
-class Connection: public QObject, public Id {
+class Connection: public QObject, public Id
+{
 Q_OBJECT
 
 public:
-	enum Type {
+	enum Type
+	{
 		STATUS, SERVER, CALL, CHAT, PING
 	};
 
@@ -24,7 +26,9 @@ public:
 
 	virtual QString id() const;
 
-	bool isConnected();
+	bool isConnected() const;
+	Host host() const;
+	Contact contact() const;
 
 signals:
 	void contactFound(Contact);

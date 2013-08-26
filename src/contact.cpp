@@ -15,16 +15,20 @@ const QString Contact::INVALID_USER("nobody");
 const Host Contact::INVALID_HOST;
 
 Host::Host(QHostAddress address, quint16 port, QObject* parent)
-		: QObject(parent), m_address(address), m_address_valid(true), m_hostname(), m_hostname_valid(false), m_port(
-				port) {
+		: QObject(parent), m_address(address), m_address_valid(true), m_hostname(), m_hostname_valid(false),
+			m_port(port)
+{
 	QObject::connect(this, &Host::lookup, DnsCache::instance(), &DnsCache::lookup);
 	QObject::connect(DnsCache::instance(), &DnsCache::lookedUp, this, &Host::lookedUp);
 	lookupHostname();
 }
 Host::Host(QString hostname, quint16 port, QObject* parent)
-		: QObject(parent), m_address(), m_address_valid(false), m_hostname(), m_hostname_valid(false), m_port(port) {
+		: QObject(parent), m_address(), m_address_valid(false), m_hostname(), m_hostname_valid(false),
+			m_port(port)
+{
 	QHostAddress address(hostname);
-	if (address.protocol() == QAbstractSocket::IPv4Protocol || address.protocol() == QAbstractSocket::IPv6Protocol) {
+	if (address.protocol() == QAbstractSocket::IPv4Protocol
+			|| address.protocol() == QAbstractSocket::IPv6Protocol) {
 		m_address = address;
 		m_address_valid = true;
 		log.debug("Valid IPv4 address.");
@@ -37,10 +41,12 @@ Host::Host(QString hostname, quint16 port, QObject* parent)
 	}
 }
 Host::Host(QObject * parent)
-		: QObject(parent), m_address(), m_address_valid(true), m_hostname(), m_hostname_valid(true), m_port(0) {
+		: QObject(parent), m_address(), m_address_valid(true), m_hostname(), m_hostname_valid(true), m_port(0)
+{
 }
 Host::Host(const Host& other)
-		: QObject(other.parent()), m_address(), m_address_valid(), m_hostname(), m_hostname_valid(), m_port(0) {
+		: QObject(other.parent()), m_address(), m_address_valid(), m_hostname(), m_hostname_valid(), m_port(0)
+{
 	m_address = QHostAddress(other.m_address);
 	m_hostname = QString(other.m_hostname);
 	m_port = other.m_port;
@@ -54,7 +60,8 @@ Host::Host(const Host& other)
 	}
 }
 
-Host& Host::operator=(const Host& other) {
+Host& Host::operator=(const Host& other)
+{
 	m_address = QHostAddress(other.m_address);
 	m_hostname = QString(other.m_hostname);
 	m_port = other.m_port;
@@ -68,12 +75,14 @@ Host& Host::operator=(const Host& other) {
 	}
 	return *this;
 }
-bool Host::operator==(const Host& other) const {
-	return ((m_address_valid && m_address == other.m_address) || (m_hostname_valid && m_hostname == other.m_hostname))
-			&& m_port == other.m_port;
+bool Host::operator==(const Host& other) const
+{
+	return ((m_address_valid && m_address == other.m_address)
+			|| (m_hostname_valid && m_hostname == other.m_hostname)) && m_port == other.m_port;
 }
 
-QHostAddress Host::address() const {
+QHostAddress Host::address() const
+{
 	static bool inHere = false;
 	if (!m_address_valid && !inHere) {
 		inHere = true;
@@ -84,7 +93,8 @@ QHostAddress Host::address() const {
 	}
 	return m_address;
 }
-QHostAddress Host::address() {
+QHostAddress Host::address()
+{
 	if (!m_address_valid) {
 		QHostInfo info = DnsCache::instance()->forceLookup(m_hostname);
 		lookedUp(info);
@@ -92,16 +102,19 @@ QHostAddress Host::address() {
 	}
 	return m_address;
 }
-QString Host::hostname() const {
+QString Host::hostname() const
+{
 	if (!m_hostname_valid) {
 		return m_address.toString();
 	}
 	return m_hostname.isEmpty() ? m_address.toString() : m_hostname;
 }
-quint16 Host::port() const {
+quint16 Host::port() const
+{
 	return m_port;
 }
-void Host::lookedUp(QHostInfo info) {
+void Host::lookedUp(QHostInfo info)
+{
 	if (m_address == INVALID_ADDRESS) {
 		if (info.addresses().size() != 0) {
 			m_address = info.addresses().first();
@@ -116,12 +129,14 @@ void Host::lookedUp(QHostInfo info) {
 		log.debug("lookup not needed; %1 = %2", m_hostname, m_address.toString());
 	}
 }
-void Host::lookupAddress() {
+void Host::lookupAddress()
+{
 	m_address = INVALID_ADDRESS;
 	m_address_valid = false;
 	emit lookup(m_hostname);
 }
-void Host::lookupHostname() {
+void Host::lookupHostname()
+{
 	m_hostname = INVALID_HOSTNAME;
 	m_hostname_valid = false;
 	emit lookup(m_address.toString());
@@ -129,76 +144,94 @@ void Host::lookupHostname() {
 	//m_hostname = NetworkUtil::parseAddress(m_address);
 }
 
-QString Host::toString() const {
+QString Host::toString() const
+{
 	if (m_port == Config::DEFAULT_PORT)
 		return hostname();
 	else
 		return hostname() + ":" + QString::number(m_port);
 }
-QString Host::id() const {
+QString Host::id() const
+{
 	return "Host<" + m_address.toString() + ":" + QString::number(m_port) + ">";
 }
 
 Contact::Contact(QString user, QHostAddress host, quint16 port, QObject* parent)
-		: QObject(parent), m_user(user), m_host(host, port) {
+		: QObject(parent), m_user(user), m_host(host, port)
+{
 }
 Contact::Contact(QString user, Host host, QObject* parent)
-		: QObject(parent), m_user(user), m_host(host) {
+		: QObject(parent), m_user(user), m_host(host)
+{
 }
 Contact::Contact(QObject * parent)
-		: QObject(parent), m_user(), m_host() {
+		: QObject(parent), m_user(), m_host()
+{
 }
 Contact::Contact(const Contact& other)
-		: QObject(other.parent()) { //, m_user(other.m_user), m_host(other.m_host), m_port(other.m_port) {
+		: QObject(other.parent())
+{ //, m_user(other.m_user), m_host(other.m_host), m_port(other.m_port) {
 	m_user = other.m_user;
 	m_host = other.m_host;
 }
 
-Contact& Contact::operator=(const Contact& other) {
+Contact& Contact::operator=(const Contact& other)
+{
 	m_user = QString(other.m_user);
 	m_host = Host(other.m_host);
 	return *this;
 }
-bool Contact::operator==(const Contact& other) const {
+bool Contact::operator==(const Contact& other) const
+{
 	return m_user == other.m_user && m_host == other.m_host;
 }
 
-QString Contact::user() const {
+QString Contact::user() const
+{
 	return m_user;
 }
-Host Contact::host() const {
+Host Contact::host() const
+{
 	return m_host;
 }
-QHostAddress Contact::address() const {
+QHostAddress Contact::address() const
+{
 	return m_host.address();
 }
-QString Contact::hostname() const {
+QString Contact::hostname() const
+{
 	return m_host.hostname();
 }
-quint16 Contact::port() const {
+quint16 Contact::port() const
+{
 	return m_host.port();
 }
 
-QString Contact::toString() const {
+QString Contact::toString() const
+{
 	return m_user + "@" + m_host.toString();
 	if (m_host.port() == Config::DEFAULT_PORT)
 		return m_user + "@" + hostname();
 	else
 		return m_user + "@" + hostname() + ":" + QString::number(m_host.port());
 }
-QString Contact::id() const {
+QString Contact::id() const
+{
 	return "Contact<" + m_user + "@" + m_host.id() + ">";
 }
 
-bool compareContacts(const Contact& left, const Contact& right) {
+bool compareContacts(const Contact& left, const Contact& right)
+{
 	return left.id() < right.id();
 }
 
-QDataStream& operator<<(QDataStream& out, const Host& myObj) {
+QDataStream& operator<<(QDataStream& out, const Host& myObj)
+{
 	out << QString("Host") << myObj.address() << myObj.hostname() << quint32(myObj.port());
 	return out;
 }
-QDataStream & operator>>(QDataStream & in, Host & myObj) {
+QDataStream & operator>>(QDataStream & in, Host & myObj)
+{
 	QHostAddress address;
 	QString hostname;
 	quint32 port;
@@ -219,11 +252,13 @@ QDataStream & operator>>(QDataStream & in, Host & myObj) {
 	return in;
 }
 
-QDataStream& operator<<(QDataStream& out, const Contact& myObj) {
+QDataStream& operator<<(QDataStream& out, const Contact& myObj)
+{
 	out << QString("Contact") << myObj.user() << myObj.host();
 	return out;
 }
-QDataStream & operator>>(QDataStream & in, Contact & myObj) {
+QDataStream & operator>>(QDataStream & in, Contact & myObj)
+{
 	QString user;
 	Host host;
 	QString type;
@@ -238,7 +273,8 @@ QDataStream & operator>>(QDataStream & in, Contact & myObj) {
 	return in;
 }
 
-void fromId(QString _str, Host& obj) {
+void fromId(QString _str, Host& obj)
+{
 	if (_str.startsWith("Host<") && _str.endsWith(">")) {
 		QString str = _str.mid(5);
 		str = str.left(str.size() - 1);
@@ -252,7 +288,8 @@ void fromId(QString _str, Host& obj) {
 	qDebug() << "[fromId]:" << "deserialization failed:" << _str;
 	obj = Contact::INVALID_HOST;
 }
-void fromId(QString _str, Contact& obj) {
+void fromId(QString _str, Contact& obj)
+{
 	if (_str.startsWith("Contact<") && _str.endsWith(">")) {
 		QString str = _str.mid(8);
 		str = str.left(str.size() - 1);

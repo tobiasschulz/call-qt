@@ -4,7 +4,8 @@
 #include "config.h"
 
 ContactModel::ContactModel(QObject* parent)
-		: QAbstractItemModel(parent), m_scanner(0) {
+		: QAbstractItemModel(parent), m_scanner(0)
+{
 
 	ContactList* m_contactlist = ContactList::instance();
 	QObject::connect(m_contactlist, &ContactList::beginInsertItems, this, &ContactModel::beginInsertItems);
@@ -19,25 +20,30 @@ ContactModel::ContactModel(QObject* parent)
 	m_scanner->start();
 }
 
-int ContactModel::rowCount(const QModelIndex& parent) const {
+int ContactModel::rowCount(const QModelIndex& parent) const
+{
 	return !parent.isValid() ? ContactList::instance()->size() : 0;
 }
 
-int ContactModel::columnCount(const QModelIndex& parent) const {
+int ContactModel::columnCount(const QModelIndex& parent) const
+{
 	return !parent.isValid() ? 1 : 0;
 }
 
-QModelIndex ContactModel::index(int row, int column, const QModelIndex& parent) const {
-	return !parent.isValid() && row >= 0 && row < rowCount(parent) && column >= 0 && column < columnCount(parent) ?
-			createIndex(row, column) : QModelIndex();
+QModelIndex ContactModel::index(int row, int column, const QModelIndex& parent) const
+{
+	return !parent.isValid() && row >= 0 && row < rowCount(parent) && column >= 0
+			&& column < columnCount(parent) ? createIndex(row, column) : QModelIndex();
 }
 
-QModelIndex ContactModel::parent(const QModelIndex& child) const {
+QModelIndex ContactModel::parent(const QModelIndex& child) const
+{
 	Q_UNUSED(child);
 	return QModelIndex();
 }
 
-QVariant ContactModel::data(const QModelIndex& index, int role) const {
+QVariant ContactModel::data(const QModelIndex& index, int role) const
+{
 	if (index.isValid() && index.row() < ContactList::instance()->size()) {
 		const Contact& contact = ContactList::instance()->getContact(index.row());
 
@@ -58,7 +64,8 @@ QVariant ContactModel::data(const QModelIndex& index, int role) const {
 	}
 }
 
-const Contact& ContactModel::getContact(const QModelIndex& index) const {
+const Contact& ContactModel::getContact(const QModelIndex& index) const
+{
 	if (index.isValid()) {
 		if (index.row() < ContactList::instance()->size()) {
 			const Contact& contact = ContactList::instance()->getContact(index.row());
@@ -71,7 +78,8 @@ const Contact& ContactModel::getContact(const QModelIndex& index) const {
 	}
 }
 
-bool ContactModel::setData(const QModelIndex& index, const QVariant& value, int role) {
+bool ContactModel::setData(const QModelIndex& index, const QVariant& value, int role)
+{
 	Q_UNUSED(index);
 	Q_UNUSED(value);
 	Q_UNUSED(role);
@@ -81,29 +89,35 @@ bool ContactModel::setData(const QModelIndex& index, const QVariant& value, int 
 	return false;
 }
 
-void ContactModel::onResetContacts() {
+void ContactModel::onResetContacts()
+{
 	emit resetContacts();
 }
 
-void ContactModel::beginInsertItems(int start, int end) {
+void ContactModel::beginInsertItems(int start, int end)
+{
 	// m_data.clear();
 	beginInsertRows(QModelIndex(), start, end);
 }
 
-void ContactModel::endInsertItems() {
+void ContactModel::endInsertItems()
+{
 	endInsertRows();
 }
 
-void ContactModel::beginRemoveItems(int start, int end) {
+void ContactModel::beginRemoveItems(int start, int end)
+{
 	// m_data.clear();
 	beginRemoveRows(QModelIndex(), start, end);
 }
 
-void ContactModel::endRemoveItems() {
+void ContactModel::endRemoveItems()
+{
 	endInsertRows();
 }
 
-void ContactModel::changeItems(int start, int end) {
+void ContactModel::changeItems(int start, int end)
+{
 	// m_data.clear();
 	emit dataChanged(index(start, 0), index(end, columnCount(QModelIndex())));
 }

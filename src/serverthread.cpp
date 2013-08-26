@@ -9,10 +9,12 @@
 #include "server.h"
 
 ServerThread::ServerThread(QObject *parent)
-		: QThread(parent) {
+		: QThread(parent)
+{
 }
 
-void ServerThread::run() {
+void ServerThread::run()
+{
 	Server server;
 	server.start();
 

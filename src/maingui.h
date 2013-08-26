@@ -10,11 +10,13 @@
 #include "log.h"
 #include "terminal.h"
 
-namespace Ui {
+namespace Ui
+{
 class Main;
 }
 
-class Main: public QMainWindow, public Id {
+class Main: public QMainWindow, public Id
+{
 Q_OBJECT
 
 public:

@@ -6,11 +6,13 @@
 
 #include "tab.h"
 
-namespace Ui {
+namespace Ui
+{
 class Terminal;
 }
 
-class Terminal: public Tab {
+class Terminal: public Tab
+{
 Q_OBJECT
 
 public:

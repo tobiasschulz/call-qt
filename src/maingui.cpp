@@ -9,7 +9,8 @@
 #include "config.h"
 
 Main::Main(QWidget* parent)
-		: QMainWindow(parent), ui(new Ui::Main), m_contactmodel(0), m_tabhash(), m_terminal(0) {
+		: QMainWindow(parent), ui(new Ui::Main), m_contactmodel(0), m_tabhash(), m_terminal(0)
+{
 
 	ui->setupUi(this);
 
@@ -36,7 +37,8 @@ Main::Main(QWidget* parent)
 	ui->actionShowTerminal->setChecked(showTerminal);
 
 	// menu
-	QObject::connect(ui->actionReloadContacts, &QAction::triggered, m_contactmodel, &ContactModel::resetContacts);
+	QObject::connect(ui->actionReloadContacts, &QAction::triggered, m_contactmodel,
+			&ContactModel::resetContacts);
 	QObject::connect(ui->actionAbout, &QAction::triggered, this, &Main::onAbout);
 	QObject::connect(ui->actionAboutQt, &QAction::triggered, this, &Main::onAboutQt);
 
@@ -45,16 +47,19 @@ Main::Main(QWidget* parent)
 	onTabChanged(ui->tabs->currentIndex());
 }
 
-QString Main::id() const {
+QString Main::id() const
+{
 	return "Main";
 }
 
-void Main::show() {
+void Main::show()
+{
 	QMainWindow::show();
 	emit shown();
 }
 
-void Main::onShowTerminalToggled(bool checked) {
+void Main::onShowTerminalToggled(bool checked)
+{
 	if (checked) {
 		openTab(m_terminal);
 	} else {
@@ -64,21 +69,25 @@ void Main::onShowTerminalToggled(bool checked) {
 	settings.setValue("window/show-terminal", checked);
 }
 
-void Main::resizeEvent(QResizeEvent* event) {
+void Main::resizeEvent(QResizeEvent* event)
+{
 	QMainWindow::resizeEvent(event);
 	QSettings settings;
 	settings.setValue("window/size", event->size());
 }
 
-void Main::onAbout() {
+void Main::onAbout()
+{
 	QMessageBox::about(this, "About", "Version " + QCoreApplication::applicationVersion());
 }
 
-void Main::onAboutQt() {
+void Main::onAboutQt()
+{
 	QMessageBox::aboutQt(this, "About Qt");
 }
 
-void Main::addTab(Tab* widget) {
+void Main::addTab(Tab* widget)
+{
 	setUpdatesEnabled(false);
 	if (widget) {
 		int index = ui->tabs->indexOf(widget);
@@ -90,13 +99,15 @@ void Main::addTab(Tab* widget) {
 	setUpdatesEnabled(true);
 }
 
-void Main::openTab(const QString& tabname) {
+void Main::openTab(const QString& tabname)
+{
 	if (m_tabhash.contains(tabname)) {
 		openTab(m_tabhash[tabname]);
 	}
 }
 
-void Main::openTab(Tab* widget) {
+void Main::openTab(Tab* widget)
+{
 	setUpdatesEnabled(false);
 	if (!m_tabhash.contains(widget->tabname())) {
 		addTab(widget);
@@ -114,7 +125,8 @@ void Main::openTab(Tab* widget) {
 	setUpdatesEnabled(true);
 }
 
-void Main::closeTab(const QString& tabname) {
+void Main::closeTab(const QString& tabname)
+{
 	if (m_tabhash.contains(tabname)) {
 		log.debug("close tab <tabname=%1>...", tabname);
 		closeTab(m_tabhash[tabname]);
@@ -123,7 +135,8 @@ void Main::closeTab(const QString& tabname) {
 	}
 }
 
-void Main::closeTab(Tab* widget) {
+void Main::closeTab(Tab* widget)
+{
 	setUpdatesEnabled(false);
 	int index = ui->tabs->indexOf(widget);
 	if (index != -1) {
@@ -135,7 +148,8 @@ void Main::closeTab(Tab* widget) {
 	setUpdatesEnabled(true);
 }
 
-void Main::onTabChanged(int index) {
+void Main::onTabChanged(int index)
+{
 	if (index != -1) {
 		QWidget* widget = ui->tabs->widget(index);
 		if (widget) {
@@ -146,7 +160,8 @@ void Main::onTabChanged(int index) {
 	}
 }
 
-void Main::onContactSelected(const QModelIndex & index) {
+void Main::onContactSelected(const QModelIndex & index)
+{
 	Contact contact(m_contactmodel->getContact(index));
 	Chat* chattab = Chat::instance(contact);
 	log.debug("selected contact: %1 (tab: %2)", contact.id(), chattab->id());
@@ -154,6 +169,7 @@ void Main::onContactSelected(const QModelIndex & index) {
 	openTab(chattab);
 }
 
-Main::~Main() {
+Main::~Main()
+{
 	delete ui;
 }

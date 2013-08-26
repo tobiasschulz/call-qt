@@ -15,10 +15,12 @@
 #define APP_BUILD "unknown"
 #endif
 
-QString Config::version() {
+QString Config::version()
+{
 	return APP_VERSION;
 }
 
-QString Config::build() {
+QString Config::build()
+{
 	return APP_BUILD;
 }

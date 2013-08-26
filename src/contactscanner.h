@@ -11,7 +11,8 @@
 class ContactList;
 class PingClient;
 
-class ContactScanner: public QThread, public Id {
+class ContactScanner: public QThread, public Id
+{
 Q_OBJECT
 public:
 	explicit ContactScanner(QObject* parent = 0);

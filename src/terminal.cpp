@@ -7,21 +7,25 @@ const QString Terminal::BEFORE_MESSAGE = "<div style='font-family: monospace; fo
 const QString Terminal::AFTER_MESSAGE = "</div>";
 
 Terminal::Terminal(QWidget *parent)
-		: Tab("Terminal", Config::icon("console"), parent), ui(new Ui::Terminal) {
+		: Tab("Terminal", Config::icon("console"), parent), ui(new Ui::Terminal)
+{
 
 	ui->setupUi(this);
 	QObject::connect(SystemUtil::instance(), &SystemUtil::newLogMessage, this, &Terminal::printLogMessage);
 	QObject::connect(this, SIGNAL(focus()), this, SLOT(setFocus()));
 }
 
-Terminal::~Terminal() {
+Terminal::~Terminal()
+{
 	delete ui;
 }
 
-void Terminal::printLogMessage(QString message) {
+void Terminal::printLogMessage(QString message)
+{
 	ui->terminal->append(BEFORE_MESSAGE + message.trimmed().toHtmlEscaped() + AFTER_MESSAGE);
 }
 
-QString Terminal::id() const {
+QString Terminal::id() const
+{
 	return "Terminal";
 }

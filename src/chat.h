@@ -7,11 +7,13 @@
 #include "tab.h"
 #include "contact.h"
 
-namespace Ui {
+namespace Ui
+{
 class Chat;
 }
 
-class Chat: public Tab {
+class Chat: public Tab
+{
 Q_OBJECT
 
 public:
@@ -19,11 +21,11 @@ public:
 	~Chat();
 
 	QString tabname() const;
-
 	QString id() const;
 
 public slots:
 	void printLogMessage(QString message);
+	void onSendMessage();
 
 private:
 	explicit Chat(const Contact& contact, QWidget *parent = 0);

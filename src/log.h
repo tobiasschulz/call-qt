@@ -18,7 +18,8 @@
 class Log;
 class Id;
 
-class Log: public QObject {
+class Log: public QObject
+{
 Q_OBJECT
 
 public:
@@ -34,7 +35,8 @@ public:
 	void debug(QString format, QVariant arg1, QVariant arg2) const;
 	void debug(QString format, QVariant arg1, QVariant arg2, QVariant arg3) const;
 	void debug(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVariant arg4) const;
-	void debug(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVariant arg4, QVariant arg5) const;
+	void debug(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVariant arg4,
+			QVariant arg5) const;
 	void debug(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVariant arg4, QVariant arg5,
 			QVariant arg6) const;
 
@@ -42,10 +44,12 @@ private:
 	Id* m_id;
 };
 
-class Id {
+class Id
+{
 public:
 	Id();
-	virtual ~Id() {
+	virtual ~Id()
+	{
 	}
 
 	virtual QString id() const;
@@ -55,7 +59,8 @@ protected:
 	Log log;
 };
 
-class StaticId: public Id {
+class StaticId: public Id
+{
 public:
 	StaticId(QString id);
 	QString id() const;
@@ -64,7 +69,8 @@ private:
 	QString m_id;
 };
 
-class InvalidId: public Id {
+class InvalidId: public Id
+{
 public:
 	InvalidId();
 	QString id() const;

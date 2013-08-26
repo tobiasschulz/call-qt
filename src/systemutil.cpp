@@ -22,10 +22,12 @@ const Log SystemUtil::log(new StaticId("SystemUtil"));
 SystemUtil* SystemUtil::m_instance;
 
 SystemUtil::SystemUtil(QObject *parent)
-		: QObject(parent) {
+		: QObject(parent)
+{
 }
 
-SystemUtil* SystemUtil::instance() {
+SystemUtil* SystemUtil::instance()
+{
 	static QMutex mutex;
 	if (!m_instance) {
 		mutex.lock();
@@ -36,7 +38,8 @@ SystemUtil* SystemUtil::instance() {
 	return m_instance;
 }
 
-QString SystemUtil::getUserName() {
+QString SystemUtil::getUserName()
+{
 	QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
 	if (env.contains("USER")) {
 		return env.value("USER");
@@ -47,7 +50,8 @@ QString SystemUtil::getUserName() {
 	}
 }
 
-void SystemUtil::messageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg) {
+void SystemUtil::messageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg)
+{
 	QString str = createLogMessage(type, context, msg);
 
 	std::cout << str.toLocal8Bit().constData();
@@ -64,7 +68,8 @@ void SystemUtil::messageOutput(QtMsgType type, const QMessageLogContext &context
 	emit newLogMessage(str);
 }
 
-QString SystemUtil::createLogMessage(QtMsgType type, const QMessageLogContext &context, const QString &msg) {
+QString SystemUtil::createLogMessage(QtMsgType type, const QMessageLogContext &context, const QString &msg)
+{
 	QString str;
 	str += QDate::currentDate().toString("yyyy-MM-dd ");
 	str += QTime::currentTime().toString("hh:mm:ss ");

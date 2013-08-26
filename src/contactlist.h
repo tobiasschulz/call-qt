@@ -8,7 +8,8 @@
 
 #include "contact.h"
 
-class ContactList: public QObject, public Id {
+class ContactList: public QObject, public Id
+{
 Q_OBJECT
 public:
 	static ContactList* instance();

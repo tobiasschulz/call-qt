@@ -7,7 +7,8 @@
 
 #include "log.h"
 
-class Host: public QObject, public Id {
+class Host: public QObject, public Id
+{
 Q_OBJECT
 public:
 	explicit Host(QHostAddress address, quint16 port, QObject* parent = 0);
@@ -46,7 +47,8 @@ private:
 	quint16 m_port;
 };
 
-class Contact: public QObject, public Id {
+class Contact: public QObject, public Id
+{
 Q_OBJECT
 public:
 	explicit Contact(QString username, QHostAddress host, quint16 port, QObject* parent = 0);

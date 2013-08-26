@@ -9,7 +9,8 @@
 class ContactList;
 class ContactScanner;
 
-class ContactModel: public QAbstractItemModel {
+class ContactModel: public QAbstractItemModel
+{
 Q_OBJECT
 public:
 	explicit ContactModel(QObject* parent = 0);
