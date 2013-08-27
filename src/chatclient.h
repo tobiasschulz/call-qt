@@ -15,10 +15,10 @@ Q_OBJECT
 public:
 	ChatClient(const Contact& contact, QObject* parent = 0);
 	ChatClient(const Host& host, QObject* parent = 0);
-	ChatClient(Connection* host, QObject* parent = 0);
 	QString id() const;
 	QString print(PrintFormat format = PRINT_NAME_AND_DATA) const;
 
+	void connect(Connection* host);
 	void checkForErrors();
 
 signals:

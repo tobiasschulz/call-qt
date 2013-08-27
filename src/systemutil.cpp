@@ -11,6 +11,7 @@
 #include <QTime>
 #include <QDate>
 #include <QMutex>
+#include <QMutexLocker>
 
 #include <iostream>
 using namespace std;
@@ -24,6 +25,8 @@ SystemUtil* SystemUtil::m_instance;
 SystemUtil::SystemUtil(QObject *parent)
 		: QObject(parent)
 {
+	QObject::connect(this, &SystemUtil::newLogMessage, this, &SystemUtil::printLogMessageConsole);
+	QObject::connect(this, &SystemUtil::newLogMessage, this, &SystemUtil::printLogMessageFile);
 }
 
 SystemUtil* SystemUtil::instance()
@@ -50,13 +53,22 @@ QString SystemUtil::getUserName()
 	}
 }
 
-void SystemUtil::messageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg)
+void SystemUtil::messageOutput(QtMsgType type, const QMessageLogContext &context, const QString& msg)
 {
 	QString str = createLogMessage(type, context, msg);
 
-	std::cout << str.toLocal8Bit().constData();
+	emit newLogMessage(str);
+}
+void SystemUtil::printLogMessageConsole(const QString& str)
+{
+	std::cout << str.toLocal8Bit().constData() << std::flush;
 
+}
+void SystemUtil::printLogMessageFile(const QString& str)
+{
 	static QTextStream* out = 0;
+	static QMutex mutex;
+	QMutexLocker locker(&mutex);
 	if (out == 0) {
 		QFile file("debug.log");
 		file.open(QIODevice::Append | QIODevice::Text);
@@ -64,8 +76,6 @@ void SystemUtil::messageOutput(QtMsgType type, const QMessageLogContext &context
 	}
 	*out << str;
 	out->flush();
-
-	emit newLogMessage(str);
 }
 
 QString SystemUtil::createLogMessage(QtMsgType type, const QMessageLogContext &context, const QString &msg)

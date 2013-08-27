@@ -11,6 +11,8 @@
 #include "connection.h"
 #include "contactlist.h"
 #include "chatclient.h"
+#include "chat.h"
+#include "maingui.h"
 
 ServerRequest::ServerRequest(int socketDescriptor, Thread* thread, QObject *parent)
 		: QObject(parent), socketDescriptor(socketDescriptor), m_socket(0), m_connection(0), m_thread(thread)
@@ -83,6 +85,22 @@ void ServerRequest::onStatusConnection()
 void ServerRequest::onChatConnection()
 {
 	log.debug("onChatConnection()");
-	ChatClient* chatclient = new ChatClient(m_connection, m_connection);
+	QObject::connect(Main::instance(), &Main::contactTabAvailable, this, &ServerRequest::onChatTabOpened);
+	QObject::connect(this, &ServerRequest::openContactTab, Main::instance(), &Main::openContactTab);
+	emit openContactTab(m_connection->contact());
 }
 
+void ServerRequest::onChatTabOpened(Contact contact)
+{
+	if (contact == m_connection->contact()) {
+		log.debug("onChatTabOpened: %1 (my contact)", Log::print(contact));
+
+		ChatClient* chatclient = new ChatClient(m_connection->contact(), m_connection);
+		Chat* chattab = Chat::instance(m_connection->contact());
+		QObject::connect(chatclient, &ChatClient::receivedMessage, chattab, &Chat::onReceivedMessage);
+		chatclient->connect(m_connection);
+
+	} else {
+		log.debug("onChatTabOpened: %1 (other contact)", Log::print(contact));
+	}
+}

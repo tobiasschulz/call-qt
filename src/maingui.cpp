@@ -8,6 +8,8 @@
 #include "chat.h"
 #include "config.h"
 
+Main* Main::m_instance;
+
 Main::Main(QWidget* parent)
 		: QMainWindow(parent), ui(new Ui::Main), m_contactmodel(0), m_tabhash(), m_terminal(0)
 {
@@ -37,14 +39,24 @@ Main::Main(QWidget* parent)
 	ui->actionShowTerminal->setChecked(showTerminal);
 
 	// menu
-	QObject::connect(ui->actionReloadContacts, &QAction::triggered, m_contactmodel,
-			&ContactModel::resetContacts);
+	QObject::connect(ui->actionReloadContacts, &QAction::triggered, m_contactmodel, &ContactModel::resetContacts);
 	QObject::connect(ui->actionAbout, &QAction::triggered, this, &Main::onAbout);
 	QObject::connect(ui->actionAboutQt, &QAction::triggered, this, &Main::onAboutQt);
 
 	// tab focus
 	QObject::connect(ui->tabs, &QTabWidget::currentChanged, this, &Main::onTabChanged);
 	onTabChanged(ui->tabs->currentIndex());
+}
+Main* Main::instance()
+{
+	static QMutex mutex;
+	if (!m_instance) {
+		mutex.lock();
+		if (!m_instance)
+			m_instance = new Main;
+		mutex.unlock();
+	}
+	return m_instance;
 }
 
 QString Main::id() const
@@ -167,6 +179,14 @@ void Main::onContactSelected(const QModelIndex & index)
 	log.debug("selected contact: %1 (tab: %2)", contact.id(), chattab->id());
 	addTab(chattab);
 	openTab(chattab);
+}
+void Main::openContactTab(Contact contact)
+{
+	Chat* chattab = Chat::instance(contact);
+	log.debug("open contact tab: %1 (tab: %2)", contact.id(), chattab->id());
+	addTab(chattab);
+	openTab(chattab);
+	emit contactTabAvailable(contact);
 }
 
 Main::~Main()

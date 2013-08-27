@@ -40,9 +40,8 @@ int main(int argv, char** args)
 	serverthread.start();
 	Server server;
 	server.moveToThread(&serverthread);
-	Main main;
-//	QObject::connect(&main, &Main::shown, &server, &ServerThread::start);
-	QObject::connect(&main, SIGNAL(shown()), &server, SLOT(start()));
-	main.show();
+	Main* main = Main::instance();
+	QObject::connect(main, SIGNAL(shown()), &server, SLOT(start()));
+	main->show();
 	return app.exec();
 }

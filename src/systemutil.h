@@ -28,6 +28,8 @@ signals:
 	void newLogMessage(QString message);
 
 public slots:
+	void printLogMessageConsole(const QString& str);
+	void printLogMessageFile(const QString& str);
 
 private:
 	explicit SystemUtil(QObject *parent = 0);

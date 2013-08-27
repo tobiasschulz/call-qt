@@ -20,7 +20,7 @@ class Main: public QMainWindow, public ID
 Q_OBJECT
 
 public:
-	explicit Main(QWidget* parent = 0);
+	static Main* instance();
 	~Main();
 	QString id() const;
 
@@ -29,6 +29,7 @@ public:
 
 signals:
 	void shown();
+	void contactTabAvailable(Contact contact);
 
 public slots:
 	void addTab(Tab* widget);
@@ -39,12 +40,20 @@ public slots:
 	void onTabChanged(int index);
 
 	void onContactSelected(const QModelIndex & index);
+	void openContactTab(Contact contact);
 
 	void onShowTerminalToggled(bool checked);
 	void onAbout();
 	void onAboutQt();
 
 private:
+	explicit Main(QWidget* parent = 0);
+	Main(const Main &); // hide copy constructor
+	Main& operator=(const Main &); // hide assign op
+	// we leave just the declarations, so the compiler will warn us
+	// if we try to use those two functions by accident
+	static Main* m_instance;
+
 	Ui::Main* ui;
 	ContactModel* m_contactmodel;
 	QHash<QString, Tab*> m_tabhash;

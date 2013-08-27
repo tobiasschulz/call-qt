@@ -30,10 +30,12 @@ public:
 
 signals:
 	void error(QTcpSocket::SocketError socketError);
+	void openContactTab(Contact contact);
 
 public slots:
-	void onConnected();
 	void start();
+	void onConnected();
+	void onChatTabOpened(Contact contact);
 
 private:
 	int socketDescriptor;

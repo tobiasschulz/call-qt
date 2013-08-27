@@ -12,18 +12,12 @@ ChatClient::ChatClient(const Host& host, QObject* parent)
 		: QObject(parent), m_host(host), m_contact(), m_connection(0), m_messagequeue(), m_messagequeue_mutex()
 {
 }
-ChatClient::ChatClient(Connection* connection, QObject* parent)
-		: QObject(parent), m_host(connection->host()), m_contact(connection->contact()), m_connection(0),
-			m_messagequeue(), m_messagequeue_mutex()
-{
-	setConnection(connection);
-	if (connection->isConnected() && connection->socket()->canReadLine()) {
-		QTimer::singleShot(0, this, SLOT(onReadyRead()));
-	}
-}
+
 QString ChatClient::id() const
 {
-	return "ChatClient<" + (m_contact != Contact::INVALID_CONTACT ? m_contact.id() : m_host.id()) + ">";
+	return "ChatClient<"
+			+ (m_contact != Contact::INVALID_CONTACT ?
+					m_contact.id() : (m_host != Host::INVALID_HOST ? m_host.id() : "?")) + ">";
 }
 QString ChatClient::print(PrintFormat format) const
 {
@@ -39,10 +33,22 @@ QString ChatClient::print(PrintFormat format) const
 		return "ChatClient " + data;
 }
 
+void ChatClient::connect(Connection* connection)
+{
+	if (m_connection) {
+		m_connection->close();
+		delete m_connection;
+	}
+	setConnection(connection);
+	if (connection->isConnected() && connection->socket()->canReadLine()) {
+		QTimer::singleShot(0, this, SLOT(onReadyRead()));
+	}
+}
+
 void ChatClient::connect()
 {
 	if (m_connection) {
-		if (!m_connection->isConnected()) {
+		if (m_connection->isConnected()) {
 			return;
 		}
 		delete m_connection;
