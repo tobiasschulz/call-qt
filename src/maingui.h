@@ -40,7 +40,9 @@ public slots:
 	void onTabChanged(int index);
 
 	void onContactSelected(const QModelIndex & index);
+	void addContactTab(Contact contact);
 	void openContactTab(Contact contact);
+	void onTabIconChanged();
 
 	void onShowTerminalToggled(bool checked);
 	void onAbout();

@@ -23,13 +23,18 @@ public:
 	~Chat();
 
 	QString tabname() const;
+	QIcon tabicon() const;
 	QString id() const;
+
+	Contact contact() const;
 
 public slots:
 	void printChatMessage(QString message);
 	void onSendMessage();
 	void onSendMessageFailed(QString message);
 	void onReceivedMessage(QString message);
+	void onHostOnline(Host host);
+	void onHostOffline(Host host);
 
 private:
 	explicit Chat(const Contact& contact, QWidget *parent = 0);

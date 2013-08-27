@@ -26,6 +26,10 @@ function debug() {
 	gdb -ex run ./call-qt
 }
 
+function profile() {
+	valgrind --leak-check=full ./call-qt
+}
+
 function run() {
 	./call-qt
 }
@@ -37,7 +41,11 @@ function commit() {
 }
 
 
-if [ "x$1" = "xgdb" ] || [ "x$1" = "xdebug" ]
+if [ "x$1" = "xvalgrind" ] || [ "x$1" = "xprofile" ]
+then
+	newversion
+	compile && profile
+elif [ "x$1" = "xgdb" ] || [ "x$1" = "xdebug" ]
 then
 	newversion
 	compile && debug

@@ -59,12 +59,12 @@ void SystemUtil::messageOutput(QtMsgType type, const QMessageLogContext &context
 
 	emit newLogMessage(str);
 }
-void SystemUtil::printLogMessageConsole(const QString& str)
+void SystemUtil::printLogMessageConsole(QString str)
 {
 	std::cout << str.toLocal8Bit().constData() << std::flush;
 
 }
-void SystemUtil::printLogMessageFile(const QString& str)
+void SystemUtil::printLogMessageFile(QString str)
 {
 	static QTextStream* out = 0;
 	static QMutex mutex;

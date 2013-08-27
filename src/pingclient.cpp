@@ -18,7 +18,7 @@ QString PingClient::id() const
 void PingClient::ping()
 {
 	if (m_connection) {
-		if (!m_connection->isConnected()) {
+		if (m_connection->isConnected()) {
 			return;
 		}
 		delete m_connection;

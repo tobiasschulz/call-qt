@@ -4,6 +4,7 @@
 #include "chat.h"
 #include "ui_chat.h"
 #include "config.h"
+#include "contactlist.h"
 
 const QString Chat::BEFORE_MESSAGE = "<div style='font-family: monospace; font-size: 9pt;'>";
 const QString Chat::AFTER_MESSAGE = "</div>";
@@ -22,8 +23,7 @@ Chat* Chat::instance(const Contact& contact)
 }
 
 Chat::Chat(const Contact& contact, QWidget *parent)
-		: Tab("Chat", Config::icon("user-available"), parent), ui(new Ui::Chat), m_contact(contact), m_client(contact),
-			m_thread("ChatThread")
+		: Tab("Chat", QIcon(), parent), ui(new Ui::Chat), m_contact(contact), m_client(contact), m_thread("ChatThread")
 {
 	ui->setupUi(this);
 	m_thread.start();
@@ -38,11 +38,19 @@ Chat::Chat(const Contact& contact, QWidget *parent)
 	QObject::connect(&m_client, &ChatClient::receivedMessage, this, &Chat::onReceivedMessage);
 	QTimer::singleShot(0, ui->chatinput, SLOT(setFocus()));
 	QTimer::singleShot(0, &m_client, SLOT(connect()));
+	QObject::connect(ContactList::instance(), &ContactList::hostOnline, this, &Chat::onHostOnline);
+	QObject::connect(ContactList::instance(), &ContactList::hostOffline, this, &Chat::onHostOffline);
+
 }
 
 Chat::~Chat()
 {
 	delete ui;
+}
+
+Contact Chat::contact() const
+{
+	return m_contact;
 }
 
 void Chat::onSendMessage()
@@ -78,8 +86,25 @@ QString Chat::tabname() const
 {
 	return m_contact.toString();
 }
-
+QIcon Chat::tabicon() const
+{
+	return ContactList::instance()->isHostOnline(m_contact.host()) ?
+			Config::icon("user-available") : Config::icon("user-offline");
+}
 QString Chat::id() const
 {
 	return "Chat<" + m_contact.id() + ">";
+}
+
+void Chat::onHostOnline(Host host)
+{
+	if (m_contact.host() == host) {
+		emit tabIconChanged();
+	}
+}
+void Chat::onHostOffline(Host host)
+{
+	if (m_contact.host() == host) {
+		emit tabIconChanged();
+	}
 }

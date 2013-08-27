@@ -91,7 +91,7 @@ void ServerRequest::onChatConnection()
 {
 	log.debug("onChatConnection()");
 	QObject::connect(Main::instance(), &Main::contactTabAvailable, this, &ServerRequest::onChatTabOpened);
-	QObject::connect(this, &ServerRequest::openContactTab, Main::instance(), &Main::openContactTab);
+	QObject::connect(this, &ServerRequest::openContactTab, Main::instance(), &Main::addContactTab);
 	emit openContactTab(m_connection->contact());
 }
 

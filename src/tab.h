@@ -21,6 +21,7 @@ public:
 
 signals:
 	void focus();
+	void tabIconChanged();
 
 private:
 	const QString m_tabname;

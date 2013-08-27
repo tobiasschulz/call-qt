@@ -7,6 +7,7 @@
 #include "ui_maingui.h"
 #include "chat.h"
 #include "config.h"
+#include "contactlist.h"
 
 Main* Main::m_instance;
 
@@ -106,6 +107,7 @@ void Main::addTab(Tab* widget)
 		if (index == -1) {
 			m_tabhash[widget->tabname()] = widget;
 			ui->tabs->addTab(widget, widget->tabicon(), widget->tabname());
+			QObject::connect(widget, &Tab::tabIconChanged, this, &Main::onTabIconChanged, Qt::UniqueConnection);
 		}
 	}
 	setUpdatesEnabled(true);
@@ -128,9 +130,11 @@ void Main::openTab(Tab* widget)
 	int index = ui->tabs->indexOf(widget);
 	if (index == -1) {
 		index = ui->tabs->addTab(widget, widget->tabicon(), widget->tabname());
+		QObject::connect(widget, &Tab::tabIconChanged, this, &Main::onTabIconChanged, Qt::UniqueConnection);
 		ui->tabs->setCurrentIndex(index);
 	} else if (index == ui->tabs->currentIndex()) {
 		// already selected
+		emit widget->focus();
 	} else {
 		ui->tabs->setCurrentIndex(index);
 	}
@@ -175,18 +179,31 @@ void Main::onTabChanged(int index)
 void Main::onContactSelected(const QModelIndex & index)
 {
 	Contact contact(m_contactmodel->getContact(index));
+	addContactTab(contact);
+	openContactTab(contact);
+}
+void Main::addContactTab(Contact contact)
+{
 	Chat* chattab = Chat::instance(contact);
-	log.debug("selected contact: %1 (tab: %2)", contact.id(), chattab->id());
+	log.debug("add contact tab: %1 (tab: %2)", contact.id(), chattab->id());
 	addTab(chattab);
-	openTab(chattab);
+	emit contactTabAvailable(contact);
 }
 void Main::openContactTab(Contact contact)
 {
 	Chat* chattab = Chat::instance(contact);
 	log.debug("open contact tab: %1 (tab: %2)", contact.id(), chattab->id());
-	addTab(chattab);
 	openTab(chattab);
-	emit contactTabAvailable(contact);
+}
+
+void Main::onTabIconChanged()
+{
+	for (int i = 0; i < ui->tabs->count(); ++i) {
+		Tab* widget = qobject_cast<Tab*>(ui->tabs->widget(i));
+		if (widget) {
+			ui->tabs->setTabIcon(i, widget->tabicon());
+		}
+	}
 }
 
 Main::~Main()
