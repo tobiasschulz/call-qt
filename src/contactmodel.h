@@ -38,7 +38,7 @@ public slots:
 	void onResetContacts();
 
 private:
-	ContactScanner* m_scanner;
+
 };
 
 #endif // CONTACTMODEL_H

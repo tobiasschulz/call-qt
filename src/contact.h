@@ -7,7 +7,7 @@
 
 #include "log.h"
 
-class Host: public QObject, public Id
+class Host: public QObject, public ID
 {
 Q_OBJECT
 public:
@@ -17,27 +17,37 @@ public:
 	Host(const Host& other);
 	Host& operator=(const Host& other);
 	bool operator==(const Host& other) const;
+	bool operator!=(const Host& other) const;
 
 	QHostAddress address() const;
-	QHostAddress address();
 	QString hostname() const;
 	quint16 port() const;
 
-	QString toString() const;
+	enum PortFormat
+	{
+		SHOW_PORT_ALWAYS, SHOW_PORT_ONLY_UNUSUAL
+	};
+	enum HostFormat
+	{
+		SHOW_ADDRESS, SHOW_HOSTNAME
+	};
+	QString toString(PortFormat showPort = SHOW_PORT_ONLY_UNUSUAL, HostFormat hostFormat = SHOW_HOSTNAME) const;
 	QString id() const;
+	QString print() const;
+	QString serialize() const;
+	static Host deserialize(QString str);
 
 	void lookupHostname();
 	void lookupAddress();
 
+	static const Host INVALID_HOST;
 	static const QHostAddress INVALID_ADDRESS;
 	static const QString INVALID_HOSTNAME;
 	static const quint16 INVALID_PORT;
 
 signals:
-	void lookup(QString hostname);
 
 public slots:
-	void lookedUp(QHostInfo);
 
 private:
 	QHostAddress m_address;
@@ -47,7 +57,7 @@ private:
 	quint16 m_port;
 };
 
-class Contact: public QObject, public Id
+class Contact: public QObject, public ID
 {
 Q_OBJECT
 public:
@@ -57,6 +67,7 @@ public:
 	Contact(const Contact& other);
 	Contact& operator=(const Contact& other);
 	bool operator==(const Contact& other) const;
+	bool operator!=(const Contact& other) const;
 
 	QString user() const;
 	Host host() const;
@@ -66,10 +77,12 @@ public:
 
 	QString toString() const;
 	QString id() const;
+	QString print() const;
+	QString serialize() const;
+	static Contact deserialize(QString str);
 
 	static const Contact INVALID_CONTACT;
 	static const QString INVALID_USER;
-	static const Host INVALID_HOST;
 
 signals:
 

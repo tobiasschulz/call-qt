@@ -5,20 +5,20 @@
 #include "networkutil.h"
 
 Connection::Connection(Type type, QObject* parent)
-		: QObject(parent), m_socket(0), m_host(), m_contact(Contact::INVALID_CONTACT), m_headers(0),
-			m_type(type), m_description("?"), m_connecttimer(this), m_readtimer(this)
+		: QObject(parent), m_socket(0), m_host(), m_contact(Contact::INVALID_CONTACT), m_headers(0), m_type(type),
+			m_description("?"), m_connecttimer(this), m_readtimer(this)
 {
 }
 QString Connection::id() const
 {
-	return "Connection<" + m_description + ">";
+	return "Connection " + m_description + "";
 }
 
 void Connection::connect(QTcpSocket* socket)
 {
 	m_host = Host(socket->peerAddress(), socket->peerPort());
 	m_description = Log::print(socket);
-	log.debug("connect(QTcpSocket*)");
+	log.debug("connect(socket = %1)", Log::print(socket));
 
 	// set socket
 	setSocket(socket);
@@ -26,8 +26,8 @@ void Connection::connect(QTcpSocket* socket)
 void Connection::connect(Host host)
 {
 	m_host = host;
-	m_description = Log::print(host);
-	log.debug("connect(QHostAddress, quint16)");
+	m_description = host.toString(Host::SHOW_PORT_ALWAYS, Host::SHOW_ADDRESS);
+	log.debug("connect(host = %1)", Log::print(host));
 
 	// connect
 	setSocket(new QTcpSocket(this));
@@ -99,7 +99,7 @@ void Connection::onConnected()
 	m_readtimer.start(Config::SOCKET_READ_TIMEOUT);
 
 	NetworkUtil::instance()->writeHeaders(m_socket, m_type);
-	m_headers = NetworkUtil::instance()->readHeaders(m_socket);
+	m_headers = NetworkUtil::instance()->readHeaders(m_socket, &log);
 
 	QHostAddress host = m_socket->peerAddress();
 	quint16 port = m_socket->peerPort();
@@ -119,6 +119,11 @@ Host Connection::host() const
 Contact Connection::contact() const
 {
 	return m_contact;
+}
+
+QTcpSocket* Connection::socket() const
+{
+	return m_socket;
 }
 
 void Connection::onDisconnected()

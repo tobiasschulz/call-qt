@@ -2,7 +2,8 @@
 #include <QtWidgets>
 #include <QSettings>
 
-#include "serverthread.h"
+#include "thread.h"
+#include "server.h"
 #include "maingui.h"
 #include "contact.h"
 #include "systemutil.h"
@@ -34,8 +35,11 @@ int main(int argv, char** args)
 	qDebug() << "starting app";
 
 	QApplication app(argv, args);
-	DnsCache::instance()->start();
-	ServerThread server;
+	DnsCache::instance();
+	Thread serverthread("ServerThread");
+	serverthread.start();
+	Server server;
+	server.moveToThread(&serverthread);
 	Main main;
 //	QObject::connect(&main, &Main::shown, &server, &ServerThread::start);
 	QObject::connect(&main, SIGNAL(shown()), &server, SLOT(start()));

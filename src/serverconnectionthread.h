@@ -11,7 +11,9 @@
 #include <QThread>
 #include <QTcpSocket>
 
-class ServerConnectionThread: public QThread
+#include "thread.h"
+
+class ServerConnectionThread: public Thread
 {
 Q_OBJECT
 

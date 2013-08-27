@@ -26,7 +26,7 @@ public:
 	QHostAddress parseHostname(QString);
 	QString parseAddress(QHostAddress);
 	void writeHeaders(QTcpSocket* socket, Connection::Type type);
-	QHash<QString, QString>* readHeaders(QTcpSocket* socket);
+	QHash<QString, QString>* readHeaders(QTcpSocket* socket, const Log* logger = &log);
 	bool writeLine(QTcpSocket* socket, QVariant str1);
 	bool writeLine(QTcpSocket* socket, QVariant str1, QVariant str2);
 	bool writeLine(QTcpSocket* socket, QVariant str1, QVariant str2, QVariant str3);

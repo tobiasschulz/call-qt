@@ -27,7 +27,7 @@
 #include <unistd.h>
 #endif
 
-const Log NetworkUtil::log(new StaticId("NetworkUtil"));
+const Log NetworkUtil::log(new StaticID("NetworkUtil"));
 NetworkUtil* NetworkUtil::m_instance;
 
 NetworkUtil::NetworkUtil(QObject *parent)
@@ -51,8 +51,7 @@ QHostAddress NetworkUtil::parseHostname(QString hostname)
 {
 	QHostAddress hostaddr(hostname);
 
-	if (hostaddr.protocol() == QAbstractSocket::IPv4Protocol
-			|| hostaddr.protocol() == QAbstractSocket::IPv6Protocol) {
+	if (hostaddr.protocol() == QAbstractSocket::IPv4Protocol || hostaddr.protocol() == QAbstractSocket::IPv6Protocol) {
 		log.debug("Valid IPv4 address.");
 
 	} else {
@@ -94,7 +93,7 @@ void NetworkUtil::writeHeaders(QTcpSocket* socket, Connection::Type type)
 
 }
 
-QHash<QString, QString>* NetworkUtil::readHeaders(QTcpSocket* socket)
+QHash<QString, QString>* NetworkUtil::readHeaders(QTcpSocket* socket, const Log* logger)
 {
 	QHash<QString, QString>* headers = new QHash<QString, QString>;
 
@@ -107,13 +106,13 @@ QHash<QString, QString>* NetworkUtil::readHeaders(QTcpSocket* socket)
 				QString key = line.left(index).trimmed().toLower();
 				QString value = line.mid(index + 1).trimmed();
 				(*headers)[key] = value;
-				log.debug("Header: %1=%2", key, value);
+				logger->debug("Header: %1=%2", key, value);
 
 			} else if (line.isEmpty()) {
 				return headers;
 
 			} else {
-				log.debug("Invalid header: '%1'", line);
+				logger->debug("Invalid header: '%1'", line);
 			}
 		}
 	}
@@ -173,29 +172,27 @@ void NetworkUtil::setSocketTimeout(QTcpSocket* socket, int sec)
 	if (-1 == setsockopt(socket->socketDescriptor(), SOL_SOCKET, SO_RCVTIMEO, (char *) &timeout, sizeof(timeout))) {
 		log.debug("Failed: set SO_RCVTIMEO to %1 (windows)", sec);
 	} else {
-		log.debug("Success: set SO_RCVTIMEO to %1 (windows)", sec);
+		//log.debug("Success: set SO_RCVTIMEO to %1 (windows)", sec);
 	}
 	if (-1 == setsockopt(socket->socketDescriptor(), SOL_SOCKET, SO_SNDTIMEO, (char *) &timeout, sizeof(timeout))) {
 		log.debug("Failed: set SO_SNDTIMEO to %1 (windows)", sec);
 	} else {
-		log.debug("Success: set SO_SNDTIMEO to %1 (windows)", sec);
+		//log.debug("Success: set SO_SNDTIMEO to %1 (windows)", sec);
 	}
 #else
 	struct timeval timeout;
 	timeout.tv_sec = sec;
 	timeout.tv_usec = 0;
 
-	if (setsockopt(socket->socketDescriptor(), SOL_SOCKET, SO_RCVTIMEO, (char *) &timeout, sizeof(timeout))
-			< 0) {
+	if (setsockopt(socket->socketDescriptor(), SOL_SOCKET, SO_RCVTIMEO, (char *) &timeout, sizeof(timeout)) < 0) {
 		log.debug("Failed: set SO_RCVTIMEO to %1 (linux)", sec);
 	} else {
-		log.debug("Success: set SO_RCVTIMEO to %1 (linux)", sec);
+		//log.debug("Success: set SO_RCVTIMEO to %1 (linux)", sec);
 	}
-	if (setsockopt(socket->socketDescriptor(), SOL_SOCKET, SO_SNDTIMEO, (char *) &timeout, sizeof(timeout))
-			< 0) {
+	if (setsockopt(socket->socketDescriptor(), SOL_SOCKET, SO_SNDTIMEO, (char *) &timeout, sizeof(timeout)) < 0) {
 		log.debug("Failed: set SO_SNDTIMEO to %1 (linux)", sec);
 	} else {
-		log.debug("Success: set SO_SNDTIMEO to %1 (linux)", sec);
+		//log.debug("Success: set SO_SNDTIMEO to %1 (linux)", sec);
 	}
 #endif
 }

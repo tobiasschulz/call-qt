@@ -6,6 +6,8 @@
 
 #include "tab.h"
 #include "contact.h"
+#include "chatclient.h"
+#include "thread.h"
 
 namespace Ui
 {
@@ -24,8 +26,9 @@ public:
 	QString id() const;
 
 public slots:
-	void printLogMessage(QString message);
+	void printChatMessage(QString message);
 	void onSendMessage();
+	void onSendMessageFailed(QString message);
 
 private:
 	explicit Chat(const Contact& contact, QWidget *parent = 0);
@@ -33,6 +36,8 @@ private:
 
 	Ui::Chat *ui;
 	Contact m_contact;
+	ChatClient m_client;
+	Thread m_thread;
 
 	static const QString BEFORE_MESSAGE;
 	static const QString AFTER_MESSAGE;

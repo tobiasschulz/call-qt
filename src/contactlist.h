@@ -8,7 +8,7 @@
 
 #include "contact.h"
 
-class ContactList: public QObject, public Id
+class ContactList: public QObject, public ID
 {
 Q_OBJECT
 public:

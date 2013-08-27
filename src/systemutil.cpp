@@ -18,7 +18,7 @@ using namespace std;
 #include "systemutil.h"
 #include "config.h"
 
-const Log SystemUtil::log(new StaticId("SystemUtil"));
+const Log SystemUtil::log(new StaticID("SystemUtil"));
 SystemUtil* SystemUtil::m_instance;
 
 SystemUtil::SystemUtil(QObject *parent)

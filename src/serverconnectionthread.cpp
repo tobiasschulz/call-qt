@@ -10,7 +10,7 @@
 #include "contactlist.h"
 
 ServerConnectionThread::ServerConnectionThread(int socketDescriptor, QObject *parent)
-		: QThread(parent), socketDescriptor(socketDescriptor)
+		: Thread("Server", parent), socketDescriptor(socketDescriptor)
 {
 }
 
@@ -23,8 +23,7 @@ void ServerConnectionThread::run()
 	}
 	Connection* connection = new Connection(Connection::SERVER, socket);
 	connection->connect(socket);
-	QObject::connect(connection, &Connection::contactFound, ContactList::instance(),
-			&ContactList::addContact);
+	QObject::connect(connection, &Connection::contactFound, ContactList::instance(), &ContactList::addContact);
 	QObject::connect(connection, &Connection::disconnected, this, &ServerConnectionThread::quit);
 	QObject::connect(this, &ServerConnectionThread::finished, socket, &QTcpSocket::close);
 

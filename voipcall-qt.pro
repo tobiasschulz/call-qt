@@ -9,48 +9,51 @@ QT       += core gui widgets multimedia network
 TARGET = call-qt
 TEMPLATE = app
 
-SOURCES += src/main.cpp \
+SOURCES += \
+	src/chatclient.cpp \
+    src/chat.cpp \
+    src/config.cpp \
+    src/connection.cpp \
+    src/contact.cpp \
+    src/contactlist.cpp \
+    src/contactmodel.cpp \
+    src/contactscanner.cpp \
+    src/dnscache.cpp \
+    src/log.cpp \
+	src/main.cpp \
     src/maingui.cpp \
-    src/server.cpp \
+    src/networkutil.cpp \
+    src/pingclient.cpp \
     src/serverconnection.cpp \
     src/serverconnectionthread.cpp \
-    src/serverthread.cpp \
-    src/pingclient.cpp \
-    src/contact.cpp \
-    src/connection.cpp \
-    src/contactmodel.cpp \
-    src/contactlist.cpp \
-    src/contactscanner.cpp \
-    src/config.cpp \
-    src/networkutil.cpp \
-    src/dnscache.cpp \
+    src/server.cpp \
     src/systemutil.cpp \
-    src/log.cpp \
     src/tab.cpp \
     src/terminal.cpp \
-    src/chat.cpp \
+    src/thread.cpp \
     src/version.cpp
 
 HEADERS  += \
-    src/maingui.h \
-    src/server.h \
+    src/chatclient.h \
+    src/chat.h \
+    src/config.h \
+    src/connection.h \
+    src/contact.h \
+    src/contactlist.h \
+    src/contactmodel.h \
+    src/contactscanner.h \
+    src/dnscache.h \
+    src/log.h \
+	src/maingui.h \
+    src/networkutil.h \
+    src/pingclient.h \
     src/serverconnection.h \
     src/serverconnectionthread.h \
-    src/serverthread.h \
-    src/pingclient.h \
-    src/contact.h \
-    src/connection.h \
-    src/contactmodel.h \
-    src/contactlist.h \
-    src/contactscanner.h \
-    src/config.h \
-    src/networkutil.h \
-    src/dnscache.h \
+    src/server.h \
     src/systemutil.h \
-    src/log.h \
     src/tab.h \
     src/terminal.h \
-    src/chat.h
+    src/thread.h
 
 FORMS    += \
     ui/maingui.ui \
@@ -73,7 +76,7 @@ Debug:RCC_DIR = build/debug/.rcc
 Debug:UI_DIR = build/debug/.ui
 
 # The application version                                                          ## VERSION
-VERSION = 0.129                                                                      ## VERSION
+VERSION = 0.207                                                                      ## VERSION
 # Define the preprocessor macro to get the application version in our application. ## VERSION
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"                                           ## VERSION
-DEFINES += APP_BUILD=\\\"129\\\"                                             ## VERSION
+DEFINES += APP_BUILD=\\\"207\\\"                                             ## VERSION

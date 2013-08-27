@@ -5,7 +5,7 @@
 
 #include "connection.h"
 
-class PingClient: public QObject, public Id
+class PingClient: public QObject, public ID
 {
 Q_OBJECT
 

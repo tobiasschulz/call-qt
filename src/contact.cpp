@@ -6,37 +6,33 @@
 #include "dnscache.h"
 #include "config.h"
 
+const Host Host::INVALID_HOST;
 const QHostAddress Host::INVALID_ADDRESS;
 const QString Host::INVALID_HOSTNAME;
 const quint16 Host::INVALID_PORT = 0;
 
 const Contact Contact::INVALID_CONTACT;
 const QString Contact::INVALID_USER("nobody");
-const Host Contact::INVALID_HOST;
 
 Host::Host(QHostAddress address, quint16 port, QObject* parent)
 		: QObject(parent), m_address(address), m_address_valid(true), m_hostname(), m_hostname_valid(false),
 			m_port(port)
 {
-	QObject::connect(this, &Host::lookup, DnsCache::instance(), &DnsCache::lookup);
-	QObject::connect(DnsCache::instance(), &DnsCache::lookedUp, this, &Host::lookedUp);
 	lookupHostname();
 }
 Host::Host(QString hostname, quint16 port, QObject* parent)
-		: QObject(parent), m_address(), m_address_valid(false), m_hostname(), m_hostname_valid(false),
-			m_port(port)
+		: QObject(parent), m_address(), m_address_valid(false), m_hostname(), m_hostname_valid(false), m_port(port)
 {
 	QHostAddress address(hostname);
-	if (address.protocol() == QAbstractSocket::IPv4Protocol
-			|| address.protocol() == QAbstractSocket::IPv6Protocol) {
+	if (address.protocol() == QAbstractSocket::IPv4Protocol || address.protocol() == QAbstractSocket::IPv6Protocol) {
 		m_address = address;
 		m_address_valid = true;
-		log.debug("Valid IPv4 address.");
+		//log.debug("Valid IPv4 address: %1", m_address.toString());
 		lookupHostname();
 	} else {
 		m_hostname = hostname;
 		m_hostname_valid = true;
-		log.debug("Got a hostname: %1", hostname);
+		//log.debug("Got a hostname: %1", hostname);
 		lookupAddress();
 	}
 }
@@ -77,29 +73,16 @@ Host& Host::operator=(const Host& other)
 }
 bool Host::operator==(const Host& other) const
 {
-	return ((m_address_valid && m_address == other.m_address)
-			|| (m_hostname_valid && m_hostname == other.m_hostname)) && m_port == other.m_port;
+	return ((m_address_valid && m_address == other.m_address) || (m_hostname_valid && m_hostname == other.m_hostname))
+			&& m_port == other.m_port;
+}
+bool Host::operator!=(const Host& other) const
+{
+	return !(*this == other);
 }
 
 QHostAddress Host::address() const
 {
-	static bool inHere = false;
-	if (!m_address_valid && !inHere) {
-		inHere = true;
-		QHostInfo info = DnsCache::instance()->forceLookup(m_hostname);
-		log.debug("Delayed lookup came too late...");
-		inHere = false;
-		return info.addresses().size() > 0 ? info.addresses().first() : m_address;
-	}
-	return m_address;
-}
-QHostAddress Host::address()
-{
-	if (!m_address_valid) {
-		QHostInfo info = DnsCache::instance()->forceLookup(m_hostname);
-		lookedUp(info);
-		log.debug("Delayed lookup came too late...");
-	}
 	return m_address;
 }
 QString Host::hostname() const
@@ -113,47 +96,69 @@ quint16 Host::port() const
 {
 	return m_port;
 }
-void Host::lookedUp(QHostInfo info)
-{
-	if (m_address == INVALID_ADDRESS) {
-		if (info.addresses().size() != 0) {
-			m_address = info.addresses().first();
-			log.debug("lookedUp(%1) = %2", m_hostname, m_address.toString());
-		} else {
-			log.debug("lookedUp(%1) failed! no address found!", m_hostname);
-		}
-	} else if (m_hostname == INVALID_HOSTNAME) {
-		m_hostname = info.hostName();
-		log.debug("lookedUp(%1) = %2", m_address.toString(), m_hostname);
-	} else {
-		log.debug("lookup not needed; %1 = %2", m_hostname, m_address.toString());
-	}
-}
 void Host::lookupAddress()
 {
-	m_address = INVALID_ADDRESS;
-	m_address_valid = false;
-	emit lookup(m_hostname);
+	QHostInfo info = DnsCache::instance()->forceLookup(m_hostname);
+	if (info.addresses().size() != 0) {
+		m_address = info.addresses().first();
+		m_address_valid = true;
+		//log.debug("lookupAddress(%1) = %2", m_hostname, m_address.toString());
+	} else {
+		m_address = INVALID_ADDRESS;
+		m_address_valid = false;
+		log.debug("lookupAddress(%1) failed! no address found!", m_hostname);
+	}
 }
 void Host::lookupHostname()
 {
-	m_hostname = INVALID_HOSTNAME;
-	m_hostname_valid = false;
-	emit lookup(m_address.toString());
-	//QHostInfo::lookupHost(m_address.toString(), this, SLOT(onLookupHostname(QHostInfo)));
-	//m_hostname = NetworkUtil::parseAddress(m_address);
+	QHostInfo info = DnsCache::instance()->forceLookup(m_address.toString());
+	if (info.hostName().size() > 0) {
+		m_hostname = info.hostName();
+		m_hostname_valid = true;
+		//log.debug("lookupAddress(%1) = %2", m_address.toString(), m_hostname);
+	} else {
+		m_hostname = INVALID_HOSTNAME;
+		m_hostname_valid = false;
+		log.debug("lookupAddress(%1) failed! no hostname found!", m_address.toString());
+	}
 }
 
-QString Host::toString() const
+QString Host::toString(PortFormat showPort, HostFormat hostFormat) const
 {
-	if (m_port == Config::DEFAULT_PORT)
-		return hostname();
+	QString formattedHost = hostFormat == SHOW_HOSTNAME ? hostname() : address().toString();
+	if (m_port == Config::DEFAULT_PORT && showPort == SHOW_PORT_ONLY_UNUSUAL)
+		return formattedHost;
 	else
-		return hostname() + ":" + QString::number(m_port);
+		return formattedHost + ":" + QString::number(m_port);
 }
 QString Host::id() const
 {
-	return "Host<" + m_address.toString() + ":" + QString::number(m_port) + ">";
+	return "Host<" + address().toString() + ":" + QString::number(m_port) + ">";
+}
+QString Host::print() const
+{
+	return "Host " + (m_address.toString().size() > 0 ? m_address.toString() : m_hostname) + ":"
+			+ QString::number(m_port) + "";
+}
+QString Host::serialize() const
+{
+	return "Host<" + address().toString() + ":" + QString::number(m_port) + ">";
+}
+Host Host::deserialize(QString _str)
+{
+	StaticID id("Host::fromId");
+	if (_str.startsWith("Host<") && _str.endsWith(">")) {
+		QString str = _str.mid(5);
+		str = str.left(str.size() - 1);
+		QStringList parts = str.split(":");
+		if (parts.size() == 2) {
+			Host obj = Host(QHostAddress(parts[0]), parts[1].toInt());
+			id.logger().debug("deserialization successful: %1 = %2", _str, Log::print(obj));
+			return obj;
+		}
+	}
+	id.logger().debug("deserialization failed: %1", _str);
+	return Host::INVALID_HOST;
 }
 
 Contact::Contact(QString user, QHostAddress host, quint16 port, QObject* parent)
@@ -184,6 +189,10 @@ Contact& Contact::operator=(const Contact& other)
 bool Contact::operator==(const Contact& other) const
 {
 	return m_user == other.m_user && m_host == other.m_host;
+}
+bool Contact::operator!=(const Contact& other) const
+{
+	return !(*this == other);
 }
 
 QString Contact::user() const
@@ -219,6 +228,31 @@ QString Contact::id() const
 {
 	return "Contact<" + m_user + "@" + m_host.id() + ">";
 }
+QString Contact::print() const
+{
+	return "Contact " + m_user + "@" + m_host.id();
+}
+QString Contact::serialize() const
+{
+	return "Contact<" + m_user + "@" + m_host.id() + ">";
+}
+Contact Contact::deserialize(QString _str)
+{
+	StaticID id("Contact::fromId");
+	if (_str.startsWith("Contact<") && _str.endsWith(">")) {
+		QString str = _str.mid(8);
+		str = str.left(str.size() - 1);
+		QStringList parts = str.split("@");
+		if (parts.size() == 2) {
+			Host host = Host::deserialize(parts[1]);
+			Contact obj = Contact(parts[0], host);
+			id.logger().debug("deserialization successful: %1 = %2", _str, Log::print(obj));
+			return obj;
+		}
+	}
+	id.logger().debug("deserialization failed: %1", _str);
+	return Contact::INVALID_CONTACT;
+}
 
 bool compareContacts(const Contact& left, const Contact& right)
 {
@@ -247,7 +281,7 @@ QDataStream & operator>>(QDataStream & in, Host & myObj)
 		}
 	} else {
 		qDebug() << "Error in deserialization of type Host: invalid type '" + type + "'!";
-		myObj = Contact::INVALID_HOST;
+		myObj = Host::INVALID_HOST;
 	}
 	return in;
 }
@@ -275,34 +309,11 @@ QDataStream & operator>>(QDataStream & in, Contact & myObj)
 
 void fromId(QString _str, Host& obj)
 {
-	if (_str.startsWith("Host<") && _str.endsWith(">")) {
-		QString str = _str.mid(5);
-		str = str.left(str.size() - 1);
-		QStringList parts = str.split(":");
-		if (parts.size() == 2) {
-			obj = Host(QHostAddress(parts[0]), parts[1].toInt());
-			qDebug() << "[fromId]:" << "deserialization successful:" << _str << "=" << Log::print(obj);
-			return;
-		}
-	}
-	qDebug() << "[fromId]:" << "deserialization failed:" << _str;
-	obj = Contact::INVALID_HOST;
+	obj = Host::deserialize(_str);
 }
+
 void fromId(QString _str, Contact& obj)
 {
-	if (_str.startsWith("Contact<") && _str.endsWith(">")) {
-		QString str = _str.mid(8);
-		str = str.left(str.size() - 1);
-		QStringList parts = str.split("@");
-		if (parts.size() == 2) {
-			Host host;
-			fromId(parts[1], host);
-			obj = Contact(parts[0], host);
-			qDebug() << "[fromId]:" << "deserialization successful:" << _str << "=" << Log::print(obj);
-			return;
-		}
-	}
-	qDebug() << "[fromId]:" << "deserialization failed:" << _str;
-	obj = Contact::INVALID_CONTACT;
+	obj = Contact::deserialize(_str);
 }
 

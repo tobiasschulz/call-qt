@@ -9,6 +9,7 @@
 #include <QTime>
 #include <QDate>
 #include <QHostAddress>
+#include <QThread>
 
 #include "log.h"
 #include "systemutil.h"
@@ -17,7 +18,20 @@
 #include <iostream>
 using namespace std;
 
-Log::Log(Id* id)
+#define PADDING_THREADNAME 12
+#define PADDING_ID 35
+
+QString fill(const QString& str, int size)
+{
+	return str + QString().fill(' ', (str.size() < size ? size - str.size() : 0));
+}
+
+QString threadname()
+{
+	return QThread::currentThread()->objectName();
+}
+
+Log::Log(ID* id)
 		: m_id(id)
 {
 }
@@ -26,80 +40,107 @@ QString Log::print(QTcpSocket* socket)
 {
 	return (QString("%1:%2").arg((socket)->localAddress().toString(), QString::number((socket)->localPort())));
 }
-QString Log::print(Id* id)
+QString Log::print(ID* id)
 {
 	return id->id();
 }
-QString Log::print(const Id& id)
+QString Log::print(const ID& id)
 {
 	return id.id();
 }
 
 void Log::debug(QString format) const
 {
-	qDebug("[%s]: %s", Q(m_id->id()), Q(format));
+	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
+	QString params(format);
+	qDebug("%s %s %s", Q(thread), Q(classid), Q(params));
 }
 void Log::debug(QString format, QVariant arg1) const
 {
-	qDebug("[%s]: %s", Q(m_id->id()), Q(format.arg(arg1.toString())));
+	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
+	QString params(format.arg(arg1.toString()));
+	qDebug("%s %s %s", Q(thread), Q(classid), Q(params));
 }
 void Log::debug(QString format, QVariant arg1, QVariant arg2) const
 {
-	qDebug("[%s]: %s", Q(m_id->id()), Q(format.arg(arg1.toString(), arg2.toString())));
+	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
+	QString params(format.arg(arg1.toString(), arg2.toString()));
+	qDebug("%s %s %s", Q(thread), Q(classid), Q(params));
 }
 void Log::debug(QString format, QVariant arg1, QVariant arg2, QVariant arg3) const
 {
-	qDebug("[%s]: %s", Q(m_id->id()), Q(format.arg(arg1.toString(), arg2.toString(), arg3.toString())));
+	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
+	QString params(format.arg(arg1.toString(), arg2.toString(), arg3.toString()));
+	qDebug("%s %s %s", Q(thread), Q(classid), Q(params));
 }
 void Log::debug(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVariant arg4) const
 {
-	qDebug(
-			"[%s]: %s", Q(m_id->id()), Q(format.arg(arg1.toString(), arg2.toString(), arg3.toString(), arg4.toString())));
+	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
+	QString params(format.arg(arg1.toString(), arg2.toString(), arg3.toString(), arg4.toString()));
+	qDebug("%s %s %s", Q(thread), Q(classid), Q(params));
 }
-void Log::debug(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVariant arg4,
-		QVariant arg5) const
+void Log::debug(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVariant arg4, QVariant arg5) const
 {
-	qDebug(
-			"[%s]: %s", Q(m_id->id()), Q(format.arg(arg1.toString(), arg2.toString(), arg3.toString(), arg4.toString(), arg5.toString())));
+	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
+	QString params(format.arg(arg1.toString(), arg2.toString(), arg3.toString(), arg4.toString(), arg5.toString()));
+	qDebug("%s %s %s", Q(thread), Q(classid), Q(params));
 }
 void Log::debug(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVariant arg4, QVariant arg5,
 		QVariant arg6) const
 {
-	qDebug(
-			"[%s]: %s", Q(m_id->id()), Q(format.arg(arg1.toString(), arg2.toString(), arg3.toString(), arg4.toString(), arg5.toString(), arg6.toString())));
+	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
+	QString params(
+			format.arg(arg1.toString(), arg2.toString(), arg3.toString(), arg4.toString(), arg5.toString(),
+					arg6.toString()));
+	qDebug("%s %s %s", Q(thread), Q(classid), Q(params));
 }
 
-Id::Id()
+ID::ID()
 		: log(this)
 {
 }
-QString Id::id() const
+QString ID::id() const
 {
 	return "This should be implemented!";
 }
-const Id& Id::fromId(QString str) const
+QString ID::serialize() const
 {
-	return InvalidId();
+	return id();
+}
+QString ID::print() const
+{
+	return id();
+}
+const Log& ID::logger() const
+{
+	return log;
 }
 
-StaticId::StaticId(QString id)
+StaticID::StaticID(QString id)
 		: m_id(id)
 {
 }
-QString StaticId::id() const
+QString StaticID::id() const
 {
 	return m_id;
 }
 
-InvalidId::InvalidId()
+InvalidID::InvalidID()
 {
 }
-QString InvalidId::id() const
+QString InvalidID::id() const
 {
 	return "invalid";
 }
 
-uint qHash(const Id& c)
+uint qHash(const ID& c)
 {
 	return qHash(c.id());
 }

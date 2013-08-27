@@ -1,10 +1,12 @@
+#include <QTimer>
+
 #include "contactmodel.h"
 #include "contactlist.h"
 #include "contactscanner.h"
 #include "config.h"
 
 ContactModel::ContactModel(QObject* parent)
-		: QAbstractItemModel(parent), m_scanner(0)
+		: QAbstractItemModel(parent)
 {
 
 	ContactList* m_contactlist = ContactList::instance();
@@ -14,10 +16,13 @@ ContactModel::ContactModel(QObject* parent)
 	QObject::connect(m_contactlist, &ContactList::endRemoveItems, this, &ContactModel::endRemoveItems);
 	QObject::connect(m_contactlist, &ContactList::changeItems, this, &ContactModel::changeItems);
 
-	m_scanner = new ContactScanner(this);
+	Thread* thread = new Thread("Contacts", this);
+	thread->start();
+	ContactScanner* scanner = new ContactScanner();
+	scanner->moveToThread(thread);
 	QObject::connect(this, &ContactModel::resetContacts, m_contactlist, &ContactList::onResetContacts);
-	QObject::connect(this, &ContactModel::resetContacts, m_scanner, &ContactScanner::scanSoon);
-	m_scanner->start();
+	QObject::connect(this, &ContactModel::resetContacts, scanner, &ContactScanner::scanSoon);
+	QTimer::singleShot(0, scanner, SLOT(start()));
 }
 
 int ContactModel::rowCount(const QModelIndex& parent) const
@@ -32,8 +37,8 @@ int ContactModel::columnCount(const QModelIndex& parent) const
 
 QModelIndex ContactModel::index(int row, int column, const QModelIndex& parent) const
 {
-	return !parent.isValid() && row >= 0 && row < rowCount(parent) && column >= 0
-			&& column < columnCount(parent) ? createIndex(row, column) : QModelIndex();
+	return !parent.isValid() && row >= 0 && row < rowCount(parent) && column >= 0 && column < columnCount(parent) ?
+			createIndex(row, column) : QModelIndex();
 }
 
 QModelIndex ContactModel::parent(const QModelIndex& child) const

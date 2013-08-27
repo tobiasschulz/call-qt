@@ -6,8 +6,9 @@
 #include <QMutex>
 
 #include "log.h"
+#include "thread.h"
 
-class DnsCache: public QThread, public Id
+class DnsCache: public QObject, public ID
 {
 Q_OBJECT
 public:
@@ -16,6 +17,8 @@ public:
 	QString id() const;
 
 	QHostInfo forceLookup(QString host);
+	bool isCached(QString host);
+	QHostInfo cachedLookup(QString host);
 
 signals:
 	void lookedUp(QHostInfo info);
@@ -32,7 +35,6 @@ private:
 	// if we try to use those two functions by accident
 	static DnsCache* m_instance;
 
-	void run();
 	QHash<QString, QHostInfo> m_hash;
 	QMutex m_mutex;
 };

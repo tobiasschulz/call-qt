@@ -17,7 +17,7 @@ QStringList serializeList(QList<T> list)
 	QStringList list2;
 	foreach (T obj, list)
 	{
-		list2.append(obj.id());
+		list2.append(obj.serialize());
 	}
 	return list2;
 }
@@ -36,22 +36,24 @@ QList<T> deserializeList(QStringList list)
 }
 
 ContactScanner::ContactScanner(QObject* parent)
-		: QThread(parent), m_connections(), m_unknownhosts(), m_knownhosts(), m_hosts_mutex()
+		: QObject(parent), m_connections(), m_unknownhosts(), m_knownhosts(), m_hosts_mutex()
 {
 }
 
 void ContactScanner::increasePriority(Host host)
 {
-	m_hosts_mutex.lock();
-	if (m_unknownhosts.contains(host))
-		m_unknownhosts.removeAll(host);
-	if (m_knownhosts.contains(host))
-		m_knownhosts.removeAll(host);
-	m_knownhosts.prepend(host);
-	m_hosts_mutex.unlock();
+	if (host != Host::INVALID_HOST) {
+		m_hosts_mutex.lock();
+		if (m_unknownhosts.contains(host))
+			m_unknownhosts.removeAll(host);
+		if (m_knownhosts.contains(host))
+			m_knownhosts.removeAll(host);
+		m_knownhosts.prepend(host);
+		m_hosts_mutex.unlock();
 
-	QSettings settings;
-	settings.setValue("contacts/known-hosts", serializeList(m_knownhosts));
+		QSettings settings;
+		settings.setValue("contacts/known-hosts", serializeList(m_knownhosts));
+	}
 }
 
 QString ContactScanner::id() const
@@ -59,15 +61,14 @@ QString ContactScanner::id() const
 	return "ContactScanner";
 }
 
-void ContactScanner::run()
+void ContactScanner::start()
 {
 	m_unknownhosts << Config::hosts_to_contact();
-	QObject::connect(ContactList::instance(), &ContactList::hostOnline, this,
-			&ContactScanner::increasePriority);
+	QObject::connect(ContactList::instance(), &ContactList::hostOnline, this, &ContactScanner::increasePriority);
 
 	QSettings settings;
-	m_knownhosts = deserializeList<Host>(
-			settings.value("contacts/known-hosts", QStringList()).toStringList());
+	m_knownhosts = deserializeList<Host>(settings.value("contacts/known-hosts", QStringList()).toStringList());
+	m_knownhosts.removeAll(Host::INVALID_HOST);
 	foreach (const Host& host, m_knownhosts)
 	{
 		log.debug("known host: %1", Log::print(host));
@@ -78,8 +79,6 @@ void ContactScanner::run()
 	QTimer *timer = new QTimer();
 	QObject::connect(timer, SIGNAL(timeout()), this, SLOT(scanNow()));
 	timer->start(Config::CONTACT_SCAN_INTERVAL);
-
-	exec();
 }
 
 void ContactScanner::scanSoon()
@@ -116,5 +115,5 @@ void ContactScanner::scanNow()
 
 void ContactScanner::onDisplayError(QAbstractSocket::SocketError error)
 {
-	log.debug("onDisplayError(%s)", Q(error));
+	log.debug("onDisplayError(%s)", qPrintable(error));
 }

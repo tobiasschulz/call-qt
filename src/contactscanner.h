@@ -6,12 +6,13 @@
 #include <QMutex>
 
 #include "contact.h"
+#include "thread.h"
 #include "log.h"
 
 class ContactList;
 class PingClient;
 
-class ContactScanner: public QThread, public Id
+class ContactScanner: public QObject, public ID
 {
 Q_OBJECT
 public:
@@ -21,6 +22,7 @@ public:
 signals:
 
 public slots:
+	void start();
 	void scanSoon();
 	void scanNow();
 	void increasePriority(Host host);
@@ -28,8 +30,6 @@ public slots:
 	void onDisplayError(QAbstractSocket::SocketError);
 
 private:
-	void run();
-
 	QHash<Host, PingClient *> m_connections;
 	QList<Host> m_unknownhosts;
 	QList<Host> m_knownhosts;

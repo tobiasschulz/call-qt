@@ -16,66 +16,67 @@
 #define Q(string) (qPrintable(string))
 
 class Log;
-class Id;
+class ID;
 
 class Log: public QObject
 {
 Q_OBJECT
 
 public:
-	Log(Id* id);
+	Log(ID* id);
 	//Log(Id* id, QObject* parent);
 
 	static QString print(QTcpSocket* socket);
-	static QString print(Id* id);
-	static QString print(const Id& id);
+	static QString print(ID* id);
+	static QString print(const ID& id);
 
 	void debug(QString format) const;
 	void debug(QString format, QVariant arg1) const;
 	void debug(QString format, QVariant arg1, QVariant arg2) const;
 	void debug(QString format, QVariant arg1, QVariant arg2, QVariant arg3) const;
 	void debug(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVariant arg4) const;
-	void debug(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVariant arg4,
-			QVariant arg5) const;
+	void debug(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVariant arg4, QVariant arg5) const;
 	void debug(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVariant arg4, QVariant arg5,
 			QVariant arg6) const;
 
 private:
-	Id* m_id;
+	ID* m_id;
 };
 
-class Id
+class ID
 {
 public:
-	Id();
-	virtual ~Id()
+	ID();
+	virtual ~ID()
 	{
 	}
 
 	virtual QString id() const;
-	virtual const Id& fromId(QString) const;
+	virtual QString print() const;
+	virtual QString serialize() const;
+	const Log& logger() const;
 
 protected:
 	Log log;
 };
 
-class StaticId: public Id
+class StaticID: public ID
 {
 public:
-	StaticId(QString id);
+	StaticID(QString id);
 	QString id() const;
 
 private:
 	QString m_id;
 };
 
-class InvalidId: public Id
+class InvalidID: public ID
 {
 public:
-	InvalidId();
+	InvalidID();
 	QString id() const;
 };
 
-uint qHash(const Id& c);
+uint qHash(const ID& c);
 
 #endif /* LOG_H */

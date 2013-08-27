@@ -12,6 +12,8 @@ Q_OBJECT
 
 public:
 	Server(QObject* parent = 0);
+
+public slots:
 	void start();
 
 protected:

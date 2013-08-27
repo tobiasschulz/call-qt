@@ -9,7 +9,7 @@
 #include "contact.h"
 #include "log.h"
 
-class Connection: public QObject, public Id
+class Connection: public QObject, public ID
 {
 Q_OBJECT
 
@@ -29,6 +29,7 @@ public:
 	bool isConnected() const;
 	Host host() const;
 	Contact contact() const;
+	QTcpSocket* socket() const;
 
 signals:
 	void contactFound(Contact);
@@ -37,8 +38,8 @@ signals:
 	void readyRead();
 	void connected();
 	void disconnected();
-	void socketError(QString error, Host host = Contact::INVALID_HOST);
-	void connectFailed(QString error, Host host = Contact::INVALID_HOST);
+	void socketError(QString error, Host host = Host::INVALID_HOST);
+	void connectFailed(QString error, Host host = Host::INVALID_HOST);
 	void close();
 
 public slots:
