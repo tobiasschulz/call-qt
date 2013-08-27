@@ -73,8 +73,8 @@ Host& Host::operator=(const Host& other)
 }
 bool Host::operator==(const Host& other) const
 {
-	return ((m_address_valid && m_address == other.m_address) || (m_hostname_valid && m_hostname == other.m_hostname))
-			&& m_port == other.m_port;
+	return (((m_address_valid && m_address == other.m_address) || (m_hostname_valid && m_hostname == other.m_hostname))
+			&& m_port == other.m_port) || (isLoopback() && other.isLoopback());
 }
 bool Host::operator!=(const Host& other) const
 {
@@ -95,6 +95,18 @@ QString Host::hostname() const
 quint16 Host::port() const
 {
 	return m_port;
+}
+bool Host::isReachable() const
+{
+	return m_port < 10000;
+}
+bool Host::isUnreachable() const
+{
+	return !isReachable();
+}
+bool Host::isLoopback() const
+{
+	return !isReachable() && Config::isLocalhost(m_address.toString());
 }
 void Host::lookupAddress()
 {
@@ -126,18 +138,30 @@ void Host::lookupHostname()
 QString Host::toString(PortFormat showPort, HostFormat hostFormat) const
 {
 	QString formattedHost = hostFormat == SHOW_HOSTNAME ? hostname() : address().toString();
-	if (m_port == Config::DEFAULT_PORT && showPort == SHOW_PORT_ONLY_UNUSUAL)
+	if (isLoopback())
+		return hostFormat == SHOW_HOSTNAME ? "loopback device" : "loopback";
+	else if (m_port == Config::DEFAULT_PORT && showPort == SHOW_PORT_ONLY_UNUSUAL)
 		return formattedHost;
 	else
 		return formattedHost + ":" + QString::number(m_port);
 }
 QString Host::id() const
 {
-	return "Host<" + address().toString() + ":" + QString::number(m_port) + ">";
+	if (isLoopback())
+		return "Host<loopback>";
+	else
+		return "Host<" + address().toString() + ":" + QString::number(m_port) + ">";
 }
 QString Host::print(PrintFormat format) const
 {
-	QString data((m_address.toString().size() > 0 ? m_address.toString() : m_hostname) + ":" + QString::number(m_port));
+	QString data;
+	if (isLoopback())
+		data = "loopback";
+	else if (m_address.toString().size() > 0)
+		data = m_address.toString() + ":" + QString::number(m_port);
+	else
+		data = m_hostname + ":" + QString::number(m_port);
+
 	if (format == PRINT_ONLY_NAME)
 		return "Host";
 	else if (format == PRINT_ONLY_DATA)
@@ -231,7 +255,10 @@ QString Contact::toString() const
 }
 QString Contact::id() const
 {
-	return "Contact<" + m_user + "@" + m_host.print(ID::PRINT_ONLY_DATA) + ">";
+	if (m_host.isLoopback())
+		return "Contact<" + m_user + "@loopback>";
+	else
+		return "Contact<" + m_user + "@" + m_host.print(ID::PRINT_ONLY_DATA) + ">";
 }
 QString Contact::print(PrintFormat format) const
 {

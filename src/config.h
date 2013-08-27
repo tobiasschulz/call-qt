@@ -15,19 +15,23 @@
 #include <QIcon>
 
 #include "contact.h"
+#include "id.h"
 
 class Config: public QObject
 {
 Q_OBJECT
 
 public:
-	static QStringList hostnames_to_contact();
-	static QList<Host> hosts_to_contact();
+	static QStringList localhosts();
+	static QStringList defaultHostnames();
+	static QList<Host> defaultHosts();
 	static long uid();
 	static long uptime();
 	static QIcon icon(QString iconname);
 	static QString version();
 	static QString build();
+	static void addLocalhost(Host host);
+	static bool isLocalhost(QString host);
 
 	static int DEFAULT_PORT;
 	static int SOCKET_READ_TIMEOUT;
@@ -37,13 +41,12 @@ public:
 	static QString DEFAULT_CONTACT_HOSTS[];
 
 private:
+	static void readConfigLocalhosts();
+	static void writeConfigLocalhosts();
+
+	static QStringList m_localhosts;
 	static long m_uid;
 	static long m_uptime;
 };
-
-#ifdef __CDT_PARSER__
-#undef foreach
-#define foreach(a, b) for(a; ; )
-#endif
 
 #endif /* CONFIG_H */

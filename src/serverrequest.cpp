@@ -13,6 +13,7 @@
 #include "chatclient.h"
 #include "chat.h"
 #include "maingui.h"
+#include "config.h"
 
 ServerRequest::ServerRequest(int socketDescriptor, Thread* thread, QObject *parent)
 		: QObject(parent), socketDescriptor(socketDescriptor), m_socket(0), m_connection(0), m_thread(thread)
@@ -69,6 +70,10 @@ void ServerRequest::start()
 void ServerRequest::onConnected()
 {
 	QHash<QString, QString> headers = m_connection->headers();
+	QString uid = headers["uid"];
+	if (uid.toInt() == Config::uid()) {
+		Config::addLocalhost(m_connection->host());
+	}
 	QString request = headers["request"];
 	log.debug("request = %1", request);
 	if (request == "Status") {

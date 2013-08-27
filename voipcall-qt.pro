@@ -19,7 +19,7 @@ SOURCES += \
     src/contactmodel.cpp \
     src/contactscanner.cpp \
     src/dnscache.cpp \
-    src/log.cpp \
+    src/id.cpp \
 	src/main.cpp \
     src/maingui.cpp \
     src/networkutil.cpp \
@@ -42,7 +42,7 @@ HEADERS  += \
     src/contactmodel.h \
     src/contactscanner.h \
     src/dnscache.h \
-    src/log.h \
+    src/id.h \
 	src/maingui.h \
     src/networkutil.h \
     src/pingclient.h \
@@ -74,7 +74,7 @@ Debug:RCC_DIR = build/debug/.rcc
 Debug:UI_DIR = build/debug/.ui
 
 # The application version                                                          ## VERSION
-VERSION = 0.255                                                                      ## VERSION
+VERSION = 0.273                                                                      ## VERSION
 # Define the preprocessor macro to get the application version in our application. ## VERSION
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"                                           ## VERSION
-DEFINES += APP_BUILD=\\\"255\\\"                                             ## VERSION
+DEFINES += APP_BUILD=\\\"273\\\"                                             ## VERSION

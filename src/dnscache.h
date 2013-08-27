@@ -5,7 +5,7 @@
 #include <QHostInfo>
 #include <QMutex>
 
-#include "log.h"
+#include "id.h"
 #include "thread.h"
 
 class DnsCache: public QObject, public ID

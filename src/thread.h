@@ -10,7 +10,7 @@
 
 #include <QThread>
 
-#include "log.h"
+#include "id.h"
 
 class Thread: public QThread, public ID
 {

@@ -13,7 +13,7 @@
 
 #include "thread.h"
 #include "connection.h"
-#include "log.h"
+#include "id.h"
 
 class ServerRequest: public QObject, public ID
 {

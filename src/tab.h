@@ -5,7 +5,7 @@
 #include <QString>
 #include <QIcon>
 
-#include "log.h"
+#include "id.h"
 
 class Tab: public QWidget, public ID
 {

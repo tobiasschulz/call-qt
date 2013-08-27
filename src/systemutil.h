@@ -12,7 +12,7 @@
 #include <QString>
 #include <QHash>
 
-#include "log.h"
+#include "id.h"
 
 class SystemUtil: public QObject
 {

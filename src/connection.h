@@ -7,7 +7,7 @@
 #include <QTimer>
 
 #include "contact.h"
-#include "log.h"
+#include "id.h"
 
 class Connection: public QObject, public ID
 {

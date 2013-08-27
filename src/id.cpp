@@ -11,7 +11,7 @@
 #include <QHostAddress>
 #include <QThread>
 
-#include "log.h"
+#include "id.h"
 #include "systemutil.h"
 #include "config.h"
 

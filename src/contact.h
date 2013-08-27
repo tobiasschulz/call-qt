@@ -5,7 +5,7 @@
 #include <QHostAddress>
 #include <QHostInfo>
 
-#include "log.h"
+#include "id.h"
 
 class Host: public QObject, public ID
 {
@@ -22,6 +22,10 @@ public:
 	QHostAddress address() const;
 	QString hostname() const;
 	quint16 port() const;
+
+	bool isReachable() const;
+	bool isUnreachable() const;
+	bool isLoopback() const;
 
 	enum PortFormat
 	{

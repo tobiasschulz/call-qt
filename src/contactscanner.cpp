@@ -3,6 +3,7 @@
 #include <QSettings>
 #include <QBuffer>
 
+#include "id.h"
 #include "contact.h"
 #include "contactlist.h"
 #include "contactscanner.h"
@@ -10,30 +11,6 @@
 #include "pingclient.h"
 #include "config.h"
 #include "networkutil.h"
-
-template<typename T>
-QStringList serializeList(QList<T> list)
-{
-	QStringList list2;
-	foreach (T obj, list)
-	{
-		list2.append(obj.serialize());
-	}
-	return list2;
-}
-
-template<typename T>
-QList<T> deserializeList(QStringList list)
-{
-	QList<T> list2;
-	foreach (QString str, list)
-	{
-		T obj;
-		fromId(str, obj);
-		list2.append(obj);
-	}
-	return list2;
-}
 
 ContactScanner::ContactScanner(QObject* parent)
 		: QObject(parent), m_connections(), m_unknownhosts(), m_knownhosts(), m_hosts_mutex()
@@ -63,7 +40,7 @@ QString ContactScanner::id() const
 
 void ContactScanner::start()
 {
-	m_unknownhosts << Config::hosts_to_contact();
+	m_unknownhosts << Config::defaultHosts();
 	QObject::connect(ContactList::instance(), &ContactList::hostOnline, this, &ContactScanner::increasePriority);
 
 	QSettings settings;
@@ -74,6 +51,9 @@ void ContactScanner::start()
 		log.debug("known host: %1", Log::print(host));
 		if (m_unknownhosts.contains(host))
 			m_unknownhosts.removeAll(host);
+		if (host.isUnreachable()) {
+			m_knownhosts.removeAll(host);
+		}
 	}
 
 	QTimer *timer = new QTimer();

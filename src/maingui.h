@@ -7,7 +7,7 @@
 #include "contactmodel.h"
 #include "systemutil.h"
 #include "tab.h"
-#include "log.h"
+#include "id.h"
 #include "terminal.h"
 
 namespace Ui

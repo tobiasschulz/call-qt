@@ -1,19 +1,26 @@
 /*
- * log.h
+ * id.h
  *
  *  Created on: 19.08.2013
  *      Author: tobias
  */
 
-#ifndef LOG_H
-#define LOG_H
+#ifndef ID_H
+#define ID_H
 
 #include <QObject>
 #include <QString>
+#include <QStringList>
+#include <QList>
 #include <QHash>
 #include <QTcpSocket>
 
 #define Q(string) (qPrintable(string))
+
+#ifdef __CDT_PARSER__
+#undef foreach
+#define foreach(a, b) for(a; ; )
+#endif
 
 class Log;
 class ID;
@@ -83,4 +90,28 @@ public:
 
 uint qHash(const ID& c);
 
-#endif /* LOG_H */
+template<typename T>
+QStringList serializeList(QList<T> list)
+{
+	QStringList list2;
+	foreach (T obj, list)
+	{
+		list2.append(obj.serialize());
+	}
+	return list2;
+}
+
+template<typename T>
+QList<T> deserializeList(QStringList list)
+{
+	QList<T> list2;
+	foreach (QString str, list)
+	{
+		T obj;
+		fromId(str, obj);
+		list2.append(obj);
+	}
+	return list2;
+}
+
+#endif /* ID_H */

@@ -6,6 +6,7 @@
  */
 
 #include <QDateTime>
+#include <QSettings>
 
 #include "config.h"
 #include "networkutil.h"
@@ -16,28 +17,28 @@ int Config::SOCKET_CONNECT_TIMEOUT = 2000;
 int Config::CONTACT_SCAN_INTERVAL = 60000;
 long Config::m_uid = 0;
 long Config::m_uptime = QDateTime::currentMSecsSinceEpoch();
+QStringList Config::m_localhosts;
 
-QStringList Config::hostnames_to_contact()
+QStringList Config::defaultHostnames()
 {
 	QStringList list;
 	if (1)
 		list << "127.0.0.1" << "dsl-ka.tobias-schulz.eu";
 	else
 		list << "127.0.0.1" << "192.168.223.3" << "192.168.223.5" << "192.168.223.7" << "192.168.223.9"
-				<< "192.168.223.150" << "192.168.223.151" << "192.168.223.152" << "192.168.223.153"
-				<< "192.168.223.154" << "192.168.224.3" << "192.168.224.5" << "192.168.224.7"
-				<< "192.168.224.9" << "192.168.224.150" << "192.168.224.151" << "192.168.224.152"
-				<< "192.168.224.153" << "192.168.224.154" << "192.168.25.100" << "192.168.25.101"
-				<< "192.168.25.102" << "192.168.25.103" << "dsl-ka.tobias-schulz.eu"
+				<< "192.168.223.150" << "192.168.223.151" << "192.168.223.152" << "192.168.223.153" << "192.168.223.154"
+				<< "192.168.224.3" << "192.168.224.5" << "192.168.224.7" << "192.168.224.9" << "192.168.224.150"
+				<< "192.168.224.151" << "192.168.224.152" << "192.168.224.153" << "192.168.224.154" << "192.168.25.100"
+				<< "192.168.25.101" << "192.168.25.102" << "192.168.25.103" << "dsl-ka.tobias-schulz.eu"
 				<< "dsl-hg.tobias-schulz.eu" << "freehal.net";
 	return list;
 }
 
-QList<Host> Config::hosts_to_contact()
+QList<Host> Config::defaultHosts()
 {
 	QList<Host> hosts;
 	for (int i = 0; i <= 5; ++i) {
-		foreach (const QString & hostname, hostnames_to_contact())
+		foreach (const QString & hostname, defaultHostnames())
 		{
 			//QHostAddress hostaddr = NetworkUtil::instance()->parseHostname(hostname);
 			//hosts << Host(hostaddr, Config::DEFAULT_PORT + i * 10);
@@ -45,6 +46,38 @@ QList<Host> Config::hosts_to_contact()
 		}
 	}
 	return hosts;
+}
+
+void Config::addLocalhost(Host host)
+{
+	readConfigLocalhosts();
+	if (!m_localhosts.contains(host.hostname()))
+		m_localhosts << host.hostname();
+	if (!m_localhosts.contains(host.address().toString()))
+		m_localhosts << host.address().toString();
+	m_localhosts.removeAll(Host::INVALID_HOST.hostname());
+	writeConfigLocalhosts();
+}
+QStringList Config::localhosts()
+{
+	if (m_localhosts.size() == 0) {
+		readConfigLocalhosts();
+	}
+	return m_localhosts;
+}
+bool Config::isLocalhost(QString host)
+{
+	return m_localhosts.contains(host);
+}
+void Config::readConfigLocalhosts()
+{
+	QSettings settings;
+	m_localhosts = settings.value("contacts/localhosts", QStringList()).toStringList();
+}
+void Config::writeConfigLocalhosts()
+{
+	QSettings settings;
+	settings.setValue("contacts/localhosts", m_localhosts);
 }
 
 long Config::uid()

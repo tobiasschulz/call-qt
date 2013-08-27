@@ -7,7 +7,7 @@
 
 #include "contact.h"
 #include "thread.h"
-#include "log.h"
+#include "id.h"
 
 class ContactList;
 class PingClient;
