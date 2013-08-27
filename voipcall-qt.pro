@@ -24,8 +24,7 @@ SOURCES += \
     src/maingui.cpp \
     src/networkutil.cpp \
     src/pingclient.cpp \
-    src/serverconnection.cpp \
-    src/serverconnectionthread.cpp \
+    src/serverrequest.cpp \
     src/server.cpp \
     src/systemutil.cpp \
     src/tab.cpp \
@@ -47,8 +46,7 @@ HEADERS  += \
 	src/maingui.h \
     src/networkutil.h \
     src/pingclient.h \
-    src/serverconnection.h \
-    src/serverconnectionthread.h \
+    src/serverrequest.h \
     src/server.h \
     src/systemutil.h \
     src/tab.h \
@@ -76,7 +74,7 @@ Debug:RCC_DIR = build/debug/.rcc
 Debug:UI_DIR = build/debug/.ui
 
 # The application version                                                          ## VERSION
-VERSION = 0.207                                                                      ## VERSION
+VERSION = 0.242                                                                      ## VERSION
 # Define the preprocessor macro to get the application version in our application. ## VERSION
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"                                           ## VERSION
-DEFINES += APP_BUILD=\\\"207\\\"                                             ## VERSION
+DEFINES += APP_BUILD=\\\"242\\\"                                             ## VERSION

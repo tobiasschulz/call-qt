@@ -51,8 +51,12 @@ public:
 	{
 	}
 
+	enum PrintFormat
+	{
+		PRINT_ONLY_NAME, PRINT_ONLY_DATA, PRINT_NAME_AND_DATA
+	};
 	virtual QString id() const;
-	virtual QString print() const;
+	virtual QString print(PrintFormat format = PRINT_NAME_AND_DATA) const;
 	virtual QString serialize() const;
 	const Log& logger() const;
 

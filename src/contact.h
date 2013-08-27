@@ -33,7 +33,7 @@ public:
 	};
 	QString toString(PortFormat showPort = SHOW_PORT_ONLY_UNUSUAL, HostFormat hostFormat = SHOW_HOSTNAME) const;
 	QString id() const;
-	QString print() const;
+	QString print(PrintFormat format = PRINT_NAME_AND_DATA) const;
 	QString serialize() const;
 	static Host deserialize(QString str);
 
@@ -77,7 +77,7 @@ public:
 
 	QString toString() const;
 	QString id() const;
-	QString print() const;
+	QString print(PrintFormat format = PRINT_NAME_AND_DATA) const;
 	QString serialize() const;
 	static Contact deserialize(QString str);
 

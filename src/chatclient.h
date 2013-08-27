@@ -16,7 +16,8 @@ public:
 	ChatClient(const Contact& contact, QObject* parent = 0);
 	ChatClient(const Host& host, QObject* parent = 0);
 	ChatClient(Connection* host, QObject* parent = 0);
-	virtual QString id() const;
+	QString id() const;
+	QString print(PrintFormat format = PRINT_NAME_AND_DATA) const;
 
 	void checkForErrors();
 
@@ -35,6 +36,8 @@ public slots:
 	void onConnectFailed(QString error, Host host);
 
 private:
+	void setConnection(Connection* connection);
+
 	Host m_host;
 	Contact m_contact;
 	Connection* m_connection;

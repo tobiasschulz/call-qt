@@ -71,8 +71,11 @@ QString NetworkUtil::parseAddress(QHostAddress address)
 	return info.hostName();
 }
 
-void NetworkUtil::writeHeaders(QTcpSocket* socket, Connection::Type type)
+void NetworkUtil::writeHeaders(QTcpSocket* socket, Connection::Type type, const Log* logger)
 {
+	logger->debug("waiting for connected");
+	socket->waitForConnected();
+	logger->debug("start writing headers");
 	writeLine(socket, "User: ", SystemUtil::instance()->getUserName());
 	writeLine(socket, "UID: ", QVariant::fromValue(Config::uid()));
 	writeLine(socket, "Uptime: ", QVariant::fromValue(Config::uptime()));
@@ -90,13 +93,16 @@ void NetworkUtil::writeHeaders(QTcpSocket* socket, Connection::Type type)
 
 	writeLine(socket, "");
 	socket->flush();
-
+	logger->debug("stop writing headers");
+	socket->waitForBytesWritten();
+	logger->debug("headers are written");
 }
 
-QHash<QString, QString>* NetworkUtil::readHeaders(QTcpSocket* socket, const Log* logger)
+QHash<QString, QString> NetworkUtil::readHeaders(QTcpSocket* socket, const Log* logger)
 {
-	QHash<QString, QString>* headers = new QHash<QString, QString>;
+	QHash<QString, QString> headers;
 
+	logger->debug("starting reading headers");
 	while (socket->isOpen() && socket->waitForReadyRead(Config::SOCKET_READ_TIMEOUT)) {
 		while (socket->canReadLine()) {
 			QString line = readLine(socket).trimmed();
@@ -105,10 +111,11 @@ QHash<QString, QString>* NetworkUtil::readHeaders(QTcpSocket* socket, const Log*
 			if (index != -1 && index + 1 < line.size()) {
 				QString key = line.left(index).trimmed().toLower();
 				QString value = line.mid(index + 1).trimmed();
-				(*headers)[key] = value;
+				headers[key] = value;
 				logger->debug("Header: %1=%2", key, value);
 
 			} else if (line.isEmpty()) {
+				logger->debug("stopping reading headers");
 				return headers;
 
 			} else {
@@ -116,6 +123,7 @@ QHash<QString, QString>* NetworkUtil::readHeaders(QTcpSocket* socket, const Log*
 			}
 		}
 	}
+	logger->debug("timeout reading headers");
 
 	return headers;
 }

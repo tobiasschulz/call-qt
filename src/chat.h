@@ -29,6 +29,7 @@ public slots:
 	void printChatMessage(QString message);
 	void onSendMessage();
 	void onSendMessageFailed(QString message);
+	void onReceivedMessage(QString message);
 
 private:
 	explicit Chat(const Contact& contact, QWidget *parent = 0);

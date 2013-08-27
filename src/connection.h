@@ -19,17 +19,24 @@ public:
 		STATUS, SERVER, CALL, CHAT, PING
 	};
 
+	enum State
+	{
+		CLOSED, CONNECTED, CONNECTING
+	};
+
 	Connection(Type type, QObject* parent = 0);
 
 	void connect(QTcpSocket* socket);
 	void connect(Host host);
 
 	virtual QString id() const;
+	virtual QString print(PrintFormat format = PRINT_NAME_AND_DATA) const;
 
 	bool isConnected() const;
 	Host host() const;
 	Contact contact() const;
 	QTcpSocket* socket() const;
+	QHash<QString, QString> headers();
 
 signals:
 	void contactFound(Contact);
@@ -56,9 +63,9 @@ protected:
 	QTcpSocket* m_socket;
 	Host m_host;
 	Contact m_contact;
-	QHash<QString, QString>* m_headers;
+	State m_state;
+	QHash<QString, QString> m_headers;
 	Type m_type;
-	QString m_description;
 	QTimer m_connecttimer;
 	QTimer m_readtimer;
 };

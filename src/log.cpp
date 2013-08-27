@@ -114,7 +114,7 @@ QString ID::serialize() const
 {
 	return id();
 }
-QString ID::print() const
+QString ID::print(PrintFormat format) const
 {
 	return id();
 }

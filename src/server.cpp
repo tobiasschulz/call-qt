@@ -1,6 +1,8 @@
+#include <QTimer>
+
 #include "server.h"
-#include "serverconnection.h"
-#include "serverconnectionthread.h"
+#include "serverrequest.h"
+#include "thread.h"
 #include "config.h"
 
 Server::Server(QObject* parent)
@@ -15,8 +17,12 @@ void Server::start()
 
 void Server::incomingConnection(qintptr socketDescriptor)
 {
-	ServerConnectionThread* thread = new ServerConnectionThread(socketDescriptor, this);
-	QObject::connect(thread, &ServerConnectionThread::finished, thread, &ServerConnectionThread::deleteLater);
+	Thread* thread = new Thread("ServerReq");
 	thread->start();
+	ServerRequest* request = new ServerRequest(socketDescriptor, thread);
+	request->moveToThread(thread);
+	QObject::connect(thread, &Thread::finished, thread, &Thread::deleteLater);
+	QObject::connect(thread, &Thread::finished, request, &ServerRequest::deleteLater);
+	QTimer::singleShot(0, request, SLOT(start()));
 }
 

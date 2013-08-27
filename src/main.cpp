@@ -36,7 +36,7 @@ int main(int argv, char** args)
 
 	QApplication app(argv, args);
 	DnsCache::instance();
-	Thread serverthread("ServerThread");
+	Thread serverthread("ServerMain");
 	serverthread.start();
 	Server server;
 	server.moveToThread(&serverthread);

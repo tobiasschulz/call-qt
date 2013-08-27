@@ -22,8 +22,8 @@ Chat* Chat::instance(const Contact& contact)
 }
 
 Chat::Chat(const Contact& contact, QWidget *parent)
-		: Tab("Chat", Config::icon("user-available"), parent), ui(new Ui::Chat), m_contact(contact),
-			m_client(contact), m_thread("ChatThread")
+		: Tab("Chat", Config::icon("user-available"), parent), ui(new Ui::Chat), m_contact(contact), m_client(contact),
+			m_thread("ChatThread")
 {
 	ui->setupUi(this);
 	m_thread.start();
@@ -35,6 +35,7 @@ Chat::Chat(const Contact& contact, QWidget *parent)
 	QObject::connect(this, SIGNAL(focus()), ui->chatinput, SLOT(setFocus()));
 	QObject::connect(ui->chatinput, &QLineEdit::returnPressed, this, &Chat::onSendMessage);
 	QObject::connect(&m_client, &ChatClient::sendMessageFailed, this, &Chat::onSendMessageFailed);
+	QObject::connect(&m_client, &ChatClient::receivedMessage, this, &Chat::onReceivedMessage);
 	QTimer::singleShot(0, ui->chatinput, SLOT(setFocus()));
 	QTimer::singleShot(0, &m_client, SLOT(connect()));
 }
@@ -47,11 +48,12 @@ Chat::~Chat()
 void Chat::onSendMessage()
 {
 	ui->chatinput->setEnabled(false);
-	QString msg = ui->chatinput->text();
+	QString message = ui->chatinput->text();
 	ui->chatinput->setText("");
 	ui->chatinput->setEnabled(true);
 	ui->chatinput->setFocus();
-	emit m_client.sendMessage(msg);
+	emit m_client.sendMessage(message);
+	printChatMessage("send: " + message);
 }
 void Chat::onSendMessageFailed(QString message)
 {
@@ -60,6 +62,11 @@ void Chat::onSendMessageFailed(QString message)
 	ui->chatinput->setCursorPosition(message.size());
 	ui->chatinput->setEnabled(true);
 	ui->chatinput->setFocus();
+	printChatMessage("send failed: " + message);
+}
+void Chat::onReceivedMessage(QString message)
+{
+	printChatMessage("received: " + message);
 }
 
 void Chat::printChatMessage(QString message)

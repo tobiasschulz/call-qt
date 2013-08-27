@@ -4,8 +4,6 @@
 #include <QTcpServer>
 #include <QTcpSocket>
 
-class ServerConnection;
-
 class Server: public QTcpServer
 {
 Q_OBJECT

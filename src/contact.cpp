@@ -47,13 +47,13 @@ Host::Host(const Host& other)
 	m_hostname = QString(other.m_hostname);
 	m_port = other.m_port;
 	m_address_valid = other.m_address_valid;
-	if (!other.m_address_valid) {
-		lookupAddress();
-	}
+	//if (!other.m_address_valid) {
+	//	lookupAddress();
+	//}
 	m_hostname_valid = other.m_hostname_valid;
-	if (!other.m_hostname_valid) {
-		lookupHostname();
-	}
+	//if (!other.m_hostname_valid) {
+	//	lookupHostname();
+	//}
 }
 
 Host& Host::operator=(const Host& other)
@@ -62,13 +62,13 @@ Host& Host::operator=(const Host& other)
 	m_hostname = QString(other.m_hostname);
 	m_port = other.m_port;
 	m_address_valid = other.m_address_valid;
-	if (!other.m_address_valid) {
-		lookupAddress();
-	}
+	//if (!other.m_address_valid) {
+	//	lookupAddress();
+	//}
 	m_hostname_valid = other.m_hostname_valid;
-	if (!other.m_hostname_valid) {
-		lookupHostname();
-	}
+	//if (!other.m_hostname_valid) {
+	//	lookupHostname();
+	//}
 	return *this;
 }
 bool Host::operator==(const Host& other) const
@@ -119,7 +119,7 @@ void Host::lookupHostname()
 	} else {
 		m_hostname = INVALID_HOSTNAME;
 		m_hostname_valid = false;
-		log.debug("lookupAddress(%1) failed! no hostname found!", m_address.toString());
+		log.debug("lookupHostname(%1) failed! no hostname found!", m_address.toString());
 	}
 }
 
@@ -135,10 +135,15 @@ QString Host::id() const
 {
 	return "Host<" + address().toString() + ":" + QString::number(m_port) + ">";
 }
-QString Host::print() const
+QString Host::print(PrintFormat format) const
 {
-	return "Host " + (m_address.toString().size() > 0 ? m_address.toString() : m_hostname) + ":"
-			+ QString::number(m_port) + "";
+	QString data((m_address.toString().size() > 0 ? m_address.toString() : m_hostname) + ":" + QString::number(m_port));
+	if (format == PRINT_ONLY_NAME)
+		return "Host";
+	else if (format == PRINT_ONLY_DATA)
+		return data;
+	else
+		return "Host " + data;
 }
 QString Host::serialize() const
 {
@@ -226,11 +231,17 @@ QString Contact::toString() const
 }
 QString Contact::id() const
 {
-	return "Contact<" + m_user + "@" + m_host.id() + ">";
+	return "Contact<" + m_user + "@" + m_host.print(ID::PRINT_ONLY_DATA) + ">";
 }
-QString Contact::print() const
+QString Contact::print(PrintFormat format) const
 {
-	return "Contact " + m_user + "@" + m_host.id();
+	QString data(m_user + "@" + m_host.print(ID::PRINT_ONLY_DATA));
+	if (format == PRINT_ONLY_NAME)
+		return "Contact";
+	else if (format == PRINT_ONLY_DATA)
+		return data;
+	else
+		return "Contact " + data;
 }
 QString Contact::serialize() const
 {
