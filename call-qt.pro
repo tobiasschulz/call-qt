@@ -74,7 +74,7 @@ Debug:RCC_DIR = build/debug/.rcc
 Debug:UI_DIR = build/debug/.ui
 
 # The application version                                                          ## VERSION
-VERSION = 0.286                                                                      ## VERSION
+VERSION = 0.288                                                                      ## VERSION
 # Define the preprocessor macro to get the application version in our application. ## VERSION
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"                                           ## VERSION
-DEFINES += APP_BUILD=\\\"286\\\"                                             ## VERSION
+DEFINES += APP_BUILD=\\\"288\\\"                                             ## VERSION
