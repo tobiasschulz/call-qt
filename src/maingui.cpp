@@ -14,7 +14,6 @@ Main* Main::m_instance;
 Main::Main(QWidget* parent)
 		: QMainWindow(parent), ui(new Ui::Main), m_contactmodel(0), m_tabhash(), m_terminal(0)
 {
-
 	ui->setupUi(this);
 
 	// settings

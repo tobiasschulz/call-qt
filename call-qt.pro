@@ -73,8 +73,12 @@ Debug:MOC_DIR = build/debug/.moc
 Debug:RCC_DIR = build/debug/.rcc
 Debug:UI_DIR = build/debug/.ui
 
+win32 {
+	LIBS += -lws2_32
+}
+
 # The application version                                                          ## VERSION
-VERSION = 0.288                                                                      ## VERSION
+VERSION = 0.293                                                                      ## VERSION
 # Define the preprocessor macro to get the application version in our application. ## VERSION
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"                                           ## VERSION
-DEFINES += APP_BUILD=\\\"288\\\"                                             ## VERSION
+DEFINES += APP_BUILD=\\\"293\\\"                                             ## VERSION

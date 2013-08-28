@@ -161,7 +161,7 @@ void NetworkUtil::setSocketReuseAddr(QTcpSocket* socket)
 {
 	int reuse_addr_val = 1;
 #if defined(Q_OS_WIN)
-	int ret = setsockopt(m_tcpSocket->socketDescriptor(), SOL_SOCKET,
+	int ret = setsockopt(socket->socketDescriptor(), SOL_SOCKET,
 			SO_REUSEADDR, (char*) &reuse_addr_val,
 			sizeof(reuse_addr_val));
 #else
