@@ -32,6 +32,6 @@ void PingClient::ping()
 			&ContactList::setHostOnline);
 	QObject::connect(m_connection, &Connection::hostOffline, ContactList::instance(),
 			&ContactList::setHostOffline);
-	QObject::connect(m_connection, &Connection::connected, m_connection, &Connection::close);
+	QObject::connect(m_connection, &Connection::connected, m_connection, &Connection::disconnect);
 }
 

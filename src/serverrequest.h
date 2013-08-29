@@ -24,6 +24,8 @@ public:
 
 	void onStatusConnection();
 	void onChatConnection();
+	void onCallConnection();
+	void openChatTab();
 
 	QString id() const;
 	QString print(PrintFormat format = PRINT_NAME_AND_DATA) const;

@@ -1,5 +1,5 @@
-#ifndef CHAT_H
-#define CHAT_H
+#ifndef CHATTAB_H
+#define CHATTAB_H
 
 #include <QWidget>
 #include <QString>
@@ -11,20 +11,21 @@
 
 namespace Ui
 {
-class Chat;
+class ChatTab;
 }
 
-class Chat: public Tab
+class ChatTab: public Tab
 {
 Q_OBJECT
 
 public:
-	static Chat* instance(const Contact& contact);
-	~Chat();
+	static ChatTab* instance(const Contact& contact);
+	~ChatTab();
 
 	QString tabname() const;
 	QIcon tabicon() const;
 	QString id() const;
+	QString print(PrintFormat format = PRINT_NAME_AND_DATA) const;
 
 	Contact contact() const;
 
@@ -35,14 +36,18 @@ public slots:
 	void onReceivedMessage(QString message);
 	void onHostOnline(Host host);
 	void onHostOffline(Host host);
+	void startCall();
+	void stopCall();
+	void onCallStarted();
+	void onCallStopped();
 
 private:
-	explicit Chat(const Contact& contact, QWidget *parent = 0);
-	static QHash<Contact, Chat*> m_instances;
+	explicit ChatTab(const Contact& contact, QWidget *parent = 0);
+	static QHash<Contact, ChatTab*> m_instances;
 
-	Ui::Chat *ui;
+	Ui::ChatTab *ui;
 	Contact m_contact;
-	ChatClient m_client;
+	ChatClient m_chatclient;
 	Thread m_thread;
 
 	static const QString BEFORE_MESSAGE;
@@ -50,4 +55,4 @@ private:
 
 };
 
-#endif // CHAT_H
+#endif // CHATTAB_H

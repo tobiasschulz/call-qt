@@ -46,20 +46,19 @@ void Connection::connect(Host host)
 	// start connect timer
 	QObject::connect(&m_connecttimer, &QTimer::timeout, this, &Connection::onConnectTimeout);
 	m_connecttimer.setSingleShot(true);
-	m_connecttimer.start(Config::SOCKET_CONNECT_TIMEOUT);
+	m_connecttimer.start(Config::instance()->SOCKET_CONNECT_TIMEOUT);
 }
 
 void Connection::setSocket(QTcpSocket* socket)
 {
 	this->m_socket = socket;
 
-	QObject::connect(this, &Connection::close, m_socket, &QTcpSocket::abort);
 	QObject::connect(m_socket, &QTcpSocket::disconnected, this, &Connection::onDisconnected);
 	QObject::connect(m_socket, &QTcpSocket::connected, this, &Connection::onConnected);
 	QObject::connect(m_socket, SIGNAL(error(QAbstractSocket::SocketError)), this,
 	SLOT(onError(QAbstractSocket::SocketError)));
 
-	log.debug("socket=%1, socket->state()=%2", Log::print(m_socket), m_socket->state());
+	//log.debug("socket=%1, socket->state()=%2", Log::print(m_socket), m_socket->state());
 	if (m_socket->state() == QAbstractSocket::ConnectedState) {
 		//onConnected();
 		emit m_socket->connected();
@@ -92,11 +91,11 @@ bool Connection::isConnected() const
 void Connection::onReadyRead()
 {
 	if (m_readtimer.isActive()) {
-		m_readtimer.start(Config::SOCKET_READ_TIMEOUT);
+		m_readtimer.start(Config::instance()->SOCKET_READ_TIMEOUT);
 	}
 	// only forward the readyRead() signal if we are done connecting!
 	if (m_state == CONNECTED) {
-		log.debug("onReadyRead()");
+		//log.debug("onReadyRead()");
 		emit readyRead();
 	}
 }
@@ -110,7 +109,7 @@ void Connection::onConnected()
 
 	QObject::connect(m_socket, &QTcpSocket::readyRead, this, &Connection::onReadyRead);
 	QObject::connect(&m_readtimer, &QTimer::timeout, this, &Connection::onReadTimeout);
-	m_readtimer.start(Config::SOCKET_READ_TIMEOUT);
+	m_readtimer.start(Config::instance()->SOCKET_READ_TIMEOUT);
 
 	NetworkUtil::instance()->writeHeaders(m_socket, m_type, &log);
 	m_headers = NetworkUtil::instance()->readHeaders(m_socket, &log);
@@ -170,5 +169,13 @@ void Connection::onError(QAbstractSocket::SocketError err)
 		m_readtimer.stop();
 		emit socketError("Socket Error: " + errString, m_host);
 	}
+}
+
+void Connection::disconnect()
+{
+	log.debug("disconnect()");
+	m_socket->abort();
+	m_socket->close();
+	m_state = CLOSED;
 }
 

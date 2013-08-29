@@ -20,7 +20,9 @@ int main(int argv, char** args)
 	QCoreApplication::setOrganizationName("Tobias Schulz");
 	QCoreApplication::setOrganizationDomain("tobias-schulz.eu");
 	QCoreApplication::setApplicationName("Call Qt");
-	QCoreApplication::setApplicationVersion(Config::version());
+	QCoreApplication::setApplicationVersion(Config::instance()->version());
+	//QApplication::setStyle(QStyleFactory::create("Fusion"));
+
 #if defined(Q_OS_WIN)
 	QSettings::setDefaultFormat(QSettings::IniFormat);
 #else

@@ -12,7 +12,7 @@ Server::Server(QObject* parent)
 
 void Server::start()
 {
-	listen(QHostAddress::Any, Config::DEFAULT_PORT);
+	listen(QHostAddress::Any, Config::instance()->DEFAULT_PORT);
 }
 
 void Server::incomingConnection(qintptr socketDescriptor)

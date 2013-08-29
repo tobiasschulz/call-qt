@@ -47,7 +47,6 @@ signals:
 	void disconnected();
 	void socketError(QString error, Host host = Host::INVALID_HOST);
 	void connectFailed(QString error, Host host = Host::INVALID_HOST);
-	void close();
 
 public slots:
 	void onReadyRead();
@@ -56,6 +55,7 @@ public slots:
 	void onError(QAbstractSocket::SocketError);
 	void onConnectTimeout();
 	void onReadTimeout();
+	void disconnect();
 
 protected:
 	void setSocket(QTcpSocket* socket);

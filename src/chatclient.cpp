@@ -36,7 +36,7 @@ QString ChatClient::print(PrintFormat format) const
 void ChatClient::connect(Connection* connection)
 {
 	if (m_connection) {
-		m_connection->close();
+		m_connection->disconnect();
 		delete m_connection;
 	}
 	setConnection(connection);

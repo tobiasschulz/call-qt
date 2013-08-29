@@ -20,8 +20,8 @@ EOT
 
 function compile() {
 	# compile
-	qmake CONFIG+=debug
-	make -j4
+	nice -n 19 qmake CONFIG+=debug
+	nice -n 19 make -j4
 	return $?
 }
 
@@ -37,7 +37,7 @@ function winecompile() {
 		echo "$MINGW/mingw32-make.exe" >> make.bat
 		wine cmd /c make.bat
 		cp bin/call-qt.exe ../call-qt/ 2>/dev/null
-		for dll in Qt5Core.dll Qt5Gui.dll Qt5Network.dll Qt5Widgets.dll \
+		for dll in Qt5Core.dll Qt5Gui.dll Qt5Network.dll Qt5Widgets.dll Qt5Multimedia.dll \
 				libgcc_s_dw2-1.dll libstdc++-6.dll icuin51.dll icuuc51.dll icudt51.dll libwinpthread-1.dll
 		do
 			test -f ../call-qt/$dll || cp $QT/$dll ../call-qt/

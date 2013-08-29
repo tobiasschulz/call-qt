@@ -10,8 +10,9 @@ TARGET = call-qt
 TEMPLATE = app
 
 SOURCES += \
+	src/call.cpp \
 	src/chatclient.cpp \
-    src/chat.cpp \
+    src/chattab.cpp \
     src/config.cpp \
     src/connection.cpp \
     src/contact.cpp \
@@ -33,8 +34,9 @@ SOURCES += \
     src/version.cpp
 
 HEADERS  += \
+    src/call.h \
     src/chatclient.h \
-    src/chat.h \
+    src/chattab.h \
     src/config.h \
     src/connection.h \
     src/contact.h \
@@ -56,7 +58,7 @@ HEADERS  += \
 FORMS    += \
     ui/maingui.ui \
     ui/terminal.ui \
-    ui/chat.ui
+    ui/chattab.ui
 
 RC_ICONS = img/icon.ico
 
@@ -78,7 +80,7 @@ win32 {
 }
 
 # The application version                                                          ## VERSION
-VERSION = 0.293                                                                      ## VERSION
+VERSION = 0.345                                                                      ## VERSION
 # Define the preprocessor macro to get the application version in our application. ## VERSION
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"                                           ## VERSION
-DEFINES += APP_BUILD=\\\"293\\\"                                             ## VERSION
+DEFINES += APP_BUILD=\\\"345\\\"                                             ## VERSION

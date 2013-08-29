@@ -7,7 +7,7 @@ const QString Terminal::BEFORE_MESSAGE = "<div style='font-family: monospace; fo
 const QString Terminal::AFTER_MESSAGE = "</div>";
 
 Terminal::Terminal(QWidget *parent)
-		: Tab("Terminal", Config::icon("console"), parent), ui(new Ui::Terminal)
+		: Tab("Terminal", Config::instance()->icon("console"), parent), ui(new Ui::Terminal)
 {
 
 	ui->setupUi(this);

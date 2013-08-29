@@ -106,7 +106,7 @@ bool Host::isUnreachable() const
 }
 bool Host::isLoopback() const
 {
-	return !isReachable() && Config::isLocalhost(m_address.toString());
+	return !isReachable() && Config::instance()->isLocalhost(m_address.toString());
 }
 void Host::lookupAddress()
 {
@@ -140,7 +140,7 @@ QString Host::toString(PortFormat showPort, HostFormat hostFormat) const
 	QString formattedHost = hostFormat == SHOW_HOSTNAME ? hostname() : address().toString();
 	if (isLoopback())
 		return hostFormat == SHOW_HOSTNAME ? "loopback device" : "loopback";
-	else if (m_port == Config::DEFAULT_PORT && showPort == SHOW_PORT_ONLY_UNUSUAL)
+	else if (m_port == Config::instance()->DEFAULT_PORT && showPort == SHOW_PORT_ONLY_UNUSUAL)
 		return formattedHost;
 	else
 		return formattedHost + ":" + QString::number(m_port);
@@ -248,7 +248,7 @@ quint16 Contact::port() const
 QString Contact::toString() const
 {
 	return m_user + "@" + m_host.toString();
-	if (m_host.port() == Config::DEFAULT_PORT)
+	if (m_host.port() == Config::instance()->DEFAULT_PORT)
 		return m_user + "@" + hostname();
 	else
 		return m_user + "@" + hostname() + ":" + QString::number(m_host.port());

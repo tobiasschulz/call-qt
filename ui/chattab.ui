@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Chat</class>
- <widget class="QWidget" name="Chat">
+ <class>ChatTab</class>
+ <widget class="QWidget" name="ChatTab">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -15,7 +15,7 @@
   </property>
   <layout class="QGridLayout" name="gridLayout_2">
    <item row="0" column="0">
-    <widget class="QPushButton" name="pushButton">
+    <widget class="QPushButton" name="callbutton_start">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
        <horstretch>0</horstretch>
@@ -27,7 +27,20 @@
      </property>
     </widget>
    </item>
-   <item row="0" column="1" colspan="2">
+   <item row="0" column="1">
+    <widget class="QPushButton" name="callbutton_stop">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>End Call</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="2" colspan="2">
     <spacer name="horizontalSpacer">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
@@ -40,7 +53,7 @@
      </property>
     </spacer>
    </item>
-   <item row="1" column="0" colspan="3">
+   <item row="1" column="0" colspan="4">
     <widget class="QScrollArea" name="scrollArea">
      <property name="frameShape">
       <enum>QFrame::StyledPanel</enum>
@@ -87,11 +100,11 @@
      </widget>
     </widget>
    </item>
-   <item row="2" column="0" colspan="2">
+   <item row="2" column="0" colspan="3">
     <widget class="QLineEdit" name="chatinput"/>
    </item>
-   <item row="2" column="2">
-    <widget class="QPushButton" name="sendbutton">
+   <item row="2" column="3">
+    <widget class="QPushButton" name="chatbutton">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
        <horstretch>0</horstretch>
@@ -105,12 +118,11 @@
    </item>
   </layout>
   <zorder>scrollArea</zorder>
-  <zorder>chatlog</zorder>
-  <zorder>sendbutton</zorder>
+  <zorder>chatbutton</zorder>
   <zorder>chatinput</zorder>
-  <zorder>chatlog</zorder>
-  <zorder>pushButton</zorder>
+  <zorder>callbutton_start</zorder>
   <zorder>horizontalSpacer</zorder>
+  <zorder>callbutton_stop</zorder>
  </widget>
  <resources/>
  <connections/>

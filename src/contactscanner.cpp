@@ -40,7 +40,7 @@ QString ContactScanner::id() const
 
 void ContactScanner::start()
 {
-	m_unknownhosts << Config::defaultHosts();
+	m_unknownhosts << Config::instance()->defaultHosts();
 	QObject::connect(ContactList::instance(), &ContactList::hostOnline, this, &ContactScanner::increasePriority);
 
 	QSettings settings;
@@ -58,7 +58,7 @@ void ContactScanner::start()
 
 	QTimer *timer = new QTimer();
 	QObject::connect(timer, SIGNAL(timeout()), this, SLOT(scanNow()));
-	timer->start(Config::CONTACT_SCAN_INTERVAL);
+	timer->start(Config::instance()->CONTACT_SCAN_INTERVAL);
 }
 
 void ContactScanner::scanSoon()
@@ -79,7 +79,7 @@ void ContactScanner::scanNow()
 		log.debug("pingclient: %1 (immediately)", Log::print(m_connections[host]));
 	}
 
-	int interval = Config::CONTACT_SCAN_INTERVAL / (1 + m_unknownhosts.size());
+	int interval = Config::instance()->CONTACT_SCAN_INTERVAL / (1 + m_unknownhosts.size());
 	int i = 0;
 	foreach (const Host & host, m_unknownhosts)
 	{

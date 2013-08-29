@@ -7,17 +7,39 @@
 
 #include <QDateTime>
 #include <QSettings>
+#include <QMutex>
+#include <QAudioDeviceInfo>
 
 #include "config.h"
 #include "networkutil.h"
 
-int Config::DEFAULT_PORT = 4000;
-int Config::SOCKET_READ_TIMEOUT = 7000;
-int Config::SOCKET_CONNECT_TIMEOUT = 2000;
-int Config::CONTACT_SCAN_INTERVAL = 60000;
-long Config::m_uid = 0;
-long Config::m_uptime = QDateTime::currentMSecsSinceEpoch();
-QStringList Config::m_localhosts;
+Config* Config::m_instance(0);
+
+Config::Config(QObject *parent)
+		: QObject(parent), DEFAULT_PORT(4000), SOCKET_READ_TIMEOUT(7000), SOCKET_CONNECT_TIMEOUT(2000),
+			CONTACT_SCAN_INTERVAL(60000), DEFAULT_CONTACT_HOSTS(), m_localhosts(), m_uid(0),
+			m_uptime(QDateTime::currentMSecsSinceEpoch()), m_audioinputdevice(QAudioDeviceInfo::defaultInputDevice()),
+			m_audiooutputdevice(QAudioDeviceInfo::defaultOutputDevice())
+{
+	m_audioinputformat = chooseAudioFormat(44100, 1, 16);
+}
+
+QString Config::id() const
+{
+	return "Config";
+}
+
+Config* Config::instance()
+{
+	static QMutex mutex;
+	if (!m_instance) {
+		mutex.lock();
+		if (!m_instance)
+			m_instance = new Config;
+		mutex.unlock();
+	}
+	return m_instance;
+}
 
 QStringList Config::defaultHostnames()
 {
@@ -40,7 +62,7 @@ QList<Host> Config::defaultHosts()
 	for (int i = 0; i <= 5; ++i) {
 		foreach (const QString & hostname, defaultHostnames())
 		{
-			//QHostAddress hostaddr = NetworkUtil::instance()->parseHostname(hostname);
+			//QHostAddress hostaddr = NetworkUtil::parseHostname(hostname);
 			//hosts << Host(hostaddr, Config::DEFAULT_PORT + i * 10);
 			hosts << Host(hostname, Config::DEFAULT_PORT + i * 10);
 		}
@@ -100,3 +122,37 @@ QIcon Config::icon(QString iconname)
 {
 	return QIcon("img/" + iconname + ".png");
 }
+
+QAudioFormat Config::currentAudioFormat()
+{
+	return m_audioinputformat;
+}
+
+QAudioFormat Config::chooseAudioFormat(int freq, int channels, int samplesize)
+{
+	QAudioFormat format;
+	format.setSampleRate(freq);
+	format.setChannelCount(channels);
+	format.setSampleSize(samplesize);
+	format.setSampleType(QAudioFormat::UnSignedInt);
+	format.setByteOrder(QAudioFormat::LittleEndian);
+	format.setCodec("audio/pcm");
+
+	QAudioDeviceInfo info(QAudioDeviceInfo::defaultInputDevice());
+	if (!info.isFormatSupported(format)) {
+		log.debug("format not supported: %1", Log::print(format));
+		format = info.nearestFormat(format);
+		log.debug("trying to use nearest: %1", Log::print(format));
+	}
+	return format;
+}
+
+QAudioDeviceInfo Config::currentAudioInputDevice()
+{
+	return m_audioinputdevice;
+}
+QAudioDeviceInfo Config::currentAudioOutputDevice()
+{
+	return m_audiooutputdevice;
+}
+

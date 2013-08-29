@@ -57,9 +57,9 @@ QVariant ContactModel::data(const QModelIndex& index, int role) const
 			return value;
 		} else if (role == Qt::DecorationRole) {
 			if (ContactList::instance()->isHostOnline(contact.host())) {
-				return Config::icon("user-available");
+				return Config::instance()->icon("user-available");
 			} else {
-				return Config::icon("user-offline");
+				return Config::instance()->icon("user-offline");
 			}
 		} else {
 			return QVariant();

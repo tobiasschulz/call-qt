@@ -11,7 +11,8 @@
 #include "connection.h"
 #include "contactlist.h"
 #include "chatclient.h"
-#include "chat.h"
+#include "chattab.h"
+#include "call.h"
 #include "maingui.h"
 #include "config.h"
 
@@ -71,8 +72,8 @@ void ServerRequest::onConnected()
 {
 	QHash<QString, QString> headers = m_connection->headers();
 	QString uid = headers["uid"];
-	if (uid.toInt() == Config::uid()) {
-		Config::addLocalhost(m_connection->host());
+	if (uid.toInt() == Config::instance()->uid()) {
+		Config::instance()->addLocalhost(m_connection->host());
 	}
 	QString request = headers["request"];
 	log.debug("request = %1", request);
@@ -80,6 +81,8 @@ void ServerRequest::onConnected()
 		onStatusConnection();
 	} else if (request == "Chat") {
 		onChatConnection();
+	} else if (request == "Call") {
+		onCallConnection();
 	}
 }
 
@@ -87,9 +90,27 @@ void ServerRequest::onStatusConnection()
 {
 	log.debug("onStatusConnection()");
 }
+
 void ServerRequest::onChatConnection()
 {
 	log.debug("onChatConnection()");
+	openChatTab();
+}
+
+void ServerRequest::onCallConnection()
+{
+	log.debug("onCallConnection()");
+	//openChatTab();
+
+	Call* call = Call::instance(m_connection->contact());
+	m_socket->moveToThread(call->thread());
+	m_connection->moveToThread(call->thread());
+	call->setConnection(m_connection);
+
+	//QTimer::singleShot(0, Call::instance(m_connection->contact()), SLOT(open()));
+}
+
+void ServerRequest::openChatTab() {
 	QObject::connect(Main::instance(), &Main::contactTabAvailable, this, &ServerRequest::onChatTabOpened);
 	QObject::connect(this, &ServerRequest::openContactTab, Main::instance(), &Main::addContactTab);
 	emit openContactTab(m_connection->contact());
@@ -101,8 +122,8 @@ void ServerRequest::onChatTabOpened(Contact contact)
 		log.debug("onChatTabOpened: %1 (my contact)", Log::print(contact));
 
 		ChatClient* chatclient = new ChatClient(m_connection->contact(), m_connection);
-		Chat* chattab = Chat::instance(m_connection->contact());
-		QObject::connect(chatclient, &ChatClient::receivedMessage, chattab, &Chat::onReceivedMessage);
+		ChatTab* chattab = ChatTab::instance(m_connection->contact());
+		QObject::connect(chatclient, &ChatClient::receivedMessage, chattab, &ChatTab::onReceivedMessage);
 		chatclient->connect(m_connection);
 
 	} else {

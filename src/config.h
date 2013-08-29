@@ -13,40 +13,60 @@
 #include <QList>
 #include <QStringList>
 #include <QIcon>
+#include <QAudioFormat>
+#include <QAudioDeviceInfo>
 
 #include "contact.h"
 #include "id.h"
 
-class Config: public QObject
+class Config: public QObject, public ID
 {
 Q_OBJECT
 
 public:
-	static QStringList localhosts();
-	static QStringList defaultHostnames();
-	static QList<Host> defaultHosts();
-	static long uid();
-	static long uptime();
-	static QIcon icon(QString iconname);
-	static QString version();
-	static QString build();
-	static void addLocalhost(Host host);
-	static bool isLocalhost(QString host);
+	static Config* instance();
+	QString id() const;
 
-	static int DEFAULT_PORT;
-	static int SOCKET_READ_TIMEOUT;
-	static int SOCKET_CONNECT_TIMEOUT;
-	static int CONTACT_SCAN_INTERVAL;
+	QStringList localhosts();
+	QStringList defaultHostnames();
+	QList<Host> defaultHosts();
+	long uid();
+	long uptime();
+	QIcon icon(QString iconname);
+	QString version();
+	QString build();
+	void addLocalhost(Host host);
+	bool isLocalhost(QString host);
+	QAudioFormat currentAudioFormat();
+	QAudioFormat chooseAudioFormat(int freq, int channels, int samplesize);
+	QAudioDeviceInfo currentAudioInputDevice();
+	QAudioDeviceInfo currentAudioOutputDevice();
 
-	static QString DEFAULT_CONTACT_HOSTS[];
+	int DEFAULT_PORT;
+	int SOCKET_READ_TIMEOUT;
+	int SOCKET_CONNECT_TIMEOUT;
+	int CONTACT_SCAN_INTERVAL;
+
+	QString DEFAULT_CONTACT_HOSTS[];
 
 private:
-	static void readConfigLocalhosts();
-	static void writeConfigLocalhosts();
+	void readConfigLocalhosts();
+	void writeConfigLocalhosts();
 
-	static QStringList m_localhosts;
-	static long m_uid;
-	static long m_uptime;
+	QStringList m_localhosts;
+	long m_uid;
+	long m_uptime;
+	QAudioFormat m_audioinputformat;
+    QAudioDeviceInfo m_audioinputdevice;
+    QAudioDeviceInfo m_audiooutputdevice;
+
+	explicit Config(QObject *parent = 0);
+	Config(const Config &); // hide copy constructor
+	Config& operator=(const Config &); // hide assign op
+	// we leave just the declarations, so the compiler will warn us
+	// if we try to use those two functions by accident
+	static Config* m_instance;
+
 };
 
 #endif /* CONFIG_H */

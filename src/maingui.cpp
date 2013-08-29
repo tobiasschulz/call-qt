@@ -5,7 +5,7 @@
 
 #include "maingui.h"
 #include "ui_maingui.h"
-#include "chat.h"
+#include "chattab.h"
 #include "config.h"
 #include "contactlist.h"
 
@@ -20,7 +20,7 @@ Main::Main(QWidget* parent)
 	QSettings settings;
 
 	// window icon, size and position
-	this->setWindowIcon(Config::icon("icon"));
+	this->setWindowIcon(Config::instance()->icon("icon"));
 	resize(settings.value("window/size", QSize(900, 400)).toSize());
 	this->setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, this->size(),
 	qApp->desktop()->availableGeometry()));
@@ -170,7 +170,7 @@ void Main::onTabChanged(int index)
 		if (widget) {
 			Tab* tab = (Tab*) widget;
 			emit tab->focus();
-			this->setWindowTitle(tab->tabname() + " - Build #" + Config::build());
+			this->setWindowTitle(tab->tabname() + " - Build #" + Config::instance()->build());
 		}
 	}
 }
@@ -183,14 +183,14 @@ void Main::onContactSelected(const QModelIndex & index)
 }
 void Main::addContactTab(Contact contact)
 {
-	Chat* chattab = Chat::instance(contact);
+	ChatTab* chattab = ChatTab::instance(contact);
 	log.debug("add contact tab: %1 (tab: %2)", contact.id(), chattab->id());
 	addTab(chattab);
 	emit contactTabAvailable(contact);
 }
 void Main::openContactTab(Contact contact)
 {
-	Chat* chattab = Chat::instance(contact);
+	ChatTab* chattab = ChatTab::instance(contact);
 	log.debug("open contact tab: %1 (tab: %2)", contact.id(), chattab->id());
 	openTab(chattab);
 }

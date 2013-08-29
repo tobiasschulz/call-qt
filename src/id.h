@@ -14,6 +14,8 @@
 #include <QList>
 #include <QHash>
 #include <QTcpSocket>
+#include <QAudioDeviceInfo>
+#include <QAudioFormat>
 
 #define Q(string) (qPrintable(string))
 
@@ -36,6 +38,8 @@ public:
 	static QString print(QTcpSocket* socket);
 	static QString print(ID* id);
 	static QString print(const ID& id);
+	static QString print(QAudioDeviceInfo device);
+	static QString print(QAudioFormat format);
 
 	void debug(QString format) const;
 	void debug(QString format, QVariant arg1) const;

@@ -48,6 +48,15 @@ QString Log::print(const ID& id)
 {
 	return id.id();
 }
+QString Log::print(QAudioDeviceInfo device)
+{
+	return device.deviceName();
+}
+QString Log::print(QAudioFormat format)
+{
+	return QString("QAudioFormat<freq=%1,channels=%2,samplesize=%3>").arg(QString::number(format.sampleRate()),
+			QString::number(format.channelCount()), QString::number(format.sampleSize()));
+}
 
 void Log::debug(QString format) const
 {

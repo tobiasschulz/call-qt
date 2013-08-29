@@ -77,8 +77,8 @@ void NetworkUtil::writeHeaders(QTcpSocket* socket, Connection::Type type, const 
 	socket->waitForConnected();
 	logger->debug("start writing headers");
 	writeLine(socket, "User: ", SystemUtil::instance()->getUserName());
-	writeLine(socket, "UID: ", QVariant::fromValue(Config::uid()));
-	writeLine(socket, "Uptime: ", QVariant::fromValue(Config::uptime()));
+	writeLine(socket, "UID: ", QVariant::fromValue(Config::instance()->uid()));
+	writeLine(socket, "Uptime: ", QVariant::fromValue(Config::instance()->uptime()));
 
 	if (type == Connection::STATUS)
 		writeLine(socket, "Request: Status");
@@ -103,7 +103,7 @@ QHash<QString, QString> NetworkUtil::readHeaders(QTcpSocket* socket, const Log* 
 	QHash<QString, QString> headers;
 
 	logger->debug("starting reading headers");
-	while (socket->isOpen() && socket->waitForReadyRead(Config::SOCKET_READ_TIMEOUT)) {
+	while (socket->isOpen() && socket->waitForReadyRead(Config::instance()->SOCKET_READ_TIMEOUT)) {
 		while (socket->canReadLine()) {
 			QString line = readLine(socket).trimmed();
 			int index = line.indexOf(":");
@@ -209,6 +209,6 @@ void NetworkUtil::setStandardSocketOptions(QTcpSocket* socket)
 {
 	socket->setSocketOption(QAbstractSocket::LowDelayOption, 1);
 	NetworkUtil::setSocketReuseAddr(socket);
-	NetworkUtil::setSocketTimeout(socket, Config::SOCKET_READ_TIMEOUT);
+	NetworkUtil::setSocketTimeout(socket, Config::instance()->SOCKET_READ_TIMEOUT);
 }
 
