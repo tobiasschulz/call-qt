@@ -7,6 +7,7 @@
 #include <QMutex>
 
 #include "contact.h"
+#include "connection.h"
 
 class ContactList: public QObject, public ID
 {
@@ -19,6 +20,7 @@ public:
 	int size() const;
 
 	bool isHostOnline(Host host);
+	void addSignals(Connection* connection);
 
 signals:
 	void hostOnline(Host host);

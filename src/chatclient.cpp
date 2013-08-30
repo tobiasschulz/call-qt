@@ -41,7 +41,7 @@ void ChatClient::connect(Connection* connection)
 	}
 	setConnection(connection);
 	if (connection->isConnected() && connection->socket()->canReadLine()) {
-		QTimer::singleShot(0, this, SLOT(onReadyRead()));
+		QTimer::singleShot(0, this, SLOT(onReceiveMessages()));
 	}
 }
 
@@ -51,7 +51,8 @@ void ChatClient::connect()
 		if (m_connection->isConnected()) {
 			return;
 		}
-		delete m_connection;
+		m_connection->disconnect();
+		m_connection = 0;
 	}
 
 	setConnection(new Connection(Connection::CHAT, this));
@@ -61,15 +62,13 @@ void ChatClient::connect()
 void ChatClient::setConnection(Connection* connection)
 {
 	m_connection = connection;
-	QObject::connect(m_connection, &Connection::contactFound, ContactList::instance(), &ContactList::addContact);
-	QObject::connect(m_connection, &Connection::hostOnline, ContactList::instance(), &ContactList::setHostOnline);
-	QObject::connect(m_connection, &Connection::hostOffline, ContactList::instance(), &ContactList::setHostOffline);
-	QObject::connect(m_connection, &Connection::connected, this, &ChatClient::onConnected);
-	QObject::connect(m_connection, &Connection::connected, this, &ChatClient::flush);
-	QObject::connect(m_connection, &Connection::readyRead, this, &ChatClient::onReadyRead);
-	QObject::connect(m_connection, &Connection::disconnected, this, &ChatClient::onDisconnected);
-	QObject::connect(m_connection, &Connection::socketError, this, &ChatClient::onSocketError);
-	QObject::connect(m_connection, &Connection::connectFailed, this, &ChatClient::onConnectFailed);
+	ContactList::instance()->addSignals(m_connection);
+	QObject::connect(m_connection.data(), &Connection::connected, this, &ChatClient::onConnected);
+	QObject::connect(m_connection.data(), &Connection::connected, this, &ChatClient::flush);
+	QObject::connect(m_connection.data(), &Connection::readyRead, this, &ChatClient::onReceiveMessages);
+	QObject::connect(m_connection.data(), &Connection::disconnected, this, &ChatClient::onDisconnected);
+	QObject::connect(m_connection.data(), &Connection::socketError, this, &ChatClient::onSocketError);
+	QObject::connect(m_connection.data(), &Connection::connectFailed, this, &ChatClient::onConnectFailed);
 }
 
 void ChatClient::sendMessage(QString msg)
@@ -82,7 +81,8 @@ void ChatClient::sendMessage(QString msg)
 void ChatClient::flush()
 {
 	log.debug("flush()");
-	if (m_connection->isConnected()) {
+
+	if (m_connection && m_connection->isConnected()) {
 		log.debug("flush... isConnected = true");
 		QTextStream stream(m_connection->socket());
 
@@ -103,9 +103,9 @@ void ChatClient::flush()
 	}
 }
 
-void ChatClient::onReadyRead()
+void ChatClient::onReceiveMessages()
 {
-	log.debug("onReadyRead()");
+	log.debug("onReceiveMessages()");
 	QTextStream stream(m_connection->socket());
 
 	// read
@@ -118,7 +118,6 @@ void ChatClient::onReadyRead()
 void ChatClient::onConnected()
 {
 	log.debug("onConnected()");
-	flush();
 }
 
 void ChatClient::onDisconnected()

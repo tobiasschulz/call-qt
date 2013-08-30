@@ -11,6 +11,8 @@ Thread::Thread(QString name, QObject *parent)
 		: QThread(parent)
 {
 	setObjectName(name);
+	QObject::connect(this, &Thread::finished, this, &Thread::deleteLater);
+
 	//log.debug("setObjectName(%1)", name);
 }
 

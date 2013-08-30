@@ -10,6 +10,7 @@
 
 #include <QThread>
 #include <QTcpSocket>
+#include <QPointer>
 
 #include "thread.h"
 #include "connection.h"
@@ -41,9 +42,8 @@ public slots:
 
 private:
 	int socketDescriptor;
-	QTcpSocket* m_socket;
-	Connection* m_connection;
-	Thread* m_thread;
+	QPointer<Connection> m_connection;
+	QPointer<Thread> m_thread;
 };
 
 #endif /* SERVERREQUEST_H */

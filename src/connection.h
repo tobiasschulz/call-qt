@@ -5,6 +5,7 @@
 #include <QString>
 #include <QTcpSocket>
 #include <QTimer>
+#include <QPointer>
 
 #include "contact.h"
 #include "id.h"
@@ -25,8 +26,10 @@ public:
 	};
 
 	Connection(Type type, QObject* parent = 0);
+	bool operator==(const Connection& other) const;
+	bool operator!=(const Connection& other) const;
 
-	void connect(QTcpSocket* socket);
+	bool connect(int socketDescriptor);
 	void connect(Host host);
 
 	virtual QString id() const;
@@ -49,18 +52,18 @@ signals:
 	void connectFailed(QString error, Host host = Host::INVALID_HOST);
 
 public slots:
-	void onReadyRead();
-	void onConnected();
-	void onDisconnected();
-	void onError(QAbstractSocket::SocketError);
-	void onConnectTimeout();
-	void onReadTimeout();
+	void onSocketReadyRead();
+	void onSocketConnected();
+	void onSocketDisconnected();
+	void onSocketError(QAbstractSocket::SocketError);
+	void onSocketConnectTimeout();
+	void onSocketReadTimeout();
 	void disconnect();
 
 protected:
 	void setSocket(QTcpSocket* socket);
 
-	QTcpSocket* m_socket;
+	QPointer<QTcpSocket> m_socket;
 	Host m_host;
 	Contact m_contact;
 	State m_state;

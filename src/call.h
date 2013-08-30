@@ -7,6 +7,7 @@
 #include <QAudio>
 #include <QAudioInput>
 #include <QAudioOutput>
+#include <QPointer>
 
 #include "contact.h"
 #include "connection.h"
@@ -30,7 +31,6 @@ public slots:
 	void open();
 	void close();
 	void onConnected();
-	void onDisconnected();
 	void onSocketError(QString error, Host host);
 	void onConnectFailed(QString error, Host host);
 
@@ -46,9 +46,9 @@ private:
 
 	Host m_host;
 	Contact m_contact;
-	Connection* m_connection;
-	QAudioInput* m_audioinput;
-	QAudioOutput* m_audiooutput;
+	QPointer<Connection> m_connection;
+	QPointer<QAudioInput> m_audioinput;
+	QPointer<QAudioOutput> m_audiooutput;
 };
 
 #endif // CALL_H

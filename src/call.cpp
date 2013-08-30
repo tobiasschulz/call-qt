@@ -50,34 +50,6 @@ QString Call::print(PrintFormat format) const
 		return "Call " + data;
 }
 
-void Call::open(Connection* connection)
-{
-	close();
-
-	m_connection = connection;
-	prepareConnection();
-	if (connection->isConnected()) {
-		QTimer::singleShot(0, this, SLOT(onConnected()));
-	}
-}
-
-void Call::close()
-{
-	if (m_connection) {
-		//	QObject::connect(m_connection->socket(), &QTcpSocket::disconnected, m_connection, &Connection::deleteLater);
-		if (m_connection->isConnected()) {
-			QTimer::singleShot(0, m_connection, SLOT(disconnect()));
-			//QTimer::singleShot(0, m_connection, SLOT(deleteLater()));
-		} else {
-			//QTimer::singleShot(0, m_connection, SLOT(deleteLater()));
-		}
-		m_connection = 0;
-	}
-	QTimer::singleShot(0, m_audioinput, SLOT(stop()));
-	QTimer::singleShot(0, m_audiooutput, SLOT(stop()));
-	emit stopped();
-}
-
 void Call::open()
 {
 	close();
@@ -87,15 +59,47 @@ void Call::open()
 	m_connection->connect(m_host);
 }
 
+void Call::open(Connection* connection)
+{
+	close();
+
+	m_connection = connection;
+	m_connection->setParent(this);
+	prepareConnection();
+	if (m_connection->isConnected()) {
+		QTimer::singleShot(0, this, SLOT(onConnected()));
+	}
+}
+
+void Call::close()
+{
+	log.debug("close()");
+	if (m_connection) {
+		if (m_connection->isConnected()) {
+			QTimer::singleShot(0, m_connection, SLOT(disconnect()));
+		}
+		m_connection.clear();
+	}
+	if (m_audioinput) {
+		m_audioinput->stop();
+		QTimer::singleShot(0, m_audioinput, SLOT(deleteLater()));
+		m_audioinput.clear();
+	}
+	if (m_audiooutput) {
+		m_audiooutput->stop();
+		QTimer::singleShot(0, m_audiooutput, SLOT(deleteLater()));
+		m_audiooutput.clear();
+	}
+	emit stopped();
+}
+
 void Call::prepareConnection()
 {
-	QObject::connect(m_connection, &Connection::contactFound, ContactList::instance(), &ContactList::addContact);
-	QObject::connect(m_connection, &Connection::hostOnline, ContactList::instance(), &ContactList::setHostOnline);
-	QObject::connect(m_connection, &Connection::hostOffline, ContactList::instance(), &ContactList::setHostOffline);
-	QObject::connect(m_connection, &Connection::connected, this, &Call::onConnected);
-	QObject::connect(m_connection, &Connection::disconnected, this, &Call::onDisconnected);
-	QObject::connect(m_connection, &Connection::socketError, this, &Call::onSocketError);
-	QObject::connect(m_connection, &Connection::connectFailed, this, &Call::onConnectFailed);
+	ContactList::instance()->addSignals(m_connection);
+	QObject::connect(m_connection.data(), &Connection::connected, this, &Call::onConnected);
+	QObject::connect(m_connection.data(), &Connection::disconnected, this, &Call::close);
+	QObject::connect(m_connection.data(), &Connection::socketError, this, &Call::onSocketError);
+	QObject::connect(m_connection.data(), &Connection::connectFailed, this, &Call::onConnectFailed);
 }
 
 void Call::setConnection(Connection* connection)
@@ -141,12 +145,6 @@ void Call::handleStateChanged(QAudio::State state)
 	if (state == QAudio::StoppedState) {
 		close();
 	}
-}
-
-void Call::onDisconnected()
-{
-	log.debug("onDisconnected()");
-	close();
 }
 
 void Call::onSocketError(QString error, Host host)

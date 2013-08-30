@@ -21,17 +21,13 @@ void PingClient::ping()
 		if (m_connection->isConnected()) {
 			return;
 		}
-		delete m_connection;
+		m_connection->disconnect();
+		m_connection = 0;
 	}
 
 	m_connection = new Connection(Connection::STATUS, this);
+	ContactList::instance()->addSignals(m_connection);
+	QObject::connect(m_connection.data(), &Connection::connected, m_connection.data(), &Connection::disconnect);
 	m_connection->connect(m_host);
-	QObject::connect(m_connection, &Connection::contactFound, ContactList::instance(),
-			&ContactList::addContact);
-	QObject::connect(m_connection, &Connection::hostOnline, ContactList::instance(),
-			&ContactList::setHostOnline);
-	QObject::connect(m_connection, &Connection::hostOffline, ContactList::instance(),
-			&ContactList::setHostOffline);
-	QObject::connect(m_connection, &Connection::connected, m_connection, &Connection::disconnect);
 }
 

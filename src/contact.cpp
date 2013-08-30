@@ -47,13 +47,7 @@ Host::Host(const Host& other)
 	m_hostname = QString(other.m_hostname);
 	m_port = other.m_port;
 	m_address_valid = other.m_address_valid;
-	//if (!other.m_address_valid) {
-	//	lookupAddress();
-	//}
 	m_hostname_valid = other.m_hostname_valid;
-	//if (!other.m_hostname_valid) {
-	//	lookupHostname();
-	//}
 }
 
 Host& Host::operator=(const Host& other)
@@ -62,13 +56,7 @@ Host& Host::operator=(const Host& other)
 	m_hostname = QString(other.m_hostname);
 	m_port = other.m_port;
 	m_address_valid = other.m_address_valid;
-	//if (!other.m_address_valid) {
-	//	lookupAddress();
-	//}
 	m_hostname_valid = other.m_hostname_valid;
-	//if (!other.m_hostname_valid) {
-	//	lookupHostname();
-	//}
 	return *this;
 }
 bool Host::operator==(const Host& other) const

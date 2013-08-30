@@ -2,6 +2,7 @@
 #define PINGCLIENT_H
 
 #include <QObject>
+#include <QPointer>
 
 #include "connection.h"
 
@@ -21,7 +22,7 @@ public slots:
 
 private:
 	Host m_host;
-	Connection* m_connection;
+	QPointer<Connection> m_connection;
 };
 
 #endif // PINGCLIENT_H

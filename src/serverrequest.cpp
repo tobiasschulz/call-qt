@@ -17,7 +17,7 @@
 #include "config.h"
 
 ServerRequest::ServerRequest(int socketDescriptor, Thread* thread, QObject *parent)
-		: QObject(parent), socketDescriptor(socketDescriptor), m_socket(0), m_connection(0), m_thread(thread)
+		: QObject(parent), socketDescriptor(socketDescriptor), m_connection(0), m_thread(thread)
 {
 	log.debug("constuctor()");
 }
@@ -41,31 +41,12 @@ QString ServerRequest::print(PrintFormat format) const
 void ServerRequest::start()
 {
 	log.debug("start()");
-	m_socket = new QTcpSocket();
-	if (!m_socket->setSocketDescriptor(socketDescriptor)) {
-		emit error(m_socket->error());
-		return;
-	}
-	m_connection = new Connection(Connection::SERVER, m_socket);
-	QObject::connect(m_connection, &Connection::contactFound, ContactList::instance(), &ContactList::addContact);
-	QObject::connect(m_connection, &Connection::disconnected, m_thread, &Thread::quit);
-	QObject::connect(m_connection, &Connection::connected, this, &ServerRequest::onConnected);
-	QObject::connect(m_thread, &Thread::finished, m_socket, &QTcpSocket::close);
-	m_connection->connect(m_socket);
-
-	/*
-	 QByteArray block;
-	 QDataStream out(&block, QIODevice::WriteOnly);
-	 out.setVersion(QDataStream::Qt_4_0);
-	 out << (quint16) 0;
-	 out << text;
-	 out.device()->seek(0);
-	 out << (quint16) (block.size() - sizeof(quint16));
-
-	 socket->write(block);
-	 socket->disconnectFromHost();
-	 socket->waitForDisconnected();
-	 */
+	m_connection = new Connection(Connection::SERVER, this);
+	QObject::connect(m_connection.data(), &Connection::contactFound, ContactList::instance(), &ContactList::addContact);
+	QObject::connect(m_connection.data(), &Connection::disconnected, m_thread.data(), &Thread::quit);
+	QObject::connect(m_thread.data(), &Thread::finished, m_connection.data(), &Connection::disconnect);
+	QObject::connect(m_connection.data(), &Connection::connected, this, &ServerRequest::onConnected);
+	m_connection->connect(socketDescriptor);
 }
 
 void ServerRequest::onConnected()
@@ -103,14 +84,15 @@ void ServerRequest::onCallConnection()
 	//openChatTab();
 
 	Call* call = Call::instance(m_connection->contact());
-	m_socket->moveToThread(call->thread());
+	m_connection->setParent(NULL);
 	m_connection->moveToThread(call->thread());
 	call->setConnection(m_connection);
 
 	//QTimer::singleShot(0, Call::instance(m_connection->contact()), SLOT(open()));
 }
 
-void ServerRequest::openChatTab() {
+void ServerRequest::openChatTab()
+{
 	QObject::connect(Main::instance(), &Main::contactTabAvailable, this, &ServerRequest::onChatTabOpened);
 	QObject::connect(this, &ServerRequest::openContactTab, Main::instance(), &Main::addContactTab);
 	emit openContactTab(m_connection->contact());

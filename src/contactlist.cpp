@@ -83,3 +83,10 @@ bool ContactList::isHostOnline(Host host)
 	return m_onlinehosts.contains(host);
 }
 
+void ContactList::addSignals(Connection* connection)
+{
+	QObject::connect(connection, &Connection::contactFound, this, &ContactList::addContact);
+	QObject::connect(connection, &Connection::hostOnline, this, &ContactList::setHostOnline);
+	QObject::connect(connection, &Connection::hostOffline, this, &ContactList::setHostOffline);
+}
+

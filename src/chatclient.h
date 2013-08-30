@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QMutex>
 #include <QStringList>
+#include <QPointer>
 
 #include "contact.h"
 #include "connection.h"
@@ -29,7 +30,7 @@ public slots:
 	void connect();
 	void sendMessage(QString msg);
 	void flush();
-	void onReadyRead();
+	void onReceiveMessages();
 	void onConnected();
 	void onDisconnected();
 	void onSocketError(QString error, Host host);
@@ -40,7 +41,7 @@ private:
 
 	Host m_host;
 	Contact m_contact;
-	Connection* m_connection;
+	QPointer<Connection> m_connection;
 	QStringList m_messagequeue;
 	QMutex m_messagequeue_mutex;
 };
