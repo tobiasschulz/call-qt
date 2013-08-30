@@ -21,7 +21,9 @@ int main(int argv, char** args)
 	QCoreApplication::setOrganizationDomain("tobias-schulz.eu");
 	QCoreApplication::setApplicationName("Call Qt");
 	QCoreApplication::setApplicationVersion(Config::instance()->version());
-	//QApplication::setStyle(QStyleFactory::create("Fusion"));
+#if !defined(Q_OS_WIN)
+	QApplication::setStyle(QStyleFactory::create("Fusion"));
+#endif
 
 #if defined(Q_OS_WIN)
 	QSettings::setDefaultFormat(QSettings::IniFormat);

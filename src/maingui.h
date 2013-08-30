@@ -44,6 +44,16 @@ public slots:
 	void openContactTab(Contact contact);
 	void onTabIconChanged();
 
+	void showStats();
+	void hideStats();
+	void onShowStatsToggled(bool checked);
+	void onStatsDurationInput(int ms);
+	void onStatsDurationOutput(int ms);
+	void onStatsLatencyInput(int ms);
+	void onStatsLatencyOutput(int ms);
+	void onStatsLevelInput(qreal level);
+	void onStatsLevelOutput(qreal level);
+
 	void onShowTerminalToggled(bool checked);
 	void onAbout();
 	void onAboutQt();
@@ -60,6 +70,7 @@ private:
 	ContactModel* m_contactmodel;
 	QHash<QString, Tab*> m_tabhash;
 	Terminal* m_terminal;
+	bool statsVisible;
 };
 
 #endif // MAIN_H

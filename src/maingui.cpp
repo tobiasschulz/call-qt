@@ -38,6 +38,12 @@ Main::Main(QWidget* parent)
 	bool showTerminal = settings.value("window/show-terminal", true).toBool();
 	ui->actionShowTerminal->setChecked(showTerminal);
 
+	// stats
+	ui->stats->hide();
+	bool showStats = settings.value("window/show-stats", true).toBool();
+	QObject::connect(ui->actionShowStats, &QAction::toggled, this, &Main::onShowStatsToggled);
+	ui->actionShowStats->setChecked(showStats);
+
 	// menu
 	QObject::connect(ui->actionReloadContacts, &QAction::triggered, m_contactmodel, &ContactModel::resetContacts);
 	QObject::connect(ui->actionAbout, &QAction::triggered, this, &Main::onAbout);
@@ -46,7 +52,11 @@ Main::Main(QWidget* parent)
 	// tab focus
 	QObject::connect(ui->tabs, &QTabWidget::currentChanged, this, &Main::onTabChanged);
 	onTabChanged(ui->tabs->currentIndex());
+
+	//ui->groupBox->setFlat(true);
+	//ui->groupBox->setAlignment(Qt::AlignHCenter);
 }
+
 Main* Main::instance()
 {
 	static QMutex mutex;
@@ -59,6 +69,11 @@ Main* Main::instance()
 	return m_instance;
 }
 
+Main::~Main()
+{
+	delete ui;
+}
+
 QString Main::id() const
 {
 	return "Main";
@@ -68,17 +83,6 @@ void Main::show()
 {
 	QMainWindow::show();
 	emit shown();
-}
-
-void Main::onShowTerminalToggled(bool checked)
-{
-	if (checked) {
-		openTab(m_terminal);
-	} else {
-		closeTab(m_terminal);
-	}
-	QSettings settings;
-	settings.setValue("window/show-terminal", checked);
 }
 
 void Main::resizeEvent(QResizeEvent* event)
@@ -181,6 +185,7 @@ void Main::onContactSelected(const QModelIndex & index)
 	addContactTab(contact);
 	openContactTab(contact);
 }
+
 void Main::addContactTab(Contact contact)
 {
 	ChatTab* chattab = ChatTab::instance(contact);
@@ -188,6 +193,7 @@ void Main::addContactTab(Contact contact)
 	addTab(chattab);
 	emit contactTabAvailable(contact);
 }
+
 void Main::openContactTab(Contact contact)
 {
 	ChatTab* chattab = ChatTab::instance(contact);
@@ -205,7 +211,70 @@ void Main::onTabIconChanged()
 	}
 }
 
-Main::~Main()
+void Main::onShowTerminalToggled(bool checked)
 {
-	delete ui;
+	if (checked) {
+		openTab(m_terminal);
+	} else {
+		closeTab(m_terminal);
+	}
+	QSettings settings;
+	settings.setValue("window/show-terminal", checked);
 }
+
+void Main::onShowStatsToggled(bool checked)
+{
+	QSettings settings;
+	settings.setValue("window/show-stats", checked);
+	ui->stats->setVisible(statsVisible && checked);
+}
+
+void Main::showStats()
+{
+	statsVisible = true;
+	ui->stats->setVisible(statsVisible && ui->actionShowStats->isChecked());
+}
+
+void Main::hideStats()
+{
+	statsVisible = false;
+	ui->stats->hide();
+}
+
+void Main::onStatsDurationInput(int ms)
+{
+	ui->statsDurationInput->setText(QString::number(ms) + "ms");
+}
+void Main::onStatsDurationOutput(int ms)
+{
+	ui->statsDurationOutput->setText(QString::number(ms) + "ms");
+}
+void Main::onStatsLatencyInput(int ms)
+{
+	ui->statsLatencyInput->setText(QString::number(ms) + "ms");
+}
+void Main::onStatsLatencyOutput(int ms)
+{
+	ui->statsLatencyOutput->setText(QString::number(ms) + "ms");
+}
+void Main::onStatsLevelInput(qreal _level)
+{
+	int level = (int) (_level * 100);
+	static int lastLevel = 0;
+	log.debug("level (in): %1", level);
+	if (level != lastLevel) {
+		ui->statsLevelInput->setValue(level);
+		lastLevel = level;
+	}
+}
+void Main::onStatsLevelOutput(qreal _level)
+{
+	int level = (int) (_level * 100);
+	static int lastLevel = 0;
+	log.debug("level (out): %1", level);
+	if (level != lastLevel) {
+		ui->statsLevelOutput->setValue(level);
+		lastLevel = level;
+	}
+}
+

@@ -9,7 +9,7 @@ export QT_MAIN=/data/local/qt-5.1.1-windows
 export QT_BIN=$QT_MAIN/$QT_VERSION/$MINGW_VERSION/bin/
 export QTCREATOR_BIN=$QT_MAIN/Tools/QtCreator/bin/
 export MINGW_BIN=$QT_MAIN/Tools/$MINGW_VERSION/bin/
-export MINGW_PLATFORM=$QT_MAIN/$QT_VERSION/$MINGW_VERSION/plugins/platforms/
+export QT_PLUGINS=$QT_MAIN/$QT_VERSION/$MINGW_VERSION/plugins/
 export W_QT_BIN=$(echo -n "Z:"; echo $QT_BIN | sed 's@/@\\@gm')
 export W_MINGW_BIN=$(echo -n "Z:"; echo $MINGW_BIN | sed 's@/@\\@gm')
 
@@ -61,18 +61,18 @@ function winezip() {
 		done
 		for dll in libEGL.dll libGLESv2.dll D3DCompiler_43.dll
 		do
-		true
+			true
 #			test -f ../call-qt/$dll || cp $QTCREATOR_BIN/$dll ../call-qt/
 		done
-		for dll in qminimal.dll qoffscreen.dll qwindowsd.dll
-		do
-			test -f ../call-qt/$dll || cp $MINGW_PLATFORM/$dll ../call-qt/
-		done
+		cp -rf $QT_PLUGINS/platforms/ ../call-qt/
+		cp -rf $QT_PLUGINS/mediaservice/ ../call-qt/
+		cp -rf $QT_PLUGINS/imageformats/ ../call-qt/
+
 		cd ../call-qt
 		#upx *.exe *.dll 2>/dev/null
 		ll *.exe *.dll 2>/dev/null
 		rm -f compiled.zip 2>/dev/null
-		zip -rq compiled.zip *.exe *.dll img/ ui/ src/
+		zip -rq compiled.zip *.exe *.dll img/ ui/ src/ platforms/ imageformats/ mediaservice/
 	))
 	echo A | unzip -d /data/share/test/ compiled.zip >/dev/null 2>&1
 }

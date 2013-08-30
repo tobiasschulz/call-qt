@@ -11,6 +11,7 @@
 
 #include "contact.h"
 #include "connection.h"
+#include "audioinfo.h"
 
 class Call: public QObject, public ID
 {
@@ -26,6 +27,12 @@ public:
 signals:
 	void started();
 	void stopped();
+	void statsDurationInput(int);
+	void statsDurationOutput(int);
+	void statsLatencyInput(int);
+	void statsLatencyOutput(int);
+	void statsLevelInput(qreal level);
+	void statsLevelOutput(qreal level);
 
 public slots:
 	void open();
@@ -34,7 +41,8 @@ public slots:
 	void onSocketError(QString error, Host host);
 	void onConnectFailed(QString error, Host host);
 
-	void notified();
+	void notifiedOutput();
+	void notifiedInput();
 	void handleStateChanged(QAudio::State state);
 
 private:
@@ -47,8 +55,10 @@ private:
 	Host m_host;
 	Contact m_contact;
 	QPointer<Connection> m_connection;
-	QPointer<QAudioInput> m_audioinput;
-	QPointer<QAudioOutput> m_audiooutput;
+	QPointer<QAudioInput> m_inputaudio;
+	QPointer<QAudioOutput> m_outputaudio;
+	QPointer<AudioInfo> m_inputinfo;
+	QPointer<AudioInfo> m_outputinfo;
 };
 
 #endif // CALL_H

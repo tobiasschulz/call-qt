@@ -1,7 +1,9 @@
 #include <QTcpSocket>
+#include <QSettings>
 #include <QTimer>
 
 #include "call.h"
+#include "maingui.h"
 #include "connection.h"
 #include "contactlist.h"
 #include "thread.h"
@@ -25,9 +27,17 @@ Call* Call::instance(const Contact& contact)
 }
 
 Call::Call(const Contact& contact, QObject* parent)
-		: QObject(parent), m_host(contact.host()), m_contact(contact), m_connection(0), m_audioinput(0),
-			m_audiooutput(0)
+		: QObject(parent), m_host(contact.host()), m_contact(contact), m_connection(0), m_inputaudio(0),
+			m_outputaudio(0), m_inputinfo(0), m_outputinfo(0)
 {
+	QObject::connect(this, &Call::started, Main::instance(), &Main::showStats);
+	QObject::connect(this, &Call::stopped, Main::instance(), &Main::hideStats);
+	QObject::connect(this, &Call::statsDurationInput, Main::instance(), &Main::onStatsDurationInput);
+	QObject::connect(this, &Call::statsDurationOutput, Main::instance(), &Main::onStatsDurationOutput);
+	QObject::connect(this, &Call::statsLatencyInput, Main::instance(), &Main::onStatsLatencyInput);
+	QObject::connect(this, &Call::statsLatencyOutput, Main::instance(), &Main::onStatsLatencyOutput);
+	QObject::connect(this, &Call::statsLevelInput, Main::instance(), &Main::onStatsLevelInput);
+	QObject::connect(this, &Call::statsLevelOutput, Main::instance(), &Main::onStatsLevelOutput);
 }
 
 QString Call::id() const
@@ -80,15 +90,15 @@ void Call::close()
 		}
 		m_connection.clear();
 	}
-	if (m_audioinput) {
-		m_audioinput->stop();
-		QTimer::singleShot(0, m_audioinput, SLOT(deleteLater()));
-		m_audioinput.clear();
+	if (m_inputaudio) {
+		m_inputaudio->stop();
+		QTimer::singleShot(0, m_inputaudio, SLOT(deleteLater()));
+		m_inputaudio.clear();
 	}
-	if (m_audiooutput) {
-		m_audiooutput->stop();
-		QTimer::singleShot(0, m_audiooutput, SLOT(deleteLater()));
-		m_audiooutput.clear();
+	if (m_outputaudio) {
+		m_outputaudio->stop();
+		QTimer::singleShot(0, m_outputaudio, SLOT(deleteLater()));
+		m_outputaudio.clear();
 	}
 	emit stopped();
 }
@@ -114,26 +124,84 @@ void Call::onConnected()
 
 	QAudioDeviceInfo indevice = Config::instance()->currentAudioInputDevice();
 	QAudioDeviceInfo outdevice = Config::instance()->currentAudioOutputDevice();
-	QAudioFormat format = Config::instance()->currentAudioFormat();
-	m_audioinput = new QAudioInput(indevice, format, this);
-	log.debug("audioinput: device = %1, format = %2", Log::print(indevice), Log::print(m_audioinput->format()));
-	m_audiooutput = new QAudioOutput(outdevice, format, this);
-	log.debug("audiooutput: device = %1, format = %2", Log::print(outdevice), Log::print(m_audiooutput->format()));
-	m_audioinput->start(m_connection->socket());
-	m_audiooutput->start(m_connection->socket());
 
-	QObject::connect(m_audioinput, SIGNAL(notify()), SLOT(notified()));
-	QObject::connect(m_audioinput, SIGNAL(stateChanged(QAudio::State)), SLOT(handleStateChanged(QAudio::State)));
-	QObject::connect(m_audiooutput, SIGNAL(notify()), SLOT(notified()));
-	QObject::connect(m_audiooutput, SIGNAL(stateChanged(QAudio::State)), SLOT(handleStateChanged(QAudio::State)));
+	QAudioFormat inputformat = Config::instance()->currentAudioFormat();
+	QAudioFormat outputformat = Config::instance()->currentAudioFormat();
+
+	m_inputaudio = new QAudioInput(indevice, inputformat, this);
+	log.debug("audioinput: device = %1, format = %2", Log::print(indevice), Log::print(m_inputaudio->format()));
+	m_outputaudio = new QAudioOutput(outdevice, outputformat, this);
+	log.debug("audiooutput: device = %1, format = %2", Log::print(outdevice), Log::print(m_outputaudio->format()));
+
+	m_inputinfo = new AudioInfo(m_connection->socket(), inputformat, this);
+	m_outputinfo = new AudioInfo(m_connection->socket(), outputformat, this);
+	m_inputinfo->start();
+	m_outputinfo->start();
+	//m_infooutput = new AudioInfo(m_connection->socket(), format, this);
+	//m_audioinput->start(m_connection->socket());
+	//m_audiooutput->start(m_connection->socket());
+	m_inputaudio->start(m_inputinfo);
+	m_outputaudio->start(m_outputinfo);
+
+	QObject::connect(m_inputaudio, SIGNAL(stateChanged(QAudio::State)), SLOT(handleStateChanged(QAudio::State)));
+	QObject::connect(m_outputaudio, SIGNAL(stateChanged(QAudio::State)), SLOT(handleStateChanged(QAudio::State)));
+
+	QSettings settings;
+	bool showStats = settings.value("window/show-stats", true).toBool();
+	if (showStats) {
+		QObject::connect(m_inputaudio.data(), &QAudioInput::notify, this, &Call::notifiedInput);
+		QObject::connect(m_outputaudio.data(), &QAudioOutput::notify, this, &Call::notifiedOutput);
+	}
 
 	emit started();
 }
 
-void Call::notified()
+void Call::notifiedInput()
 {
-	log.debug("bytesReady = %1, elapsedSeconds = %2, processedSeconds = %3", m_audioinput->bytesReady(),
-			(m_audioinput->elapsedUSecs() / 1000000.0), (m_audioinput->processedUSecs() / 1000000.0));
+	long bytesready = m_inputaudio->bytesReady();
+	long elapsedmsec = (m_inputaudio->elapsedUSecs() / 1000.0);
+	long processedmsec = (m_inputaudio->processedUSecs() / 1000.0);
+	long latency = elapsedmsec - processedmsec;
+
+	static long latencyAverage = 0;
+	static long lastElapsedmsec = 0;
+	if (elapsedmsec < lastElapsedmsec)
+		latencyAverage = 0;
+	if (latencyAverage > 2)
+		latencyAverage = (latencyAverage + latency) / 2;
+	else
+		latencyAverage = latency;
+	lastElapsedmsec = elapsedmsec;
+
+	emit statsDurationInput(elapsedmsec);
+	emit statsLatencyInput(latencyAverage);
+	emit statsLevelInput(m_inputinfo->level());
+
+	log.debug("microphone: bytesReady = %1, elapsedSeconds = %2, latency = %3", (int) bytesready, (int) elapsedmsec,
+			(int) latency);
+}
+
+void Call::notifiedOutput()
+{
+	long elapsedmsec = (m_outputaudio->elapsedUSecs() / 1000.0);
+	long processedmsec = (m_outputaudio->processedUSecs() / 1000.0);
+	long latency = elapsedmsec - processedmsec;
+
+	static long latencyAverage = 0;
+	static long lastElapsedmsec = 0;
+	if (elapsedmsec < lastElapsedmsec)
+		latencyAverage = 0;
+	if (latencyAverage > 2)
+		latencyAverage = (latencyAverage + latency) / 2;
+	else
+		latencyAverage = latency;
+	lastElapsedmsec = elapsedmsec;
+
+	emit statsDurationOutput(elapsedmsec);
+	emit statsLatencyOutput(latencyAverage);
+	emit statsLevelOutput(m_outputinfo->level());
+
+	log.debug("speaker: bytesReady = %1, elapsedSeconds = %2, latency = %3", "?", (int) elapsedmsec, (int) latency);
 }
 
 void Call::handleStateChanged(QAudio::State state)
