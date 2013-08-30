@@ -36,8 +36,6 @@ Call::Call(const Contact& contact, QObject* parent)
 	QObject::connect(this, &Call::statsDurationOutput, Main::instance(), &Main::onStatsDurationOutput);
 	QObject::connect(this, &Call::statsLatencyInput, Main::instance(), &Main::onStatsLatencyInput);
 	QObject::connect(this, &Call::statsLatencyOutput, Main::instance(), &Main::onStatsLatencyOutput);
-	QObject::connect(this, &Call::statsLevelInput, Main::instance(), &Main::onStatsLevelInput);
-	QObject::connect(this, &Call::statsLevelOutput, Main::instance(), &Main::onStatsLevelOutput);
 }
 
 QString Call::id() const
@@ -100,6 +98,16 @@ void Call::close()
 		QTimer::singleShot(0, m_outputaudio, SLOT(deleteLater()));
 		m_outputaudio.clear();
 	}
+	if (m_inputinfo) {
+		m_inputinfo->stop();
+		QTimer::singleShot(0, m_inputinfo, SLOT(deleteLater()));
+		m_inputinfo.clear();
+	}
+	if (m_outputinfo) {
+		m_outputinfo->stop();
+		QTimer::singleShot(0, m_outputinfo, SLOT(deleteLater()));
+		m_outputinfo.clear();
+	}
 	emit stopped();
 }
 
@@ -151,6 +159,10 @@ void Call::onConnected()
 	if (showStats) {
 		QObject::connect(m_inputaudio.data(), &QAudioInput::notify, this, &Call::notifiedInput);
 		QObject::connect(m_outputaudio.data(), &QAudioOutput::notify, this, &Call::notifiedOutput);
+		m_inputinfo->setLevelUpdates(true);
+		m_outputinfo->setLevelUpdates(true);
+		QObject::connect(m_inputinfo.data(), &AudioInfo::levelUpdated, Main::instance(), &Main::onStatsLevelInput);
+		QObject::connect(m_outputinfo.data(), &AudioInfo::levelUpdated, Main::instance(), &Main::onStatsLevelOutput);
 	}
 
 	emit started();
@@ -175,7 +187,6 @@ void Call::notifiedInput()
 
 	emit statsDurationInput(elapsedmsec);
 	emit statsLatencyInput(latencyAverage);
-	emit statsLevelInput(m_inputinfo->level());
 
 	log.debug("microphone: bytesReady = %1, elapsedSeconds = %2, latency = %3", (int) bytesready, (int) elapsedmsec,
 			(int) latency);
@@ -199,7 +210,6 @@ void Call::notifiedOutput()
 
 	emit statsDurationOutput(elapsedmsec);
 	emit statsLatencyOutput(latencyAverage);
-	emit statsLevelOutput(m_outputinfo->level());
 
 	log.debug("speaker: bytesReady = %1, elapsedSeconds = %2, latency = %3", "?", (int) elapsedmsec, (int) latency);
 }

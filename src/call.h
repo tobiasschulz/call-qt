@@ -31,8 +31,6 @@ signals:
 	void statsDurationOutput(int);
 	void statsLatencyInput(int);
 	void statsLatencyOutput(int);
-	void statsLevelInput(qreal level);
-	void statsLevelOutput(qreal level);
 
 public slots:
 	void open();

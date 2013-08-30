@@ -12,8 +12,11 @@ using namespace std;
 
 #include "audioinfo.h"
 
+bool AudioInfo::DO_DEBUG = 0;
+
 AudioInfo::AudioInfo(QIODevice* device, const QAudioFormat &format, QObject *parent)
-		: QIODevice(parent), m_device(device), m_format(format), m_maxAmplitude(0), m_level(0.0)
+		: QIODevice(parent), m_device(device), m_format(format), m_doLevelUpdates(false), m_maxAmplitude(0),
+			m_baseAmplitude(0), m_level(0.0), m_timer()
 
 {
 	switch (m_format.sampleSize()) {
@@ -61,6 +64,12 @@ AudioInfo::AudioInfo(QIODevice* device, const QAudioFormat &format, QObject *par
 	default:
 		break;
 	}
+
+	if (m_format.sampleType() == QAudioFormat::UnSignedInt) {
+		m_baseAmplitude = (m_maxAmplitude + 1) / 2;
+	} else {
+		m_baseAmplitude = 0;
+	}
 }
 
 AudioInfo::~AudioInfo()
@@ -75,6 +84,8 @@ QString AudioInfo::id() const
 void AudioInfo::start()
 {
 	open(QIODevice::ReadWrite);
+	connect(&m_timer, &QTimer::timeout, this, &AudioInfo::update);
+	m_timer.start(500);
 }
 
 void AudioInfo::stop()
@@ -82,35 +93,30 @@ void AudioInfo::stop()
 	close();
 }
 
+void AudioInfo::update()
+{
+	emit levelUpdated(m_level);
+}
+
 bool AudioInfo::isSequential() const
 {
 	return m_device->isSequential();
 }
-/*
- qint64 AudioInfo::bytesAvailable() const
- {
- return m_device->bytesAvailable() + QIODevice::bytesAvailable();
- }
 
- qint64 AudioInfo::bytesToWrite() const
- {
- return m_device->bytesToWrite() + QIODevice::bytesToWrite();
- }
+void AudioInfo::setLevelUpdates(bool doLevelUpdates)
+{
+	m_doLevelUpdates = doLevelUpdates;
+}
 
- bool AudioInfo::canReadLine() const
- {
- return m_device->canReadLine();
- }
+bool AudioInfo::isLevelUpdatesEnabled()
+{
+	return m_doLevelUpdates;
+}
 
- QIODevice::OpenMode AudioInfo::openMode() const
- {
- return m_device->openMode();
- }
- */
 qint64 AudioInfo::readData(char *data, qint64 maxlen)
 {
 	qint64 len = m_device->read(data, maxlen);
-	if (len > 0) {
+	if (m_doLevelUpdates && len > 0) {
 		qreal level = updateLevel(data, len);
 		if (level >= 0)
 			m_level = level;
@@ -121,7 +127,7 @@ qint64 AudioInfo::readData(char *data, qint64 maxlen)
 qint64 AudioInfo::writeData(const char *data, qint64 len)
 {
 	qint64 written = m_device->write(data, len);
-	if (written > 0) {
+	if (m_doLevelUpdates && written > 0) {
 		qreal level = updateLevel(data, len);
 		if (level >= 0)
 			m_level = level;
@@ -129,7 +135,7 @@ qint64 AudioInfo::writeData(const char *data, qint64 len)
 	return written;
 }
 
-qreal AudioInfo::updateLevel(const char *data, qint64 len)
+qreal AudioInfo::updateLevel(const char* data, qint64 len)
 {
 	if (m_maxAmplitude) {
 		Q_ASSERT(m_format.sampleSize() % 8 == 0);
@@ -138,6 +144,7 @@ qreal AudioInfo::updateLevel(const char *data, qint64 len)
 		Q_ASSERT(len % sampleBytes == 0);
 		const int numSamples = len / sampleBytes;
 
+		qint64 minValue = 0;
 		qint64 maxValue = 0;
 		qint64 avgValue = 0;
 		qint64 rmsValue = 0;
@@ -177,10 +184,17 @@ qreal AudioInfo::updateLevel(const char *data, qint64 len)
 					value = qAbs(*reinterpret_cast<const float*>(ptr) * 0x7fffffff); // assumes 0-1.0
 				}
 				if (m_format.sampleType() == QAudioFormat::UnSignedInt) {
-					//value -= m_maxAmplitude / 2;
-					value = qAbs(value);
+					//value /= 2;
+
+					if (value > m_baseAmplitude)
+						value = m_baseAmplitude - value;
+					else
+						value = value - m_baseAmplitude;
+					value = qAbs(value) * 2;
+					value = m_maxAmplitude - value;
 				}
 
+				minValue = qMin(value, minValue);
 				maxValue = qMax(value, maxValue);
 				avgValue += value;
 				rmsValue += pow(value, 2);
@@ -195,13 +209,16 @@ qreal AudioInfo::updateLevel(const char *data, qint64 len)
 			rmsValue = sqrt(rmsValue / (m_format.channelCount() * numSamples));
 		}
 
-		maxValue = qMin(maxValue, (qint64)m_maxAmplitude);
+		maxValue = qMin(maxValue, (qint64) m_maxAmplitude);
 		//qreal level = qreal(avgValue) / m_maxAmplitude;
 		//qreal level = maxDb;
-		qreal level = (qreal)rmsValue / m_maxAmplitude;
+		qreal level = (qreal) rmsValue / m_maxAmplitude;
 
-		log.debug("level is %1 (max = %2, avg = %3, rms = %4, samples = %5)", level, maxValue, avgValue, rmsValue,
-				m_format.channelCount() * numSamples);
+		if (DO_DEBUG) {
+			log.debug("level is %1\% (max = %2, min = %3, avg = %4, rms = %5, samples = %6)\t%7", (int) (level * 100),
+					maxValue, minValue, avgValue, rmsValue, m_format.channelCount() * numSamples);
+		}
+
 		return level;
 	} else {
 		log.debug("m_maxAmplitude is NULL!");

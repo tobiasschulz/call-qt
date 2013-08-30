@@ -8,6 +8,7 @@
 #include "chattab.h"
 #include "config.h"
 #include "contactlist.h"
+#include "audioinfo.h"
 
 Main* Main::m_instance;
 
@@ -261,7 +262,8 @@ void Main::onStatsLevelInput(qreal _level)
 {
 	int level = (int) (_level * 100);
 	static int lastLevel = 0;
-	log.debug("level (in): %1", level);
+	if (AudioInfo::DO_DEBUG)
+		log.debug("level (in): %1", level);
 	if (level != lastLevel) {
 		ui->statsLevelInput->setValue(level);
 		lastLevel = level;
@@ -271,7 +273,8 @@ void Main::onStatsLevelOutput(qreal _level)
 {
 	int level = (int) (_level * 100);
 	static int lastLevel = 0;
-	log.debug("level (out): %1", level);
+	if (AudioInfo::DO_DEBUG)
+		log.debug("level (out): %1", level);
 	if (level != lastLevel) {
 		ui->statsLevelOutput->setValue(level);
 		lastLevel = level;

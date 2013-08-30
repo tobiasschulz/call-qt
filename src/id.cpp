@@ -110,6 +110,26 @@ void Log::debug(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVa
 					arg6.toString()));
 	qDebug("%s %s %s", Q(thread), Q(classid), Q(params));
 }
+void Log::debug(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVariant arg4, QVariant arg5,
+		QVariant arg6, QVariant arg7) const
+{
+	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
+	QString params(
+			format.arg(arg1.toString(), arg2.toString(), arg3.toString(), arg4.toString(), arg5.toString(),
+					arg6.toString(), arg7.toString()));
+	qDebug("%s %s %s", Q(thread), Q(classid), Q(params));
+}
+void Log::debug(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVariant arg4, QVariant arg5,
+		QVariant arg6, QVariant arg7, QVariant arg8) const
+{
+	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
+	QString params(
+			format.arg(arg1.toString(), arg2.toString(), arg3.toString(), arg4.toString(), arg5.toString(),
+					arg6.toString(), arg7.toString(), arg8.toString()));
+	qDebug("%s %s %s", Q(thread), Q(classid), Q(params));
+}
 
 ID::ID()
 		: log(this)

@@ -12,6 +12,7 @@
 #include <QAudioInput>
 #include <QAudioOutput>
 #include <QPointer>
+#include <QTimer>
 
 #include "id.h"
 
@@ -33,9 +34,14 @@ public:
 	}
 	bool isSequential() const;
 	/*qint64 bytesAvailable() const;
-	qint64 bytesToWrite() const;
-	bool canReadLine() const;
-	OpenMode openMode() const;*/
+	 qint64 bytesToWrite() const;
+	 bool canReadLine() const;
+	 OpenMode openMode() const;*/
+
+	void setLevelUpdates(bool doLevelUpdates);
+	bool isLevelUpdatesEnabled();
+
+	static bool DO_DEBUG;
 
 protected:
 	qint64 readData(char *data, qint64 maxlen);
@@ -43,12 +49,18 @@ protected:
 	qreal updateLevel(const char *data, qint64 len);
 
 signals:
+	void levelUpdated(qreal level);
 
 private:
+	void update();
+
 	QPointer<QIODevice> m_device;
 	const QAudioFormat m_format;
-	quint32 m_maxAmplitude;
+	bool m_doLevelUpdates;
+	qint32 m_maxAmplitude;
+	qint32 m_baseAmplitude;
 	qreal m_level; // 0.0 <= m_level <= 1.0
+	QTimer m_timer;
 };
 
 #endif /* AUDIOINFO_H */
