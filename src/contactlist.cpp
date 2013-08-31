@@ -1,7 +1,7 @@
 #include "contactlist.h"
 
 ContactList* ContactList::m_instance;
-QMutex ContactList::m_mutex;
+QMutex ContactList::m_lock;
 
 ContactList::ContactList(QObject *parent)
 		: QObject(parent), m_set(), m_onlinehosts(), m_list()
@@ -34,11 +34,27 @@ void ContactList::addContact(Contact contact)
 
 const Contact& ContactList::getContact(int index) const
 {
+	QMutexLocker locker(&m_lock);
 	return index < m_list.size() ? m_list.at(index) : Contact::INVALID_CONTACT;
+}
+
+const Contact& ContactList::getReachableContact(const Contact& unreachable) const
+{
+	if (unreachable.host().isUnreachable() && !unreachable.host().isLoopback()) {
+		foreach (const Contact& contact, m_set)
+		{
+			if (contact.user() == unreachable.user() && contact.host().address() == unreachable.host().address()
+					&& contact.host().isReachable()) {
+				return contact;
+			}
+		}
+	}
+	return unreachable;
 }
 
 int ContactList::size() const
 {
+	QMutexLocker locker(&m_lock);
 	int size = 0;
 	size = m_list.size();
 	return size;
@@ -46,11 +62,16 @@ int ContactList::size() const
 
 void ContactList::buildSortedList()
 {
-	emit this->beginInsertItems(0, m_set.size());
-	m_mutex.lock();
-	m_list = QList<Contact>::fromSet(m_set);
-	qSort(m_list.begin(), m_list.end(), compareContacts);
-	m_mutex.unlock();
+	emit this->beginRemoveItems(0, m_list.size());
+	emit this->endRemoveItems();
+	QList<Contact> list;
+	list = QList<Contact>::fromSet(m_set);
+	qSort(list.begin(), list.end(), compareContacts);
+	emit this->beginInsertItems(0, list.size());
+	{
+		QMutexLocker locker(&m_lock);
+		m_list = list;
+	}
 	emit this->endInsertItems();
 }
 
@@ -59,7 +80,7 @@ void ContactList::onResetContacts()
 	emit this->beginRemoveItems(0, m_set.size());
 	m_set.clear();
 	buildSortedList();
-	emit this->endInsertItems();
+	emit this->endRemoveItems();
 }
 
 void ContactList::setHostOnline(Host host)

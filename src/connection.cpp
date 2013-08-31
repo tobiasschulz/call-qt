@@ -1,6 +1,7 @@
 #include <QHostInfo>
 
 #include "connection.h"
+#include "contactlist.h"
 #include "config.h"
 #include "networkutil.h"
 
@@ -147,6 +148,7 @@ void Connection::onSocketConnected()
 	m_host = Host(host, port);
 	QString user = m_headers.value("user", Contact::INVALID_USER);
 	m_contact = Contact(user, m_host);
+	m_contact = ContactList::instance()->getReachableContact(m_contact);
 	emit contactFound(m_contact);
 
 	m_state = CONNECTED;

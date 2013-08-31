@@ -2,6 +2,7 @@
 #include <QTimer>
 
 #include "contact.h"
+#include "contactlist.h"
 #include "networkutil.h"
 #include "dnscache.h"
 #include "config.h"
@@ -178,10 +179,6 @@ Host Host::deserialize(QString _str)
 	return Host::INVALID_HOST;
 }
 
-Contact::Contact(QString user, QHostAddress host, quint16 port, QObject* parent)
-		: QObject(parent), m_user(user), m_host(host, port)
-{
-}
 Contact::Contact(QString user, Host host, QObject* parent)
 		: QObject(parent), m_user(user), m_host(host)
 {

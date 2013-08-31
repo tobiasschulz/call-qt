@@ -135,19 +135,20 @@ QHash<QString, QString> NetworkUtil::readHeaders(QTcpSocket* socket, const Log* 
 
 QAudioFormat NetworkUtil::readAudioFormat(QHash<QString, QString> headers)
 {
-	QStringList values = headers["microphone-format"].split(",");
+	QString value = headers["microphone-format"];
+	QStringList values = value.split(",");
 	if (values.size() == 3) {
 		bool ok1, ok2, ok3;
 		QAudioFormat format = Config::instance()->chooseAudioFormat(values[0].toInt(&ok1), values[1].toInt(&ok2),
 				values[2].toInt(&ok3));
 		if (ok1 && ok2 && ok3) {
-			log.debug("readFormat(%1) => %2", values.join(","), Log::print(format));
+			log.debug("readFormat(%1) => %2", value, Log::print(format));
 			return format;
 		} else {
-			log.debug("readFormat(%1): error: not all values are integers!");
+			log.debug("readFormat(%1): error: not all values are integers!", value);
 		}
 	} else {
-		log.debug("readFormat(%1): error: more or less than 3 values!");
+		log.debug("readFormat(%1): error: more or less than 3 values!", value);
 	}
 	return Config::instance()->defaultAudioFormat();
 }

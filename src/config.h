@@ -37,6 +37,7 @@ public:
 	// host-related
 	QStringList localhosts();
 	QStringList defaultHostnames();
+	QList<quint16> defaultPorts();
 	QList<Host> defaultHosts();
 	void addLocalhost(Host host);
 	bool isLocalhost(QString host);

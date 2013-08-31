@@ -19,7 +19,22 @@ ContactScanner::ContactScanner(QObject* parent)
 
 void ContactScanner::increasePriority(Host host)
 {
-	if (host != Host::INVALID_HOST) {
+	if (host == Host::INVALID_HOST) {
+		// invalid
+	} else if (host.isUnreachable()&&0) {
+		log.debug("host is unreachable: %1", Log::print(host));
+		QList<quint16> ports = Config::instance()->defaultPorts();
+		QList<Host> hosts;
+		foreach (quint16 port, ports)
+		{
+			host = Host(host.address(), port);
+			if (!m_connections.contains(host)) {
+				m_connections[host] = new PingClient(host, this);
+			}
+			emit m_connections[host]->ping();
+			log.debug("=> pingclient: %1 (immediately)", Log::print(m_connections[host]));
+		}
+	} else {
 		m_hosts_mutex.lock();
 		if (m_unknownhosts.contains(host))
 			m_unknownhosts.removeAll(host);

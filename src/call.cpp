@@ -14,8 +14,10 @@ QHash<Contact, Call*> Call::m_instances;
 
 Call* Call::instance(const Contact& contact)
 {
+	// ein call wird zwei verschiedenen thread szugewiesen und von der normalen und der looopback connection
+	// verwendet und dnan wohl auch nach open() direkt geclose()ed
 	static QMutex mutex;
-	mutex.lock();
+	QMutexLocker locker(&mutex);
 	if (!m_instances.contains(contact)) {
 		m_instances[contact] = new Call(contact);
 		static int num = 0;
@@ -23,13 +25,12 @@ Call* Call::instance(const Contact& contact)
 		thread->start();
 		m_instances[contact]->moveToThread(thread);
 	}
-	mutex.unlock();
 	return m_instances[contact];
 }
 
 Call::Call(const Contact& contact, QObject* parent)
 		: QObject(parent), m_host(contact.host()), m_contact(contact), m_connection(0), m_inputaudio(0),
-			m_outputaudio(0), m_inputinfo(0), m_outputinfo(0)
+			m_outputaudio(0), m_inputinfo(0), m_outputinfo(0), m_state(CLOSED)
 {
 	QObject::connect(this, &Call::started, Main::instance(), &Main::showStats);
 	QObject::connect(this, &Call::stopped, Main::instance(), &Main::hideStats);
@@ -61,28 +62,54 @@ QString Call::print(PrintFormat format) const
 
 void Call::open()
 {
-	close();
+	QMutexLocker locker(&m_openlock);
+	if (m_state == CLOSED) {
+		log.debug("open call: %1", Log::print(m_host));
+		m_state = OPENING;
+		close();
+		m_state = OPEN;
 
-	m_connection = new Connection(Connection::CALL, this);
-	prepareConnection();
-	m_connection->connect(m_host);
+		m_connection = new Connection(Connection::CALL, this);
+		prepareConnection();
+		m_connection->connect(m_host);
+	} else {
+		log.debug("Cannot open call: call is already active!");
+	}
 }
 
 void Call::open(Connection* connection)
 {
-	close();
+	QMutexLocker locker(&m_openlock);
+	if (m_state == CLOSED) {
+		log.debug("open call: %1", Log::print(connection));
+		m_state = OPENING;
+		close();
+		m_state = OPEN;
 
-	m_connection = connection;
-	m_connection->setParent(this);
-	prepareConnection();
-	if (m_connection->isConnected()) {
-		QTimer::singleShot(0, this, SLOT(onConnected()));
+		m_connection = connection;
+		m_connection->setParent(this);
+		prepareConnection();
+		if (m_connection->isConnected()) {
+			QTimer::singleShot(0, this, SLOT(onConnected()));
+		}
+	} else {
+		log.debug("Cannot open call: call is already active!");
 	}
 }
 
 void Call::close()
 {
-	log.debug("close()");
+	if (m_closelock.tryLock(100))
+		m_closelock.unlock();
+	else
+		return;
+
+	QMutexLocker locker(&m_closelock);
+	if (m_state == OPEN)
+		log.debug("close call.");
+	else if (m_state == CLOSED)
+		log.debug("making sure call is closed.");
+
 	if (m_connection) {
 		if (m_connection->isConnected()) {
 			QTimer::singleShot(0, m_connection, SLOT(disconnect()));
@@ -109,6 +136,9 @@ void Call::close()
 		QTimer::singleShot(0, m_outputinfo, SLOT(deleteLater()));
 		m_outputinfo.clear();
 	}
+
+	if (m_state == OPEN)
+		m_state = CLOSED;
 	emit stopped();
 }
 
@@ -123,7 +153,6 @@ void Call::prepareConnection()
 
 void Call::setConnection(Connection* connection)
 {
-	close();
 	open(connection);
 }
 

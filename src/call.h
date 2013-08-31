@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QMutex>
+#include <QMutexLocker>
 #include <QStringList>
 #include <QAudio>
 #include <QAudioInput>
@@ -23,6 +24,11 @@ public:
 	QString print(PrintFormat format = PRINT_NAME_AND_DATA) const;
 
 	void setConnection(Connection* connection);
+
+	enum State
+	{
+		OPEN, CLOSED, OPENING
+	};
 
 signals:
 	void started();
@@ -57,6 +63,9 @@ private:
 	QPointer<QAudioOutput> m_outputaudio;
 	QPointer<AudioInfo> m_inputinfo;
 	QPointer<AudioInfo> m_outputinfo;
+	State m_state;
+	QMutex m_openlock;
+	QMutex m_closelock;
 };
 
 #endif // CALL_H

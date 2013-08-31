@@ -61,15 +61,23 @@ QStringList Config::defaultHostnames()
 	return list;
 }
 
+QList<quint16> Config::defaultPorts()
+{
+	QList<quint16> ports;
+	for (int i = 0; i <= 5; ++i) {
+		ports << Config::DEFAULT_PORT + i * 10;
+	}
+	return ports;
+}
+
 QList<Host> Config::defaultHosts()
 {
+	QList<quint16> ports = defaultPorts();
 	QList<Host> hosts;
-	for (int i = 0; i <= 5; ++i) {
+	foreach (quint16 port, ports) {
 		foreach (const QString & hostname, defaultHostnames())
 		{
-			//QHostAddress hostaddr = NetworkUtil::parseHostname(hostname);
-			//hosts << Host(hostaddr, Config::DEFAULT_PORT + i * 10);
-			hosts << Host(hostname, Config::DEFAULT_PORT + i * 10);
+			hosts << Host(hostname, port);
 		}
 	}
 	return hosts;

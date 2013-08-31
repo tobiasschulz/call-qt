@@ -5,6 +5,7 @@
 #include <QList>
 #include <QSet>
 #include <QMutex>
+#include <QMutexLocker>
 
 #include "contact.h"
 #include "connection.h"
@@ -17,6 +18,7 @@ public:
 	QString id() const;
 
 	const Contact& getContact(int index) const;
+	const Contact& getReachableContact(const Contact& contact) const;
 	int size() const;
 
 	bool isHostOnline(Host host);
@@ -47,7 +49,7 @@ private:
 	QSet<Contact> m_set;
 	QSet<Host> m_onlinehosts;
 	QList<Contact> m_list;
-	static QMutex m_mutex;
+	static QMutex m_lock;
 };
 
 #endif // CONTACTLIST_H

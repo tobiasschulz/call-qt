@@ -1,4 +1,5 @@
 #include <QMutex>
+#include <QMutexLocker>
 #include <QTimer>
 
 #include "ui_chattab.h"
@@ -15,17 +16,19 @@ QHash<Contact, ChatTab*> ChatTab::m_instances;
 ChatTab* ChatTab::instance(const Contact& contact)
 {
 	static QMutex mutex;
-	mutex.lock();
-	if (!m_instances.contains(contact)) {
-		m_instances[contact] = new ChatTab(contact);
+	QMutexLocker locker(&mutex);
+	ChatTab* instance = 0;
+	if (m_instances.contains(contact)) {
+		instance = m_instances[contact];
+	} else {
+		instance = new ChatTab(contact);
+		m_instances[contact] = instance;
 	}
-	mutex.unlock();
-	return m_instances[contact];
+	return instance;
 }
 
 ChatTab::ChatTab(const Contact& contact)
-		: Tab("Chat", QIcon()), ui(new Ui::ChatTab), m_contact(contact), m_chatclient(contact),
-			m_thread("ChatThread")
+		: Tab("Chat", QIcon()), ui(new Ui::ChatTab), m_contact(contact), m_chatclient(contact), m_thread("ChatThread")
 {
 	ui->setupUi(this);
 	m_thread.start();
