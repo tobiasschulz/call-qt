@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QResizeEvent>
+#include <QAudioFormat>
 #include <QPointer>
 
 #include "contactmodel.h"
@@ -42,12 +43,15 @@ public slots:
 	void showStats();
 	void hideStats();
 	void onShowStatsToggled(bool checked);
+	void onStatsContact(Contact contact);
 	void onStatsDurationInput(int ms);
 	void onStatsDurationOutput(int ms);
 	void onStatsLatencyInput(int ms);
 	void onStatsLatencyOutput(int ms);
 	void onStatsLevelInput(qreal level);
 	void onStatsLevelOutput(qreal level);
+	void onStatsFormatInput(QAudioFormat format);
+	void onStatsFormatOutput(QAudioFormat format);
 
 	void onMenuShowTerminal();
 	void onMenuAudioDevices();

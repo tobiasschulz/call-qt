@@ -33,10 +33,13 @@ public:
 signals:
 	void started();
 	void stopped();
+	void statsContact(Contact contact);
 	void statsDurationInput(int);
 	void statsDurationOutput(int);
 	void statsLatencyInput(int);
 	void statsLatencyOutput(int);
+	void statsFormatInput(QAudioFormat format);
+	void statsFormatOutput(QAudioFormat format);
 
 public slots:
 	void open();

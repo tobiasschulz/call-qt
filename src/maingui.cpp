@@ -3,6 +3,8 @@
 #include <QVariant>
 #include <QSettings>
 
+#include <cmath>
+
 #include "maingui.h"
 #include "ui_maingui.h"
 #include "chattab.h"
@@ -155,13 +157,26 @@ void Main::hideStats()
 	ui->stats->hide();
 }
 
+void Main::onStatsContact(Contact contact)
+{
+	ui->address->setText(contact.address().toString());
+	ui->hostname->setText(contact.hostname());
+	ui->computername->setText(contact.computername());
+	ui->port->setText(QString::number(contact.port()));
+}
 void Main::onStatsDurationInput(int ms)
 {
-	ui->statsDurationInput->setText(QString::number(ms) + "ms");
+	QTime time(ms / 1000 / 60 / 60, (ms / 1000 / 60) % 60, (ms / 1000) % 60, ms % 1000);
+//	time.addMSecs(ms);
+	log.debug("time: %1, ms=%2", time.toString("HH:mm:ss"), ms);
+	ui->statsDurationInput->setTime(time);
 }
 void Main::onStatsDurationOutput(int ms)
 {
-	ui->statsDurationOutput->setText(QString::number(ms) + "ms");
+	QTime time(ms / 1000 / 60 / 60, (ms / 1000 / 60) % 60, (ms / 1000) % 60, ms % 1000);
+	//	time.addMSecs(ms);
+	log.debug("time: %1, ms=%2", time.toString("HH:mm:ss"), ms);
+	ui->statsDurationOutput->setTime(time);
 }
 void Main::onStatsLatencyInput(int ms)
 {
@@ -171,12 +186,30 @@ void Main::onStatsLatencyOutput(int ms)
 {
 	ui->statsLatencyOutput->setText(QString::number(ms) + "ms");
 }
+qreal weighted(qreal level)
+{
+	level = (level - 0.015) / (1 - 0.015);
+	if (level < 0)
+		level = 0;
+	level = std::pow(level, 0.6);
+
+	static qreal loudestValueMeasured = 0.5;
+	if (level > loudestValueMeasured) {
+		loudestValueMeasured = qMax(level, 0.7);
+		level = 1.0;
+	} else {
+		level /= loudestValueMeasured;
+	}
+
+	return level;
+}
 void Main::onStatsLevelInput(qreal _level)
 {
-	int level = (int) (_level * 100);
+	int level = (int) (weighted(_level) * 100);
 	static int lastLevel = 0;
 	if (AudioInfo::DO_DEBUG)
 		log.debug("level (in): %1", level);
+	level = level >= lastLevel ? level : (lastLevel + level) / 2;
 	if (level != lastLevel) {
 		ui->statsLevelInput->setValue(level);
 		lastLevel = level;
@@ -184,13 +217,26 @@ void Main::onStatsLevelInput(qreal _level)
 }
 void Main::onStatsLevelOutput(qreal _level)
 {
-	int level = (int) (_level * 100);
+	int level = (int) (weighted(_level) * 100);
 	static int lastLevel = 0;
 	if (AudioInfo::DO_DEBUG)
 		log.debug("level (out): %1", level);
+	level = level >= lastLevel ? level : (lastLevel + level) / 2;
 	if (level != lastLevel) {
 		ui->statsLevelOutput->setValue(level);
 		lastLevel = level;
 	}
+}
+void Main::onStatsFormatInput(QAudioFormat format)
+{
+	ui->codecInput->setText(
+			QString("PCM %1 kHz, %2 bit, %3").arg(QString::number(format.sampleRate() / 1000.0),
+					QString::number(format.sampleSize()), format.channelCount() == 1 ? "mono" : "stereo"));
+}
+void Main::onStatsFormatOutput(QAudioFormat format)
+{
+	ui->codecOutput->setText(
+			QString("PCM %1 kHz, %2 bit, %3").arg(QString::number(format.sampleRate() / 1000.0),
+					QString::number(format.sampleSize()), format.channelCount() == 1 ? "mono" : "stereo"));
 }
 

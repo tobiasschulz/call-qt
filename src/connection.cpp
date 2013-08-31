@@ -147,7 +147,8 @@ void Connection::onSocketConnected()
 	quint16 port = m_socket->peerPort();
 	m_host = Host(host, port);
 	QString user = m_headers.value("user", Contact::INVALID_USER);
-	m_contact = Contact(user, m_host);
+	QString computername = m_headers.value("computername", "");
+	m_contact = Contact(user, computername, m_host);
 	m_contact = ContactList::instance()->getReachableContact(m_contact);
 	emit contactFound(m_contact);
 

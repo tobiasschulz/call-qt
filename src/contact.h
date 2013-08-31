@@ -65,8 +65,7 @@ class Contact: public QObject, public ID
 {
 Q_OBJECT
 public:
-	explicit Contact(QString username, QHostAddress host, quint16 port, QObject* parent = 0);
-	explicit Contact(QString username, Host host, QObject* parent = 0);
+	explicit Contact(QString username, QString computername, Host host, QObject* parent = 0);
 	explicit Contact(QObject* parent = 0);
 	Contact(const Contact& other);
 	Contact& operator=(const Contact& other);
@@ -74,6 +73,7 @@ public:
 	bool operator!=(const Contact& other) const;
 
 	QString user() const;
+	QString computername() const;
 	Host host() const;
 	QHostAddress address() const;
 	QString hostname() const;
@@ -94,6 +94,7 @@ public slots:
 
 private:
 	QString m_user;
+	QString m_computername;
 	Host m_host;
 };
 

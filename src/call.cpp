@@ -32,12 +32,17 @@ Call::Call(const Contact& contact, QObject* parent)
 		: QObject(parent), m_host(contact.host()), m_contact(contact), m_connection(0), m_inputaudio(0),
 			m_outputaudio(0), m_inputinfo(0), m_outputinfo(0), m_state(CLOSED)
 {
-	QObject::connect(this, &Call::started, Main::instance(), &Main::showStats);
-	QObject::connect(this, &Call::stopped, Main::instance(), &Main::hideStats);
-	QObject::connect(this, &Call::statsDurationInput, Main::instance(), &Main::onStatsDurationInput);
-	QObject::connect(this, &Call::statsDurationOutput, Main::instance(), &Main::onStatsDurationOutput);
-	QObject::connect(this, &Call::statsLatencyInput, Main::instance(), &Main::onStatsLatencyInput);
-	QObject::connect(this, &Call::statsLatencyOutput, Main::instance(), &Main::onStatsLatencyOutput);
+	if (!m_host.isLoopback()) {
+		QObject::connect(this, &Call::started, Main::instance(), &Main::showStats);
+		QObject::connect(this, &Call::stopped, Main::instance(), &Main::hideStats);
+		QObject::connect(this, &Call::statsContact, Main::instance(), &Main::onStatsContact);
+		QObject::connect(this, &Call::statsDurationInput, Main::instance(), &Main::onStatsDurationInput);
+		QObject::connect(this, &Call::statsDurationOutput, Main::instance(), &Main::onStatsDurationOutput);
+		QObject::connect(this, &Call::statsLatencyInput, Main::instance(), &Main::onStatsLatencyInput);
+		QObject::connect(this, &Call::statsLatencyOutput, Main::instance(), &Main::onStatsLatencyOutput);
+		QObject::connect(this, &Call::statsFormatInput, Main::instance(), &Main::onStatsFormatInput);
+		QObject::connect(this, &Call::statsFormatOutput, Main::instance(), &Main::onStatsFormatOutput);
+	}
 }
 
 QString Call::id() const
@@ -184,15 +189,21 @@ void Call::onConnected()
 	QObject::connect(m_inputaudio, SIGNAL(stateChanged(QAudio::State)), SLOT(handleStateChanged(QAudio::State)));
 	QObject::connect(m_outputaudio, SIGNAL(stateChanged(QAudio::State)), SLOT(handleStateChanged(QAudio::State)));
 
-	QSettings settings;
-	bool showStats = settings.value("window/show-stats", true).toBool();
-	if (showStats) {
-		QObject::connect(m_inputaudio.data(), &QAudioInput::notify, this, &Call::notifiedInput);
-		QObject::connect(m_outputaudio.data(), &QAudioOutput::notify, this, &Call::notifiedOutput);
-		m_inputinfo->setLevelUpdates(true);
-		m_outputinfo->setLevelUpdates(true);
-		QObject::connect(m_inputinfo.data(), &AudioInfo::levelUpdated, Main::instance(), &Main::onStatsLevelInput);
-		QObject::connect(m_outputinfo.data(), &AudioInfo::levelUpdated, Main::instance(), &Main::onStatsLevelOutput);
+	if (!m_host.isLoopback()) {
+		QSettings settings;
+		bool showStats = settings.value("window/show-stats", true).toBool();
+		if (showStats) {
+			QObject::connect(m_inputaudio.data(), &QAudioInput::notify, this, &Call::notifiedInput);
+			QObject::connect(m_outputaudio.data(), &QAudioOutput::notify, this, &Call::notifiedOutput);
+			m_inputinfo->setLevelUpdates(true);
+			m_outputinfo->setLevelUpdates(true);
+			QObject::connect(m_inputinfo.data(), &AudioInfo::levelUpdated, Main::instance(), &Main::onStatsLevelInput);
+			QObject::connect(m_outputinfo.data(), &AudioInfo::levelUpdated, Main::instance(),
+					&Main::onStatsLevelOutput);
+		}
+		emit statsContact(m_connection->contact());
+		emit statsFormatInput(inputformat);
+		emit statsFormatOutput(outputformat);
 	}
 
 	emit started();
