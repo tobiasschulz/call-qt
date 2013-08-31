@@ -91,6 +91,11 @@ void NetworkUtil::writeHeaders(QTcpSocket* socket, Connection::Type type, const 
 	else if (type == Connection::SERVER)
 		writeLine(socket, "Request: ServerRole");
 
+	QAudioFormat format = Config::instance()->currentAudioFormat();
+	writeLine(socket, "Microphone-Format: ",
+			QString("%1,%2,%3").arg(QString::number(format.sampleRate()), QString::number(format.sampleSize()),
+					QString::number(format.channelCount())));
+
 	writeLine(socket, "");
 	socket->flush();
 	logger->debug("stop writing headers");
@@ -126,6 +131,25 @@ QHash<QString, QString> NetworkUtil::readHeaders(QTcpSocket* socket, const Log* 
 	logger->debug("timeout reading headers");
 
 	return headers;
+}
+
+QAudioFormat NetworkUtil::readAudioFormat(QHash<QString, QString> headers)
+{
+	QStringList values = headers["microphone-format"].split(",");
+	if (values.size() == 3) {
+		bool ok1, ok2, ok3;
+		QAudioFormat format = Config::instance()->chooseAudioFormat(values[0].toInt(&ok1), values[1].toInt(&ok2),
+				values[2].toInt(&ok3));
+		if (ok1 && ok2 && ok3) {
+			log.debug("readFormat(%1) => %2", values.join(","), Log::print(format));
+			return format;
+		} else {
+			log.debug("readFormat(%1): error: not all values are integers!");
+		}
+	} else {
+		log.debug("readFormat(%1): error: more or less than 3 values!");
+	}
+	return Config::instance()->defaultAudioFormat();
 }
 
 bool NetworkUtil::writeLine(QTcpSocket* socket, QVariant line)

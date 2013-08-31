@@ -42,7 +42,7 @@ public slots:
 	void onCallStopped();
 
 private:
-	explicit ChatTab(const Contact& contact, QWidget *parent = 0);
+	explicit ChatTab(const Contact& contact);
 	static QHash<Contact, ChatTab*> m_instances;
 
 	Ui::ChatTab *ui;

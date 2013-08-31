@@ -27,22 +27,28 @@ public:
 	static Config* instance();
 	QString id() const;
 
-	QStringList localhosts();
-	QStringList defaultHostnames();
-	QList<Host> defaultHosts();
+	// general
 	long uid();
 	long uptime();
 	QIcon icon(QString iconname);
 	QString version();
 	QString build();
+
+	// host-related
+	QStringList localhosts();
+	QStringList defaultHostnames();
+	QList<Host> defaultHosts();
 	void addLocalhost(Host host);
 	bool isLocalhost(QString host);
+
+	// audio-related
+	QAudioFormat defaultAudioFormat();
 	QAudioFormat currentAudioFormat();
-	QAudioFormat chooseAudioFormat(int freq, int channels, int samplesize);
-	QAudioDeviceInfo currentMicrophone();
-	QAudioDeviceInfo currentSpeaker();
+	QAudioFormat chooseAudioFormat(int freq, int samplesize, int channels);
 	QAudioDeviceInfo defaultMicrophone();
 	QAudioDeviceInfo defaultSpeaker();
+	QAudioDeviceInfo currentMicrophone();
+	QAudioDeviceInfo currentSpeaker();
 	void setCurrentMicrophone(QAudioDeviceInfo device);
 	void setCurrentSpeaker(QAudioDeviceInfo device);
 	QAudioDeviceInfo getMicrophone(QString devicename);

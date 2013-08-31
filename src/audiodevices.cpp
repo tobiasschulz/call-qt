@@ -5,7 +5,7 @@
 #include "systemutil.h"
 #include "config.h"
 
-AudioDevices::AudioDevices(QWidget *parent)
+AudioDevices::AudioDevices()
 		: Tab("Audio Devices", Config::instance()->icon("microphone")), ui(new Ui::AudioDevices)
 {
 

@@ -16,7 +16,7 @@ class Terminal: public Tab
 Q_OBJECT
 
 public:
-	explicit Terminal(QWidget *parent = 0);
+	explicit Terminal();
 	~Terminal();
 
 	QString id() const;

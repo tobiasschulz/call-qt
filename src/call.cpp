@@ -6,6 +6,7 @@
 #include "maingui.h"
 #include "connection.h"
 #include "contactlist.h"
+#include "networkutil.h"
 #include "thread.h"
 #include "config.h"
 
@@ -134,7 +135,7 @@ void Call::onConnected()
 	QAudioDeviceInfo outdevice = Config::instance()->currentSpeaker();
 
 	QAudioFormat inputformat = Config::instance()->currentAudioFormat();
-	QAudioFormat outputformat = Config::instance()->currentAudioFormat();
+	QAudioFormat outputformat = NetworkUtil::instance()->readAudioFormat(m_connection->headers());
 
 	m_inputaudio = new QAudioInput(indevice, inputformat, this);
 	log.debug("audioinput: device = %1, format = %2", Log::print(indevice), Log::print(m_inputaudio->format()));

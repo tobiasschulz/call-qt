@@ -36,7 +36,7 @@ Main::Main(QWidget* parent)
 	QObject::connect(this, &Main::shown, m_contactmodel, &ContactModel::onResetContacts);
 
 	// terminal
-	m_terminal = new Terminal(this);
+	m_terminal = new Terminal;
 	bool showTerminal = settings.value("window/show-terminal", true).toBool();
 	if (showTerminal)
 		m_tabs->addTab(m_terminal);
@@ -49,7 +49,7 @@ Main::Main(QWidget* parent)
 	ui->actionShowStats->setChecked(showStats);
 
 	// audio devices settings
-	m_audiodevices = new AudioDevices(this);
+	m_audiodevices = new AudioDevices;
 	QObject::connect(ui->actionAudioDevices, &QAction::triggered, this, &Main::onMenuAudioDevices);
 
 	// menu

@@ -19,7 +19,7 @@ class AudioDevices: public Tab
 Q_OBJECT
 
 public:
-	explicit AudioDevices(QWidget *parent = 0);
+	explicit AudioDevices();
 	~AudioDevices();
 	QString id() const;
 

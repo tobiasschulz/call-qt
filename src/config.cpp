@@ -20,7 +20,7 @@ Config::Config(QObject *parent)
 			CONTACT_SCAN_INTERVAL(60000), DEFAULT_CONTACT_HOSTS(), m_localhosts(), m_uid(0),
 			m_uptime(QDateTime::currentMSecsSinceEpoch()), m_audioinputdevice(), m_audiooutputdevice()
 {
-	m_audioinputformat = chooseAudioFormat(44100, 1, 16);
+	m_audioinputformat = defaultAudioFormat();
 
 	QSettings settings;
 	QString microphone = settings.value("microphones/default", "").toString();
@@ -128,17 +128,22 @@ QIcon Config::icon(QString iconname)
 	return QIcon("img/" + iconname + ".png");
 }
 
+QAudioFormat Config::defaultAudioFormat()
+{
+	return chooseAudioFormat(44100, 16, 1);
+}
+
 QAudioFormat Config::currentAudioFormat()
 {
 	return m_audioinputformat;
 }
 
-QAudioFormat Config::chooseAudioFormat(int freq, int channels, int samplesize)
+QAudioFormat Config::chooseAudioFormat(int freq, int samplesize, int channels)
 {
 	QAudioFormat format;
 	format.setSampleRate(freq);
-	format.setChannelCount(channels);
 	format.setSampleSize(samplesize);
+	format.setChannelCount(channels);
 	format.setSampleType(QAudioFormat::UnSignedInt);
 	format.setByteOrder(QAudioFormat::LittleEndian);
 	format.setCodec("audio/pcm");

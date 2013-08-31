@@ -27,6 +27,7 @@ public:
 	QString parseAddress(QHostAddress);
 	void writeHeaders(QTcpSocket* socket, Connection::Type type, const Log* logger = &log);
 	QHash<QString, QString> readHeaders(QTcpSocket* socket, const Log* logger = &log);
+	QAudioFormat readAudioFormat(QHash<QString, QString> headers);
 	bool writeLine(QTcpSocket* socket, QVariant str1);
 	bool writeLine(QTcpSocket* socket, QVariant str1, QVariant str2);
 	bool writeLine(QTcpSocket* socket, QVariant str1, QVariant str2, QVariant str3);
