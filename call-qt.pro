@@ -31,6 +31,7 @@ SOURCES += \
     src/server.cpp \
     src/systemutil.cpp \
     src/tab.cpp \
+    src/tabs.cpp \
     src/terminal.cpp \
     src/thread.cpp \
     src/version.cpp
@@ -56,6 +57,7 @@ HEADERS  += \
     src/server.h \
     src/systemutil.h \
     src/tab.h \
+    src/tabs.h \
     src/terminal.h \
     src/thread.h
 
@@ -85,7 +87,7 @@ win32 {
 }
 
 # The application version                                                          ## VERSION
-VERSION = 0.497                                                                      ## VERSION
+VERSION = 0.513                                                                      ## VERSION
 # Define the preprocessor macro to get the application version in our application. ## VERSION
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"                                           ## VERSION
-DEFINES += APP_BUILD=\\\"497\\\"                                             ## VERSION
+DEFINES += APP_BUILD=\\\"513\\\"                                             ## VERSION

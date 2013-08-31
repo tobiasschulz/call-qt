@@ -3,11 +3,13 @@
 
 #include <QMainWindow>
 #include <QResizeEvent>
+#include <QPointer>
 
 #include "contactmodel.h"
 #include "systemutil.h"
 #include "tab.h"
 #include "id.h"
+#include "tabs.h"
 #include "terminal.h"
 #include "audiodevices.h"
 
@@ -25,28 +27,17 @@ public:
 	~Main();
 	QString id() const;
 
+	static Tabs* tabs();
+
 	void show();
 	void resizeEvent(QResizeEvent* event);
 
 signals:
 	void shown();
-	void contactTabAvailable(Contact contact);
-
-public:
-	int addTab(Tab* widget);
-	void openTab(Tab* widget);
-	void closeTab(Tab* widget);
 
 public slots:
-	void openTab(const QString& tabname);
-	void closeTab(const QString& tabname);
-	void closeTab(int index);
-	void onTabChanged(int index);
-
 	void onContactSelected(const QModelIndex & index);
-	void addContactTab(Contact contact);
-	void openContactTab(Contact contact);
-	void onTabIconChanged();
+	void onTabTitleChanged(QString);
 
 	void showStats();
 	void hideStats();
@@ -72,11 +63,11 @@ private:
 	static Main* m_instance;
 
 	Ui::Main* ui;
+	Tabs* m_tabs;
 	ContactModel* m_contactmodel;
-	QHash<QString, Tab*> m_tabhash;
 	Terminal* m_terminal;
 	AudioDevices* m_audiodevices;
-	bool statsVisible;
+	bool m_statsVisible;
 };
 
 #endif // MAIN_H

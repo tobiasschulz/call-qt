@@ -13,9 +13,10 @@
 Main* Main::m_instance;
 
 Main::Main(QWidget* parent)
-		: QMainWindow(parent), ui(new Ui::Main), m_contactmodel(0), m_tabhash(), m_terminal(0)
+		: QMainWindow(parent), ui(new Ui::Main), m_tabs(0), m_contactmodel(0), m_terminal(0), m_statsVisible(false)
 {
 	ui->setupUi(this);
+	m_tabs = new Tabs(ui->tabs);
 
 	// settings
 	QSettings settings;
@@ -36,7 +37,7 @@ Main::Main(QWidget* parent)
 	m_terminal = new Terminal(this);
 	bool showTerminal = settings.value("window/show-terminal", true).toBool();
 	if (showTerminal)
-		addTab(m_terminal);
+		m_tabs->addTab(m_terminal);
 	QObject::connect(ui->actionShowTerminal, &QAction::triggered, this, &Main::onMenuShowTerminal);
 
 	// stats
@@ -54,11 +55,8 @@ Main::Main(QWidget* parent)
 	QObject::connect(ui->actionAbout, &QAction::triggered, this, &Main::onMenuAbout);
 	QObject::connect(ui->actionAboutQt, &QAction::triggered, this, &Main::onMenuAboutQt);
 
-	// tab focus
-	QObject::connect(ui->tabs, &QTabWidget::currentChanged, this, &Main::onTabChanged);
-	QObject::connect(ui->tabs, SIGNAL(tabCloseRequested(int)), this, SLOT(closeTab(int)));
-
-	onTabChanged(ui->tabs->currentIndex());
+	// tabs
+	m_tabs->onTabChanged(ui->tabs->currentIndex());
 
 	//ui->groupBox->setFlat(true);
 	//ui->groupBox->setAlignment(Qt::AlignHCenter);
@@ -74,6 +72,11 @@ Main* Main::instance()
 		mutex.unlock();
 	}
 	return m_instance;
+}
+
+Tabs* Main::tabs()
+{
+	return instance()->m_tabs;
 }
 
 Main::~Main()
@@ -109,152 +112,44 @@ void Main::onMenuAboutQt()
 	QMessageBox::aboutQt(this, "About Qt");
 }
 
-int Main::addTab(Tab* widget)
-{
-	int index = -1;
-	if (widget) {
-		index = ui->tabs->indexOf(widget);
-		if (index == -1) {
-			m_tabhash[widget->tabname()] = widget;
-			setUpdatesEnabled(false);
-			index = ui->tabs->addTab(widget, widget->tabicon(), widget->tabname());
-			setUpdatesEnabled(true);
-			QTimer::singleShot(0, widget, SLOT(added()));
-			QObject::connect(widget, &Tab::tabIconChanged, this, &Main::onTabIconChanged, Qt::UniqueConnection);
-		}
-	}
-	return index;
-}
-
-void Main::openTab(const QString& tabname)
-{
-	if (m_tabhash.contains(tabname)) {
-		openTab(m_tabhash[tabname]);
-	}
-}
-
-void Main::openTab(Tab* widget)
-{
-	if (!m_tabhash.contains(widget->tabname())) {
-		addTab(widget);
-	}
-
-	setUpdatesEnabled(false);
-	int index = ui->tabs->indexOf(widget);
-	if (index == -1) {
-		index = addTab(widget);
-		ui->tabs->setCurrentIndex(index);
-	} else if (index == ui->tabs->currentIndex()) {
-		// already selected
-		emit widget->focus();
-	} else {
-		ui->tabs->setCurrentIndex(index);
-	}
-	setUpdatesEnabled(true);
-}
-
-void Main::closeTab(const QString& tabname)
-{
-	if (m_tabhash.contains(tabname)) {
-		log.debug("close tab <tabname=%1>...", tabname);
-		closeTab(m_tabhash[tabname]);
-	} else {
-		log.debug("close tab <tabname=%1>: error: tabname not found", tabname);
-	}
-}
-
-void Main::closeTab(Tab* widget)
-{
-	setUpdatesEnabled(false);
-	int index = ui->tabs->indexOf(widget);
-	if (index != -1) {
-		log.debug("close tab <widget=%1>...", widget->metaObject()->className());
-		ui->tabs->removeTab(index);
-		QTimer::singleShot(0, widget, SLOT(removed()));
-	} else {
-		log.debug("close tab <widget=%1>: error: widget not found.", widget->metaObject()->className());
-	}
-	setUpdatesEnabled(true);
-}
-
-void Main::closeTab(int index)
-{
-	Tab* widget = (Tab*) ui->tabs->widget(index);
-	if (widget != 0) {
-		closeTab(widget);
-	}
-}
-
-void Main::onTabChanged(int index)
-{
-	if (index != -1) {
-		QWidget* widget = ui->tabs->widget(index);
-		if (widget) {
-			Tab* tab = (Tab*) widget;
-			emit tab->focus();
-			this->setWindowTitle(tab->tabname() + " - Build #" + Config::instance()->build());
-		}
-	}
-}
-
 void Main::onContactSelected(const QModelIndex & index)
 {
 	Contact contact(m_contactmodel->getContact(index));
-	addContactTab(contact);
-	openContactTab(contact);
+	m_tabs->addContactTab(contact);
+	m_tabs->openContactTab(contact);
 }
 
-void Main::addContactTab(Contact contact)
+void Main::onTabTitleChanged(QString tabtitle)
 {
-	ChatTab* chattab = ChatTab::instance(contact);
-	log.debug("add contact tab: %1 (tab: %2)", contact.id(), chattab->id());
-	addTab(chattab);
-	emit contactTabAvailable(contact);
-}
-
-void Main::openContactTab(Contact contact)
-{
-	ChatTab* chattab = ChatTab::instance(contact);
-	log.debug("open contact tab: %1 (tab: %2)", contact.id(), chattab->id());
-	openTab(chattab);
-}
-
-void Main::onTabIconChanged()
-{
-	for (int i = 0; i < ui->tabs->count(); ++i) {
-		Tab* widget = qobject_cast<Tab*>(ui->tabs->widget(i));
-		if (widget) {
-			ui->tabs->setTabIcon(i, widget->tabicon());
-		}
-	}
+	setWindowTitle(tabtitle + " - Build #" + Config::instance()->build());
 }
 
 void Main::onMenuShowTerminal()
 {
-	openTab(m_terminal);
+	m_tabs->openTab(m_terminal);
 }
 
 void Main::onMenuAudioDevices()
 {
-	openTab(m_audiodevices);
+	m_tabs->openTab(m_audiodevices);
 }
 
 void Main::onShowStatsToggled(bool checked)
 {
 	QSettings settings;
 	settings.setValue("window/show-stats", checked);
-	ui->stats->setVisible(statsVisible && checked);
+	ui->stats->setVisible(m_statsVisible && checked);
 }
 
 void Main::showStats()
 {
-	statsVisible = true;
-	ui->stats->setVisible(statsVisible && ui->actionShowStats->isChecked());
+	m_statsVisible = true;
+	ui->stats->setVisible(m_statsVisible && ui->actionShowStats->isChecked());
 }
 
 void Main::hideStats()
 {
-	statsVisible = false;
+	m_statsVisible = false;
 	ui->stats->hide();
 }
 

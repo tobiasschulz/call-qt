@@ -93,8 +93,8 @@ void ServerRequest::onCallConnection()
 
 void ServerRequest::addChatTab()
 {
-	QObject::connect(Main::instance(), &Main::contactTabAvailable, this, &ServerRequest::onChatTabOpened);
-	QObject::connect(this, &ServerRequest::addContactTab, Main::instance(), &Main::addContactTab);
+	QObject::connect(Main::tabs(), &Tabs::contactTabAvailable, this, &ServerRequest::onChatTabOpened);
+	QObject::connect(this, &ServerRequest::addContactTab, Main::tabs(), &Tabs::addContactTab);
 	emit addContactTab(m_connection->contact());
 }
 

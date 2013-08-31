@@ -33,6 +33,7 @@ QString Terminal::id() const
 }
 
 void Terminal::opened() {
+	log.debug("Terminal::opened()");
 	QSettings settings;
 	settings.setValue("window/show-terminal", true);
 }

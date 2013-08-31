@@ -23,8 +23,8 @@ public:
 
 public slots:
 	void printLogMessage(QString message);
-	void opened();
-	void closed();
+	virtual void opened();
+	virtual void closed();
 
 private:
 	Ui::Terminal *ui;

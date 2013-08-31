@@ -17,9 +17,11 @@ QIcon Tab::tabicon() const
 
 void Tab::opened()
 {
+	log.debug("opened()");
 }
 
 void Tab::closed()
 {
+	log.debug("closed()");
 }
 
