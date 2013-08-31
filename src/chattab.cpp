@@ -24,7 +24,7 @@ ChatTab* ChatTab::instance(const Contact& contact)
 }
 
 ChatTab::ChatTab(const Contact& contact, QWidget *parent)
-		: Tab("Chat", QIcon(), parent), ui(new Ui::ChatTab), m_contact(contact), m_chatclient(contact),
+		: Tab("Chat", QIcon()), ui(new Ui::ChatTab), m_contact(contact), m_chatclient(contact),
 			m_thread("ChatThread")
 {
 	ui->setupUi(this);

@@ -10,6 +10,7 @@ TARGET = call-qt
 TEMPLATE = app
 
 SOURCES += \
+	src/audiodevices.cpp \
 	src/audioinfo.cpp \
 	src/call.cpp \
 	src/chatclient.cpp \
@@ -35,6 +36,7 @@ SOURCES += \
     src/version.cpp
 
 HEADERS  += \
+	src/audiodevices.h \
 	src/audioinfo.h \
     src/call.h \
     src/chatclient.h \
@@ -60,7 +62,8 @@ HEADERS  += \
 FORMS    += \
     ui/maingui.ui \
     ui/terminal.ui \
-    ui/chattab.ui
+    ui/chattab.ui \
+    ui/audiodevices.ui
 
 RC_ICONS = img/icon.ico
 
@@ -82,7 +85,7 @@ win32 {
 }
 
 # The application version                                                          ## VERSION
-VERSION = 0.477                                                                      ## VERSION
+VERSION = 0.497                                                                      ## VERSION
 # Define the preprocessor macro to get the application version in our application. ## VERSION
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"                                           ## VERSION
-DEFINES += APP_BUILD=\\\"477\\\"                                             ## VERSION
+DEFINES += APP_BUILD=\\\"497\\\"                                             ## VERSION

@@ -9,6 +9,7 @@
 #include "tab.h"
 #include "id.h"
 #include "terminal.h"
+#include "audiodevices.h"
 
 namespace Ui
 {
@@ -31,12 +32,15 @@ signals:
 	void shown();
 	void contactTabAvailable(Contact contact);
 
-public slots:
-	void addTab(Tab* widget);
-	void openTab(const QString& tabname);
+public:
+	int addTab(Tab* widget);
 	void openTab(Tab* widget);
-	void closeTab(const QString& tabname);
 	void closeTab(Tab* widget);
+
+public slots:
+	void openTab(const QString& tabname);
+	void closeTab(const QString& tabname);
+	void closeTab(int index);
 	void onTabChanged(int index);
 
 	void onContactSelected(const QModelIndex & index);
@@ -54,9 +58,10 @@ public slots:
 	void onStatsLevelInput(qreal level);
 	void onStatsLevelOutput(qreal level);
 
-	void onShowTerminalToggled(bool checked);
-	void onAbout();
-	void onAboutQt();
+	void onMenuShowTerminal();
+	void onMenuAudioDevices();
+	void onMenuAbout();
+	void onMenuAboutQt();
 
 private:
 	explicit Main(QWidget* parent = 0);
@@ -70,6 +75,7 @@ private:
 	ContactModel* m_contactmodel;
 	QHash<QString, Tab*> m_tabhash;
 	Terminal* m_terminal;
+	AudioDevices* m_audiodevices;
 	bool statsVisible;
 };
 

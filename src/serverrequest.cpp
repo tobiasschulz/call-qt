@@ -75,7 +75,7 @@ void ServerRequest::onStatusConnection()
 void ServerRequest::onChatConnection()
 {
 	log.debug("onChatConnection()");
-	openChatTab();
+	addChatTab();
 }
 
 void ServerRequest::onCallConnection()
@@ -91,11 +91,11 @@ void ServerRequest::onCallConnection()
 	//QTimer::singleShot(0, Call::instance(m_connection->contact()), SLOT(open()));
 }
 
-void ServerRequest::openChatTab()
+void ServerRequest::addChatTab()
 {
 	QObject::connect(Main::instance(), &Main::contactTabAvailable, this, &ServerRequest::onChatTabOpened);
-	QObject::connect(this, &ServerRequest::openContactTab, Main::instance(), &Main::addContactTab);
-	emit openContactTab(m_connection->contact());
+	QObject::connect(this, &ServerRequest::addContactTab, Main::instance(), &Main::addContactTab);
+	emit addContactTab(m_connection->contact());
 }
 
 void ServerRequest::onChatTabOpened(Contact contact)

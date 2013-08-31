@@ -34,10 +34,10 @@ Main::Main(QWidget* parent)
 
 	// terminal
 	m_terminal = new Terminal(this);
-	addTab(m_terminal);
-	QObject::connect(ui->actionShowTerminal, &QAction::toggled, this, &Main::onShowTerminalToggled);
 	bool showTerminal = settings.value("window/show-terminal", true).toBool();
-	ui->actionShowTerminal->setChecked(showTerminal);
+	if (showTerminal)
+		addTab(m_terminal);
+	QObject::connect(ui->actionShowTerminal, &QAction::triggered, this, &Main::onMenuShowTerminal);
 
 	// stats
 	ui->stats->hide();
@@ -45,13 +45,19 @@ Main::Main(QWidget* parent)
 	QObject::connect(ui->actionShowStats, &QAction::toggled, this, &Main::onShowStatsToggled);
 	ui->actionShowStats->setChecked(showStats);
 
+	// audio devices settings
+	m_audiodevices = new AudioDevices(this);
+	QObject::connect(ui->actionAudioDevices, &QAction::triggered, this, &Main::onMenuAudioDevices);
+
 	// menu
 	QObject::connect(ui->actionReloadContacts, &QAction::triggered, m_contactmodel, &ContactModel::resetContacts);
-	QObject::connect(ui->actionAbout, &QAction::triggered, this, &Main::onAbout);
-	QObject::connect(ui->actionAboutQt, &QAction::triggered, this, &Main::onAboutQt);
+	QObject::connect(ui->actionAbout, &QAction::triggered, this, &Main::onMenuAbout);
+	QObject::connect(ui->actionAboutQt, &QAction::triggered, this, &Main::onMenuAboutQt);
 
 	// tab focus
 	QObject::connect(ui->tabs, &QTabWidget::currentChanged, this, &Main::onTabChanged);
+	QObject::connect(ui->tabs, SIGNAL(tabCloseRequested(int)), this, SLOT(closeTab(int)));
+
 	onTabChanged(ui->tabs->currentIndex());
 
 	//ui->groupBox->setFlat(true);
@@ -93,28 +99,31 @@ void Main::resizeEvent(QResizeEvent* event)
 	settings.setValue("window/size", event->size());
 }
 
-void Main::onAbout()
+void Main::onMenuAbout()
 {
 	QMessageBox::about(this, "About", "Version " + QCoreApplication::applicationVersion());
 }
 
-void Main::onAboutQt()
+void Main::onMenuAboutQt()
 {
 	QMessageBox::aboutQt(this, "About Qt");
 }
 
-void Main::addTab(Tab* widget)
+int Main::addTab(Tab* widget)
 {
-	setUpdatesEnabled(false);
+	int index = -1;
 	if (widget) {
-		int index = ui->tabs->indexOf(widget);
+		index = ui->tabs->indexOf(widget);
 		if (index == -1) {
 			m_tabhash[widget->tabname()] = widget;
-			ui->tabs->addTab(widget, widget->tabicon(), widget->tabname());
+			setUpdatesEnabled(false);
+			index = ui->tabs->addTab(widget, widget->tabicon(), widget->tabname());
+			setUpdatesEnabled(true);
+			QTimer::singleShot(0, widget, SLOT(added()));
 			QObject::connect(widget, &Tab::tabIconChanged, this, &Main::onTabIconChanged, Qt::UniqueConnection);
 		}
 	}
-	setUpdatesEnabled(true);
+	return index;
 }
 
 void Main::openTab(const QString& tabname)
@@ -126,15 +135,14 @@ void Main::openTab(const QString& tabname)
 
 void Main::openTab(Tab* widget)
 {
-	setUpdatesEnabled(false);
 	if (!m_tabhash.contains(widget->tabname())) {
 		addTab(widget);
 	}
 
+	setUpdatesEnabled(false);
 	int index = ui->tabs->indexOf(widget);
 	if (index == -1) {
-		index = ui->tabs->addTab(widget, widget->tabicon(), widget->tabname());
-		QObject::connect(widget, &Tab::tabIconChanged, this, &Main::onTabIconChanged, Qt::UniqueConnection);
+		index = addTab(widget);
 		ui->tabs->setCurrentIndex(index);
 	} else if (index == ui->tabs->currentIndex()) {
 		// already selected
@@ -162,10 +170,19 @@ void Main::closeTab(Tab* widget)
 	if (index != -1) {
 		log.debug("close tab <widget=%1>...", widget->metaObject()->className());
 		ui->tabs->removeTab(index);
+		QTimer::singleShot(0, widget, SLOT(removed()));
 	} else {
 		log.debug("close tab <widget=%1>: error: widget not found.", widget->metaObject()->className());
 	}
 	setUpdatesEnabled(true);
+}
+
+void Main::closeTab(int index)
+{
+	Tab* widget = (Tab*) ui->tabs->widget(index);
+	if (widget != 0) {
+		closeTab(widget);
+	}
 }
 
 void Main::onTabChanged(int index)
@@ -212,15 +229,14 @@ void Main::onTabIconChanged()
 	}
 }
 
-void Main::onShowTerminalToggled(bool checked)
+void Main::onMenuShowTerminal()
 {
-	if (checked) {
-		openTab(m_terminal);
-	} else {
-		closeTab(m_terminal);
-	}
-	QSettings settings;
-	settings.setValue("window/show-terminal", checked);
+	openTab(m_terminal);
+}
+
+void Main::onMenuAudioDevices()
+{
+	openTab(m_audiodevices);
 }
 
 void Main::onShowStatsToggled(bool checked)

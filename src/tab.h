@@ -12,7 +12,7 @@ class Tab: public QWidget, public ID
 Q_OBJECT
 
 public:
-	Tab(QString tabname = QString(), QIcon tabicon = QIcon(), QWidget *parent = 0);
+	Tab(QString tabname = QString(), QIcon tabicon = QIcon());
 
 	virtual QString tabname() const;
 	virtual QIcon tabicon() const;
@@ -22,6 +22,10 @@ public:
 signals:
 	void focus();
 	void tabIconChanged();
+
+public slots:
+	virtual void opened();
+	virtual void closed();
 
 private:
 	const QString m_tabname;

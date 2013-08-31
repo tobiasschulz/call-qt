@@ -26,14 +26,14 @@ public:
 	void onStatusConnection();
 	void onChatConnection();
 	void onCallConnection();
-	void openChatTab();
+	void addChatTab();
 
 	QString id() const;
 	QString print(PrintFormat format = PRINT_NAME_AND_DATA) const;
 
 signals:
 	void error(QTcpSocket::SocketError socketError);
-	void openContactTab(Contact contact);
+	void addContactTab(Contact contact);
 
 public slots:
 	void start();
