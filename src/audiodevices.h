@@ -2,7 +2,10 @@
 #define AUDIODEVICES_H
 
 #include <QWidget>
+#include <QComboBox>
 #include <QString>
+#include <QMutexLocker>
+#include <QMutex>
 
 #include "tab.h"
 
@@ -18,11 +21,20 @@ Q_OBJECT
 public:
 	explicit AudioDevices(QWidget *parent = 0);
 	~AudioDevices();
-
 	QString id() const;
+
+	void updateDevices();
+	void fillCombobox(QComboBox* combobox, QList<QAudioDeviceInfo> devices);
+
+signals:
+
+public slots:
+	void microphoneChanged(int index);
+	void speakerChanged(int index);
 
 private:
 	Ui::AudioDevices *ui;
+	QMutex m_deviceslock;
 };
 
 #endif // AUDIODEVICES_H

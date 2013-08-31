@@ -130,8 +130,8 @@ void Call::onConnected()
 {
 	log.debug("onConnected()");
 
-	QAudioDeviceInfo indevice = Config::instance()->currentAudioInputDevice();
-	QAudioDeviceInfo outdevice = Config::instance()->currentAudioOutputDevice();
+	QAudioDeviceInfo indevice = Config::instance()->currentMicrophone();
+	QAudioDeviceInfo outdevice = Config::instance()->currentSpeaker();
 
 	QAudioFormat inputformat = Config::instance()->currentAudioFormat();
 	QAudioFormat outputformat = Config::instance()->currentAudioFormat();

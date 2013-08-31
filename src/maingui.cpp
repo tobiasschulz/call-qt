@@ -17,6 +17,8 @@ Main::Main(QWidget* parent)
 {
 	ui->setupUi(this);
 	m_tabs = new Tabs(ui->tabs);
+	QObject::connect(m_tabs, &Tabs::tabTitleChanged, this, &Main::onTabTitleChanged);
+	onTabTitleChanged(QApplication::applicationName());
 
 	// settings
 	QSettings settings;

@@ -18,10 +18,15 @@ Config* Config::m_instance(0);
 Config::Config(QObject *parent)
 		: QObject(parent), DEFAULT_PORT(4000), SOCKET_READ_TIMEOUT(7000), SOCKET_CONNECT_TIMEOUT(2000),
 			CONTACT_SCAN_INTERVAL(60000), DEFAULT_CONTACT_HOSTS(), m_localhosts(), m_uid(0),
-			m_uptime(QDateTime::currentMSecsSinceEpoch()), m_audioinputdevice(QAudioDeviceInfo::defaultInputDevice()),
-			m_audiooutputdevice(QAudioDeviceInfo::defaultOutputDevice())
+			m_uptime(QDateTime::currentMSecsSinceEpoch()), m_audioinputdevice(), m_audiooutputdevice()
 {
 	m_audioinputformat = chooseAudioFormat(44100, 1, 16);
+
+	QSettings settings;
+	QString microphone = settings.value("microphones/default", "").toString();
+	setCurrentMicrophone(getMicrophone(microphone));
+	QString speaker = settings.value("speakers/default", "").toString();
+	setCurrentSpeaker(getSpeaker(speaker));
 }
 
 QString Config::id() const
@@ -147,12 +152,59 @@ QAudioFormat Config::chooseAudioFormat(int freq, int channels, int samplesize)
 	return format;
 }
 
-QAudioDeviceInfo Config::currentAudioInputDevice()
+QAudioDeviceInfo Config::currentMicrophone()
 {
 	return m_audioinputdevice;
 }
-QAudioDeviceInfo Config::currentAudioOutputDevice()
+
+QAudioDeviceInfo Config::currentSpeaker()
 {
 	return m_audiooutputdevice;
+}
+
+QAudioDeviceInfo Config::defaultMicrophone()
+{
+	return QAudioDeviceInfo::defaultInputDevice();
+}
+
+QAudioDeviceInfo Config::defaultSpeaker()
+{
+	return QAudioDeviceInfo::defaultOutputDevice();
+}
+
+void Config::setCurrentMicrophone(QAudioDeviceInfo device)
+{
+	m_audioinputdevice = device;
+	QSettings settings;
+	settings.setValue("microphones/default", device.deviceName());
+}
+
+void Config::setCurrentSpeaker(QAudioDeviceInfo device)
+{
+	m_audiooutputdevice = device;
+	QSettings settings;
+	settings.setValue("speakers/default", device.deviceName());
+}
+
+QAudioDeviceInfo Config::getMicrophone(QString devicename)
+{
+	QList<QAudioDeviceInfo> devices = QAudioDeviceInfo::availableDevices(QAudio::AudioInput);
+	for (int i = 0; i < devices.size(); ++i) {
+		if (devicename == devices.at(i).deviceName()) {
+			return devices.at(i);
+		}
+	}
+	return QAudioDeviceInfo::defaultInputDevice();
+}
+
+QAudioDeviceInfo Config::getSpeaker(QString devicename)
+{
+	QList<QAudioDeviceInfo> devices = QAudioDeviceInfo::availableDevices(QAudio::AudioOutput);
+	for (int i = 0; i < devices.size(); ++i) {
+		if (devicename == devices.at(i).deviceName()) {
+			return devices.at(i);
+		}
+	}
+	return QAudioDeviceInfo::defaultOutputDevice();
 }
 

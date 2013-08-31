@@ -39,8 +39,14 @@ public:
 	bool isLocalhost(QString host);
 	QAudioFormat currentAudioFormat();
 	QAudioFormat chooseAudioFormat(int freq, int channels, int samplesize);
-	QAudioDeviceInfo currentAudioInputDevice();
-	QAudioDeviceInfo currentAudioOutputDevice();
+	QAudioDeviceInfo currentMicrophone();
+	QAudioDeviceInfo currentSpeaker();
+	QAudioDeviceInfo defaultMicrophone();
+	QAudioDeviceInfo defaultSpeaker();
+	void setCurrentMicrophone(QAudioDeviceInfo device);
+	void setCurrentSpeaker(QAudioDeviceInfo device);
+	QAudioDeviceInfo getMicrophone(QString devicename);
+	QAudioDeviceInfo getSpeaker(QString devicename);
 
 	int DEFAULT_PORT;
 	int SOCKET_READ_TIMEOUT;
@@ -57,8 +63,8 @@ private:
 	long m_uid;
 	long m_uptime;
 	QAudioFormat m_audioinputformat;
-    QAudioDeviceInfo m_audioinputdevice;
-    QAudioDeviceInfo m_audiooutputdevice;
+	QAudioDeviceInfo m_audioinputdevice;
+	QAudioDeviceInfo m_audiooutputdevice;
 
 	explicit Config(QObject *parent = 0);
 	Config(const Config &); // hide copy constructor
