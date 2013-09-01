@@ -33,6 +33,7 @@ Call::Call(const Contact& contact, QObject* parent)
 			m_outputaudio(0), m_inputinfo(0), m_outputinfo(0), m_state(CLOSED)
 {
 	if (!m_host.isLoopback()) {
+		// for normal connections
 		QObject::connect(this, &Call::started, Main::instance(), &Main::showStats);
 		QObject::connect(this, &Call::stopped, Main::instance(), &Main::hideStats);
 		QObject::connect(this, &Call::statsContact, Main::instance(), &Main::onStatsContact);
@@ -42,6 +43,13 @@ Call::Call(const Contact& contact, QObject* parent)
 		QObject::connect(this, &Call::statsLatencyOutput, Main::instance(), &Main::onStatsLatencyOutput);
 		QObject::connect(this, &Call::statsFormatInput, Main::instance(), &Main::onStatsFormatInput);
 		QObject::connect(this, &Call::statsFormatOutput, Main::instance(), &Main::onStatsFormatOutput);
+		QObject::connect(Main::instance(), &Main::volumeChangedInput, this, &Call::onVolumeChangedInput);
+		QObject::connect(Main::instance(), &Main::volumeChangedOutput, this, &Call::onVolumeChangedOutput);
+
+	} else {
+		// for loopback connections
+		QObject::connect(Main::instance(), &Main::volumeChangedOutput, this, &Call::onVolumeChangedInput);
+		QObject::connect(Main::instance(), &Main::volumeChangedInput, this, &Call::onVolumeChangedOutput);
 	}
 }
 
@@ -195,8 +203,8 @@ void Call::onConnected()
 		if (showStats) {
 			QObject::connect(m_inputaudio.data(), &QAudioInput::notify, this, &Call::notifiedInput);
 			QObject::connect(m_outputaudio.data(), &QAudioOutput::notify, this, &Call::notifiedOutput);
-			m_inputinfo->setLevelUpdates(true);
-			m_outputinfo->setLevelUpdates(true);
+			m_inputinfo->setUpdateLevel(true);
+			m_outputinfo->setUpdateLevel(true);
 			QObject::connect(m_inputinfo.data(), &AudioInfo::levelUpdated, Main::instance(), &Main::onStatsLevelInput);
 			QObject::connect(m_outputinfo.data(), &AudioInfo::levelUpdated, Main::instance(),
 					&Main::onStatsLevelOutput);
@@ -207,6 +215,12 @@ void Call::onConnected()
 	}
 
 	emit started();
+}
+void Call::onVolumeChangedInput(qreal volume) {
+	m_inputinfo->setVolume(volume);
+}
+void Call::onVolumeChangedOutput(qreal volume) {
+	m_outputinfo->setVolume(volume);
 }
 
 void Call::notifiedInput()

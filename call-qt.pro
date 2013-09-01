@@ -87,7 +87,7 @@ win32 {
 }
 
 # The application version                                                          ## VERSION
-VERSION = 0.595                                                                      ## VERSION
+VERSION = 0.610                                                                      ## VERSION
 # Define the preprocessor macro to get the application version in our application. ## VERSION
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"                                           ## VERSION
-DEFINES += APP_BUILD=\\\"595\\\"                                             ## VERSION
+DEFINES += APP_BUILD=\\\"610\\\"                                             ## VERSION

@@ -52,6 +52,9 @@ public slots:
 	void notifiedInput();
 	void handleStateChanged(QAudio::State state);
 
+	void onVolumeChangedInput(qreal volume);
+	void onVolumeChangedOutput(qreal volume);
+
 private:
 	explicit Call(const Contact& contact, QObject* parent = 0);
 	static QHash<Contact, Call*> m_instances;

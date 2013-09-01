@@ -35,6 +35,8 @@ public:
 
 signals:
 	void shown();
+	void volumeChangedInput(qreal volume);
+	void volumeChangedOutput(qreal volume);
 
 public slots:
 	void onContactSelected(const QModelIndex & index);
@@ -52,6 +54,8 @@ public slots:
 	void onStatsLevelOutput(qreal level);
 	void onStatsFormatInput(QAudioFormat format);
 	void onStatsFormatOutput(QAudioFormat format);
+	void onSliderVolumeInput(int value);
+	void onSliderVolumeOutput(int value);
 
 	void onMenuShowTerminal();
 	void onMenuAudioDevices();

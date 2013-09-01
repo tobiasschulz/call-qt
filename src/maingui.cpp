@@ -49,6 +49,8 @@ Main::Main(QWidget* parent)
 	bool showStats = settings.value("window/show-stats", true).toBool();
 	QObject::connect(ui->actionShowStats, &QAction::toggled, this, &Main::onShowStatsToggled);
 	ui->actionShowStats->setChecked(showStats);
+	QObject::connect(ui->volumeInput, &QSlider::valueChanged, this, &Main::onSliderVolumeInput);
+	QObject::connect(ui->volumeOutput, &QSlider::valueChanged, this, &Main::onSliderVolumeOutput);
 
 	// audio devices settings
 	m_audiodevices = new AudioDevices;
@@ -238,5 +240,14 @@ void Main::onStatsFormatOutput(QAudioFormat format)
 	ui->codecOutput->setText(
 			QString("PCM %1 kHz, %2 bit, %3").arg(QString::number(format.sampleRate() / 1000.0),
 					QString::number(format.sampleSize()), format.channelCount() == 1 ? "mono" : "stereo"));
+}
+void Main::onSliderVolumeInput(int value)
+{
+	emit volumeChangedInput((qreal) value / 100);
+}
+
+void Main::onSliderVolumeOutput(int value)
+{
+	emit volumeChangedOutput((qreal) value / 100);
 }
 
