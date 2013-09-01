@@ -24,7 +24,7 @@ public:
 	QString id() const;
 
 	void updateDevices();
-	void fillCombobox(QComboBox* combobox, QList<QAudioDeviceInfo> devices);
+	void fillCombobox(QComboBox* combobox, QList<QAudioDeviceInfo> devices, QAudioDeviceInfo currentDevice);
 
 signals:
 

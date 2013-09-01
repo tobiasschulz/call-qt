@@ -28,7 +28,8 @@ QString fill(const QString& str, int size)
 
 QString threadname()
 {
-	return QThread::currentThread()->objectName();
+	const QString& objectname = QThread::currentThread()->objectName();
+	return objectname.size() > 0 ? objectname : "main";
 }
 
 Log::Log(ID* id)

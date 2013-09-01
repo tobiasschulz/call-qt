@@ -31,17 +31,27 @@ QString AudioDevices::id() const
 void AudioDevices::updateDevices()
 {
 	// microphones
-	fillCombobox(ui->comboboxMicrophones, QAudioDeviceInfo::availableDevices(QAudio::AudioInput));
+	fillCombobox(ui->comboboxMicrophones, QAudioDeviceInfo::availableDevices(QAudio::AudioInput),
+			Config::instance()->currentMicrophone());
 	// speakers
-	fillCombobox(ui->comboboxSpeakers, QAudioDeviceInfo::availableDevices(QAudio::AudioOutput));
+	fillCombobox(ui->comboboxSpeakers, QAudioDeviceInfo::availableDevices(QAudio::AudioOutput),
+			Config::instance()->currentSpeaker());
 }
 
-void AudioDevices::fillCombobox(QComboBox* combobox, QList<QAudioDeviceInfo> devices)
+void AudioDevices::fillCombobox(QComboBox* combobox, QList<QAudioDeviceInfo> devices, QAudioDeviceInfo currentDevice)
 {
 	QMutexLocker locker(&m_deviceslock);
 	combobox->clear();
+	int currentIndex = -1;
 	for (int i = 0; i < devices.size(); ++i) {
-		combobox->addItem(devices.at(i).deviceName(), qVariantFromValue(devices.at(i)));
+		QString name = devices.at(i).deviceName();
+		combobox->addItem(name, qVariantFromValue(devices.at(i)));
+		if (name == currentDevice.deviceName()) {
+			currentIndex = i;
+		}
+	}
+	if (currentIndex != -1) {
+		combobox->setCurrentIndex(currentIndex);
 	}
 }
 

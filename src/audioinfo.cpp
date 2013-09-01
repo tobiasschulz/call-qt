@@ -12,14 +12,13 @@ using namespace std;
 
 #include "audioinfo.h"
 
-bool AudioInfo::DO_DEBUG = 0;
+bool AudioInfo::DO_DEBUG = 1;
 int AudioInfo::BUFFER_SIZE = 262144;
 
 AudioInfo::AudioInfo(QIODevice* device, const QAudioFormat &format, QObject *parent)
 		: QIODevice(parent), m_device(device), m_format(format), m_buffer(new char[BUFFER_SIZE]()),
 			m_doUpdateLevel(false), m_doChangeVolume(true), m_maxAmplitude(0), m_baseAmplitude(0), m_level(0.0),
 			m_volume(1.0), m_timer()
-
 {
 	switch (m_format.sampleSize()) {
 	case 8:
