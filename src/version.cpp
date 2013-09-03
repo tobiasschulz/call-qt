@@ -24,3 +24,13 @@ QString Config::build()
 {
 	return APP_BUILD;
 }
+
+QString CONFIG__version()
+{
+	return APP_VERSION;
+}
+
+QString CONFIG__build()
+{
+	return APP_BUILD;
+}

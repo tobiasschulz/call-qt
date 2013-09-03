@@ -110,5 +110,5 @@ void ContactScanner::scanNow()
 
 void ContactScanner::onDisplayError(QAbstractSocket::SocketError error)
 {
-	log.debug("onDisplayError(%s)", qPrintable(error));
+	log.error("onDisplayError(%s)", qPrintable(error));
 }

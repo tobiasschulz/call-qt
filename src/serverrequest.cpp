@@ -59,6 +59,7 @@ void ServerRequest::onConnected()
 	QString request = headers["request"];
 	log.debug("request = %1", request);
 	if (request == "Status") {
+		this->setVerbose(NONE);
 		onStatusConnection();
 	} else if (request == "Chat") {
 		onChatConnection();

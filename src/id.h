@@ -54,6 +54,45 @@ public:
 	void debug(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVariant arg4, QVariant arg5, QVariant arg6,
 			QVariant arg7, QVariant arg8) const;
 
+	void info(QString format) const;
+	void info(QString format, QVariant arg1) const;
+	void info(QString format, QVariant arg1, QVariant arg2) const;
+	void info(QString format, QVariant arg1, QVariant arg2, QVariant arg3) const;
+	void info(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVariant arg4) const;
+	void info(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVariant arg4, QVariant arg5) const;
+	void info(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVariant arg4, QVariant arg5,
+			QVariant arg6) const;
+	void info(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVariant arg4, QVariant arg5, QVariant arg6,
+			QVariant arg7) const;
+	void info(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVariant arg4, QVariant arg5, QVariant arg6,
+			QVariant arg7, QVariant arg8) const;
+
+	void warn(QString format) const;
+	void warn(QString format, QVariant arg1) const;
+	void warn(QString format, QVariant arg1, QVariant arg2) const;
+	void warn(QString format, QVariant arg1, QVariant arg2, QVariant arg3) const;
+	void warn(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVariant arg4) const;
+	void warn(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVariant arg4, QVariant arg5) const;
+	void warn(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVariant arg4, QVariant arg5,
+			QVariant arg6) const;
+	void warn(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVariant arg4, QVariant arg5, QVariant arg6,
+			QVariant arg7) const;
+	void warn(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVariant arg4, QVariant arg5, QVariant arg6,
+			QVariant arg7, QVariant arg8) const;
+
+	void error(QString format) const;
+	void error(QString format, QVariant arg1) const;
+	void error(QString format, QVariant arg1, QVariant arg2) const;
+	void error(QString format, QVariant arg1, QVariant arg2, QVariant arg3) const;
+	void error(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVariant arg4) const;
+	void error(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVariant arg4, QVariant arg5) const;
+	void error(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVariant arg4, QVariant arg5,
+			QVariant arg6) const;
+	void error(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVariant arg4, QVariant arg5, QVariant arg6,
+			QVariant arg7) const;
+	void error(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVariant arg4, QVariant arg5, QVariant arg6,
+			QVariant arg7, QVariant arg8) const;
+
 private:
 	ID* m_id;
 };
@@ -66,6 +105,13 @@ public:
 	{
 	}
 
+	enum Verbosity
+	{
+#ifdef ERROR
+#undef ERROR
+#endif
+		ALL, DEBUG, INFO, WARN, ERROR, NONE
+	};
 	enum PrintFormat
 	{
 		PRINT_ONLY_NAME, PRINT_ONLY_DATA, PRINT_NAME_AND_DATA
@@ -74,9 +120,13 @@ public:
 	virtual QString print(PrintFormat format = PRINT_NAME_AND_DATA) const;
 	virtual QString serialize() const;
 	const Log& logger() const;
+	virtual void setVerbose(Verbosity verbose);
+	virtual Verbosity verbose() const;
+	virtual bool isVerbose(Verbosity verbose) const;
 
 protected:
 	Log log;
+	Verbosity m_verbose;
 };
 
 class StaticID: public ID

@@ -80,7 +80,7 @@ void Connection::connect(Host host)
 void Connection::setSocket(QTcpSocket* socket)
 {
 	if (socket == 0) {
-		log.debug("socket is NULL");
+		log.error("socket is NULL");
 		return;
 	}
 
@@ -98,7 +98,7 @@ void Connection::onSocketConnectTimeout()
 		m_socket->abort();
 	}
 	m_state = CLOSED;
-	log.debug("connectFailed(Connect Timeout)");
+	log.error("connectFailed(Connect Timeout)");
 	emit connectFailed("Connect Timeout", m_host);
 	emit hostOffline(m_host);
 }
@@ -108,7 +108,7 @@ void Connection::onSocketReadTimeout()
 		m_socket->abort();
 	}
 	m_state = CLOSED;
-	log.debug("socketError(Read Timeout)");
+	log.error("socketError(Read Timeout)");
 	emit socketError("Read Timeout", m_host);
 }
 
@@ -178,7 +178,7 @@ void Connection::onSocketError(QAbstractSocket::SocketError err)
 	} else {
 		errString = "socket is NULL!";
 	}
-	log.debug("Connection::onSocketError(%1)", errString);
+	log.error("Connection::onSocketError(%1)", errString);
 	m_state = CLOSED;
 
 	if (m_connecttimer.isActive()) {

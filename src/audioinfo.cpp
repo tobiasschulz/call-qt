@@ -12,7 +12,7 @@ using namespace std;
 
 #include "audioinfo.h"
 
-bool AudioInfo::DO_DEBUG = 1;
+bool AudioInfo::DO_DEBUG = 0;
 int AudioInfo::BUFFER_SIZE = 262144;
 
 AudioInfo::AudioInfo(QIODevice* device, const QAudioFormat &format, QObject *parent)

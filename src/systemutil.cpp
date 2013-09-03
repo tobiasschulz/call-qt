@@ -55,8 +55,12 @@ QString SystemUtil::getUserName()
 
 void SystemUtil::messageOutput(QtMsgType type, const QMessageLogContext &context, const QString& msg)
 {
-	QString str = createLogMessage(type, context, msg);
-
+	QString str = createLogMessage(type == QtDebugMsg ? ID::DEBUG : type == QtWarningMsg ? ID::WARN : ID::ERROR, msg);
+	emit newLogMessage(str);
+}
+void SystemUtil::messageOutput(ID::Verbosity type, const QString& msg)
+{
+	QString str = createLogMessage(type, msg);
 	emit newLogMessage(str);
 }
 void SystemUtil::printLogMessageConsole(QString str)
@@ -67,35 +71,40 @@ void SystemUtil::printLogMessageConsole(QString str)
 void SystemUtil::printLogMessageFile(QString str)
 {
 	static QTextStream* out = 0;
-	static QMutex mutex;
-	QMutexLocker locker(&mutex);
-	if (out == 0) {
+	static bool initialized = false;
+	if (!initialized) {
+		initialized = true;
+		static QMutex mutex;
+		QMutexLocker locker(&mutex);
 		QFile file("debug.log");
-		file.open(QIODevice::Append | QIODevice::Text);
-		out = new QTextStream(&file);
+		if (file.open(QIODevice::Append | QIODevice::Text) && (file.openMode() & QIODevice::WriteOnly)) {
+			out = new QTextStream(&file);
+		}
 	}
-	*out << str;
-	out->flush();
+	if (initialized && out != 0) {
+		*out << str;
+		out->flush();
+	}
 }
 
-QString SystemUtil::createLogMessage(QtMsgType type, const QMessageLogContext &context, const QString &msg)
+QString SystemUtil::createLogMessage(ID::Verbosity type, const QString &msg)
 {
 	QString str;
 	str += QDate::currentDate().toString("yyyy-MM-dd ");
 	str += QTime::currentTime().toString("hh:mm:ss ");
 
 	switch (type) {
-	case QtDebugMsg:
+	case ID::DEBUG:
 		str += "(debug)";
 		break;
-	case QtWarningMsg:
+	case ID::INFO:
+		str += "(info) ";
+		break;
+	case ID::WARN:
 		str += "(warn) ";
 		break;
-	case QtCriticalMsg:
-		str += "(crit) ";
-		break;
-	case QtFatalMsg:
-		str += "(fatal)";
+	case ID::ERROR:
+		str += "(error)";
 		break;
 	}
 

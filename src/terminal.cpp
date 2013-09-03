@@ -28,11 +28,11 @@ QColor typeColor(const QString& type)
 	if (type == "(debug)")
 		return Qt::darkCyan;
 	else if (type == "(error)")
-		return Qt::darkRed;
+		return Qt::red;
 	else if (type == "(info)")
 		return Qt::darkGreen;
 	else if (type == "(warn)")
-		return Qt::darkRed;
+		return Qt::red;
 	else
 		return Qt::darkBlue;
 }

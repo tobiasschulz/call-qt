@@ -15,12 +15,14 @@ void messageHandler(QtMsgType type, const QMessageLogContext &context, const QSt
 	SystemUtil::instance()->messageOutput(type, context, msg);
 }
 
+QString CONFIG__version();
+
 int main(int argv, char** args)
 {
 	QCoreApplication::setOrganizationName("Tobias Schulz");
 	QCoreApplication::setOrganizationDomain("tobias-schulz.eu");
 	QCoreApplication::setApplicationName("Call Qt");
-	QCoreApplication::setApplicationVersion(Config::instance()->version());
+	QCoreApplication::setApplicationVersion(CONFIG__version());
 #if !defined(Q_OS_WIN)
 	QApplication::setStyle(QStyleFactory::create("Fusion"));
 #endif

@@ -23,6 +23,7 @@ public:
 
 	QString getUserName();
 	void messageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg);
+	void messageOutput(ID::Verbosity type, const QString &msg);
 
 signals:
 	void newLogMessage(QString message);
@@ -40,6 +41,7 @@ private:
 	static SystemUtil* m_instance;
 
 	QString createLogMessage(QtMsgType type, const QMessageLogContext &context, const QString &msg);
+	QString createLogMessage(ID::Verbosity type, const QString &msg);
 
 	static const Log log;
 };
