@@ -15,10 +15,10 @@ using namespace std;
 bool AudioInfo::DO_DEBUG = 0;
 int AudioInfo::BUFFER_SIZE = 262144;
 
-AudioInfo::AudioInfo(QIODevice* device, const QAudioFormat &format, QObject *parent)
-		: QIODevice(parent), m_device(device), m_format(format), m_buffer(new char[BUFFER_SIZE]()),
+AudioInfo::AudioInfo(QIODevice* device, const QAudioFormat &format, QString name, QObject *parent)
+		: QIODevice(parent), m_name(name), m_device(device), m_format(format), m_buffer(new char[BUFFER_SIZE]()),
 			m_doUpdateLevel(false), m_doChangeVolume(true), m_maxAmplitude(0), m_baseAmplitude(0), m_level(0.0),
-			m_volume(1.0), m_timer()
+			m_volume(1.0), m_processedsamples(0), m_timer()
 {
 	switch (m_format.sampleSize()) {
 	case 8:
@@ -80,7 +80,7 @@ AudioInfo::~AudioInfo()
 
 QString AudioInfo::id() const
 {
-	return "AudioInfo<" + m_device->objectName() + ">";
+	return "AudioInfo<" + m_name + ">";
 }
 
 void AudioInfo::start()
@@ -135,6 +135,15 @@ qint64 AudioInfo::readData(char *data, qint64 maxlen)
 	if (m_doChangeVolume && len > 0) {
 		changeVolume(data, len);
 	}
+	m_processedsamples += len / (m_format.channelCount() * m_format.sampleSize() / 8);
+
+	static long lastmsecs = 0;
+	long msecs = processedMilliseconds();
+	if (msecs > lastmsecs + 1000) {
+		log.debug("processed (read): %1 ms", (int) msecs);
+		lastmsecs = msecs;
+	}
+
 	return len;
 }
 
@@ -146,10 +155,19 @@ qint64 AudioInfo::writeData(const char *data, qint64 len)
 		changeVolume(m_buffer, len);
 	}
 	qint64 written = m_device->write(m_buffer, len);
+	m_processedsamples += written / (m_format.channelCount() * m_format.sampleSize() / 8);
 	if (m_doUpdateLevel && written > 0) {
 		qreal level = updateLevel(m_buffer, written);
 		m_level = qMax(m_level, level);
 	}
+
+	static long lastmsecs = 0;
+	long msecs = processedMilliseconds();
+	if (msecs > lastmsecs + 1000) {
+		log.debug("processed (write): %1 ms", (int) msecs);
+		lastmsecs = msecs;
+	}
+
 	return written;
 }
 

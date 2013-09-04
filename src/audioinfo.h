@@ -21,7 +21,7 @@ class AudioInfo: public QIODevice, public ID
 Q_OBJECT
 
 public:
-	AudioInfo(QIODevice* device, const QAudioFormat &format, QObject *parent);
+	AudioInfo(QIODevice* device, const QAudioFormat &format, QString name, QObject *parent);
 	~AudioInfo();
 	QString id() const;
 
@@ -35,6 +35,14 @@ public:
 	qreal volume() const
 	{
 		return m_volume;
+	}
+	long processedSamples() const
+	{
+		return m_processedsamples;
+	}
+	long processedMilliseconds() const
+	{
+		return m_processedsamples * 1000.0 / m_format.sampleRate();
 	}
 	bool isSequential() const;
 	bool isLevelUpdatesEnabled();
@@ -61,6 +69,7 @@ private:
 	qint64 decode(const unsigned char *ptr);
 	void encode(qint64 value, unsigned char *ptr);
 
+	QString m_name;
 	QPointer<QIODevice> m_device;
 	const QAudioFormat m_format;
 	char* m_buffer;
@@ -70,6 +79,7 @@ private:
 	qint32 m_baseAmplitude;
 	qreal m_level; // 0.0 <= m_level <= 1.0
 	qreal m_volume; // 0.0 <= m_volume <= 2.0
+	long m_processedsamples;
 	QTimer m_timer;
 };
 

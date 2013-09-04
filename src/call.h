@@ -45,12 +45,15 @@ public slots:
 	void open();
 	void close();
 	void onConnected();
+	void startSpeaker();
 	void onSocketError(QString error, Host host);
 	void onConnectFailed(QString error, Host host);
 
 	void notifiedOutput();
 	void notifiedInput();
-	void handleStateChanged(QAudio::State state);
+	void handleInputStateChanged(QAudio::State state);
+	void handleOutputStateChanged(QAudio::State state);
+	void restartSpeaker();
 
 	void onVolumeChangedInput(qreal volume);
 	void onVolumeChangedOutput(qreal volume);
@@ -61,6 +64,7 @@ private:
 
 	void prepareConnection();
 	void open(Connection* host);
+	void printStates();
 
 	Host m_host;
 	Contact m_contact;

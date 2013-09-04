@@ -70,6 +70,7 @@ void SystemUtil::printLogMessageConsole(QString str)
 }
 void SystemUtil::printLogMessageFile(QString str)
 {
+#if !defined(Q_OS_WIN)
 	static QTextStream* out = 0;
 	static bool initialized = false;
 	if (!initialized) {
@@ -85,6 +86,7 @@ void SystemUtil::printLogMessageFile(QString str)
 		*out << str;
 		out->flush();
 	}
+#endif
 }
 
 QString SystemUtil::createLogMessage(ID::Verbosity type, const QString &msg)

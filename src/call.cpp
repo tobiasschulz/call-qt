@@ -30,7 +30,7 @@ Call* Call::instance(const Contact& contact)
 
 Call::Call(const Contact& contact, QObject* parent)
 		: QObject(parent), m_host(contact.host()), m_contact(contact), m_connection(0), m_inputaudio(0),
-			m_outputaudio(0), m_inputinfo(0), m_outputinfo(0), m_state(CLOSED)
+			m_outputaudio(0), m_inputinfo(0), m_outputinfo(0), m_state(CLOSED), m_openlock(), m_closelock()
 {
 	if (!m_host.isLoopback()) {
 		// for normal connections
@@ -184,8 +184,8 @@ void Call::onConnected()
 	m_outputaudio = new QAudioOutput(outdevice, outputformat, this);
 	log.debug("audiooutput: device = %1, format = %2", Log::print(outdevice), Log::print(m_outputaudio->format()));
 
-	m_inputinfo = new AudioInfo(m_connection->socket(), inputformat, this);
-	m_outputinfo = new AudioInfo(m_connection->socket(), outputformat, this);
+	m_inputinfo = new AudioInfo(m_connection->socket(), inputformat, "microphone", this);
+	m_outputinfo = new AudioInfo(m_connection->socket(), outputformat, "speaker", this);
 	m_inputinfo->start();
 	m_outputinfo->start();
 	//m_infooutput = new AudioInfo(m_connection->socket(), format, this);
@@ -193,9 +193,10 @@ void Call::onConnected()
 	//m_audiooutput->start(m_connection->socket());
 	m_inputaudio->start(m_inputinfo);
 	m_outputaudio->start(m_outputinfo);
+	QObject::connect(m_connection->socket(), &QTcpSocket::readyRead, this, &Call::startSpeaker);
 
-	QObject::connect(m_inputaudio, SIGNAL(stateChanged(QAudio::State)), SLOT(handleStateChanged(QAudio::State)));
-	QObject::connect(m_outputaudio, SIGNAL(stateChanged(QAudio::State)), SLOT(handleStateChanged(QAudio::State)));
+	QObject::connect(m_inputaudio, SIGNAL(stateChanged(QAudio::State)), SLOT(handleInputStateChanged(QAudio::State)));
+	QObject::connect(m_outputaudio, SIGNAL(stateChanged(QAudio::State)), SLOT(handleOutputStateChanged(QAudio::State)));
 
 	if (!m_host.isLoopback()) {
 		QSettings settings;
@@ -216,10 +217,19 @@ void Call::onConnected()
 
 	emit started();
 }
-void Call::onVolumeChangedInput(qreal volume) {
+
+void Call::startSpeaker()
+{
+	QObject::disconnect(m_connection->socket(), &QTcpSocket::readyRead, this, &Call::startSpeaker);
+	//m_outputaudio->start(m_outputinfo);
+}
+
+void Call::onVolumeChangedInput(qreal volume)
+{
 	m_inputinfo->setVolume(volume);
 }
-void Call::onVolumeChangedOutput(qreal volume) {
+void Call::onVolumeChangedOutput(qreal volume)
+{
 	m_outputinfo->setVolume(volume);
 }
 
@@ -227,7 +237,7 @@ void Call::notifiedInput()
 {
 	long bytesready = m_inputaudio->bytesReady();
 	long elapsedmsec = (m_inputaudio->elapsedUSecs() / 1000.0);
-	long processedmsec = (m_inputaudio->processedUSecs() / 1000.0);
+	long processedmsec = m_inputinfo->processedMilliseconds();
 	long latency = elapsedmsec - processedmsec;
 
 	static long latencyAverage = 0;
@@ -243,14 +253,19 @@ void Call::notifiedInput()
 	emit statsDurationInput(elapsedmsec);
 	emit statsLatencyInput(latencyAverage);
 
-	log.debug("microphone: bytesReady = %1, elapsedSeconds = %2, latency = %3", (int) bytesready, (int) elapsedmsec,
-			(int) latency);
+	log.debug("microphone: bytes ready = %1, elapsed ms = %2, processed ms = %3, latency = %4", (int) bytesready,
+			(int) elapsedmsec, (int) processedmsec, (int) latency);
+	if (m_connection) {
+		log.debug("socket: bytesAvailable = %1", m_connection->socket()->bytesAvailable());
+		log.debug("socket: bytesToWrite = %1", m_connection->socket()->bytesToWrite());
+	}
 }
 
 void Call::notifiedOutput()
 {
+	long bytesready = m_connection ? m_connection->socket()->bytesAvailable() : -1;
 	long elapsedmsec = (m_outputaudio->elapsedUSecs() / 1000.0);
-	long processedmsec = (m_outputaudio->processedUSecs() / 1000.0);
+	long processedmsec = m_outputinfo->processedMilliseconds();
 	long latency = elapsedmsec - processedmsec;
 
 	static long latencyAverage = 0;
@@ -266,28 +281,85 @@ void Call::notifiedOutput()
 	emit statsDurationOutput(elapsedmsec);
 	emit statsLatencyOutput(latencyAverage);
 
-	log.debug("speaker: bytesReady = %1, elapsedSeconds = %2, latency = %3", "?", (int) elapsedmsec, (int) latency);
+	log.debug("speaker: bytes ready = %1, elapsed ms = %2, processed ms = %3, latency = %4", (int) bytesready,
+			(int) elapsedmsec, (int) processedmsec, (int) latency);
 }
 
-void Call::handleStateChanged(QAudio::State state)
+void Call::handleInputStateChanged(QAudio::State state)
 {
-	log.debug("state = %1",
-			state == QAudio::ActiveState ? "QAudio::ActiveState" :
-			state == QAudio::StoppedState ? "QAudio::StoppedState" :
-			state == QAudio::IdleState ? "QAudio::IdleState" : "unknown");
+	printStates();
 	if (state == QAudio::StoppedState) {
 		close();
+	} else if (state == QAudio::IdleState) {
+		//m_inputaudio->start(m_inputaudio->start());
 	}
+}
+
+void Call::handleOutputStateChanged(QAudio::State state)
+{
+	printStates();
+	if (state == QAudio::StoppedState) {
+		close();
+	} else if (state == QAudio::IdleState) {
+		QTimer::singleShot(250, this, SLOT(restartSpeaker()));
+	}
+}
+
+void Call::restartSpeaker()
+{
+	if (m_outputinfo && m_outputaudio)
+		m_outputaudio->start(m_outputinfo);
+}
+
+void Call::printStates()
+{
+	if (m_inputaudio) {
+		QAudio::State state = m_inputaudio->state();
+		log.debug("microphone: state = %1",
+				state == QAudio::ActiveState ? "QAudio::ActiveState" :
+				state == QAudio::StoppedState ? "QAudio::StoppedState" :
+				state == QAudio::IdleState ? "QAudio::IdleState" : "unknown");
+	}
+	if (m_outputaudio) {
+		QAudio::State state = m_outputaudio->state();
+		log.debug("speaker: state = %1",
+				state == QAudio::ActiveState ? "QAudio::ActiveState" :
+				state == QAudio::StoppedState ? "QAudio::StoppedState" :
+				state == QAudio::IdleState ? "QAudio::IdleState" : "unknown");
+	}
+
+	if (m_inputaudio) {
+		QAudio::Error error = m_inputaudio->error();
+		if (error != QAudio::NoError)
+			log.error("microphone: error = %1",
+					error == QAudio::OpenError ? "QAudio::OpenError" : error == QAudio::IOError ? "QAudio::IOError" :
+					error == QAudio::UnderrunError ? "QAudio::UnderrunError" :
+					QAudio::FatalError ? "QAudio::FatalError" : "unknown");
+	}
+	if (m_outputaudio) {
+		QAudio::Error error = m_outputaudio->error();
+		if (error != QAudio::NoError)
+			log.error("speaker: error = %1",
+					error == QAudio::OpenError ? "QAudio::OpenError" : error == QAudio::IOError ? "QAudio::IOError" :
+					error == QAudio::UnderrunError ? "QAudio::UnderrunError" :
+					QAudio::FatalError ? "QAudio::FatalError" : "unknown");
+	}
+
+	if (m_connection) {
+		log.debug("socket: bytesAvailable = %1", m_connection->socket()->bytesAvailable());
+		log.debug("socket: bytesToWrite = %1", m_connection->socket()->bytesToWrite());
+	}
+
 }
 
 void Call::onSocketError(QString error, Host host)
 {
-	log.debug("onSocketError(%1, %2)", error, Log::print(host));
+	log.warn("onSocketError(%1, %2)", error, Log::print(host));
 	close();
 }
 
 void Call::onConnectFailed(QString error, Host host)
 {
-	log.debug("onConnectFailed(%1, %2)", error, Log::print(host));
+	log.error("onConnectFailed(%1, %2)", error, Log::print(host));
 	close();
 }

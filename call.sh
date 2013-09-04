@@ -13,6 +13,11 @@ export QT_PLUGINS=$QT_MAIN/$QT_VERSION/$MINGW_VERSION/plugins/
 export W_QT_BIN=$(echo -n "Z:"; echo $QT_BIN | sed 's@/@\\@gm')
 export W_MINGW_BIN=$(echo -n "Z:"; echo $MINGW_BIN | sed 's@/@\\@gm')
 
+export CODEDIR=../call-qt
+export WIN32DIR=../call-qt-win
+export WINRELEASE=../call-qt-win32-release
+export WINDEBUG=../call-qt-win32-debug
+
 function newversion() {
 	# version stuff
 	export $(grep "VERSION =" call-qt.pro | sed 's@ = @=@gm' | sed 's@#.*@@gm')
@@ -37,48 +42,68 @@ function compile() {
 }
 
 function wineclean() {
-	rm -rf ../call-qt-win 2>/dev/null
+	rm -rf $WIN32DIR 2>/dev/null
 	rm -f *.exe *.dll compiled.zip
 }
 
 function winecompile() {
-	(mkdir ../call-qt-win 2>/dev/null; cd ../call-qt-win && (
+	(mkdir $WIN32DIR $WINDEBUG $WINRELEASE 2>/dev/null; cd $WIN32DIR && (
 		echo -n > make.bat
 		echo "set PATH=%PATH%;$W_QT_BIN;$W_MINGW_BIN" > make.bat
-		echo "$QT_BIN/qmake.exe ../call-qt/call-qt.pro" >> make.bat
+		echo "$QT_BIN/qmake.exe $CODEDIR/call-qt.pro" >> make.bat
 		echo "$MINGW_BIN/mingw32-make.exe" >> make.bat
-		wine cmd /c make.bat
+		nice -n 19 wine cmd /c make.bat
+		rm -f $WINRELEASE/call-qt.exe $WINDEBUG/call-qt.exe
+		cp bin/call-qt.exe $WINRELEASE 2>/dev/null
+		cp bin/call-qt.exe $WINDEBUG 2>/dev/null
+		cp bin/call-qt.exe $WINDEBUG
 	))
+	test -f $WINDEBUG/call-qt.exe
 }
 
 function winezip() {
-	(mkdir ../call-qt-win 2>/dev/null; cd ../call-qt-win && (
-		cp bin/call-qt.exe ../call-qt/ 2>/dev/null
+	(mkdir $WIN32DIR $WINDEBUG $WINRELEASE 2>/dev/null; cd $WIN32DIR && (
 		for dll in Qt5Core.dll Qt5Gui.dll Qt5Network.dll Qt5Widgets.dll Qt5Multimedia.dll Qt5MultimediaWidgets.dll Qt5Svg.dll Qt5OpenGL.dll \
 				libgcc_s_dw2-1.dll libstdc++-6.dll icuin51.dll icuuc51.dll icudt51.dll libwinpthread-1.dll
 		do
-			test -f ../call-qt/$dll || cp $QT_BIN/$dll ../call-qt/
+			test -f $WINRELEASE/$dll || cp $QT_BIN/$dll $WINRELEASE
+			export debugdll=$(echo $dll | sed 's@.dll@d.dll@gm')
+			test -f $WINDEBUG/$debugdll || (test -f $WINDEBUG/$dll || (cp $QT_BIN/$debugdll $WINDEBUG || cp $QT_BIN/$dll $WINDEBUG))
 		done
 		for dll in libEGL.dll libGLESv2.dll D3DCompiler_43.dll
 		do
 			true
 #			test -f ../call-qt/$dll || cp $QTCREATOR_BIN/$dll ../call-qt/
 		done
-		cp -rf $QT_PLUGINS/platforms/ ../call-qt/
-		cp -rf $QT_PLUGINS/mediaservice/ ../call-qt/
-		cp -rf $QT_PLUGINS/imageformats/ ../call-qt/
-
-		cd ../call-qt
-		#upx *.exe *.dll 2>/dev/null
-		ll *.exe *.dll 2>/dev/null
-		rm -f compiled.zip 2>/dev/null
-		zip -rq compiled.zip *.exe *.dll img/ ui/ src/ platforms/ imageformats/ mediaservice/
+		cp -rf $QT_PLUGINS/platforms/ $WINRELEASE
+		cp -rf $QT_PLUGINS/mediaservice/ $WINRELEASE
+		cp -rf $QT_PLUGINS/imageformats/ $WINRELEASE
+		cp -rf $QT_PLUGINS/platforms/ $WINDEBUG
+		cp -rf $QT_PLUGINS/mediaservice/ $WINDEBUG
+		cp -rf $QT_PLUGINS/imageformats/ $WINDEBUG
 	))
-	echo A | unzip -d /data/share/test/ compiled.zip >/dev/null 2>&1
+
+	(mkdir $CODEDIR 2>/dev/null; cd $CODEDIR && (
+		cp -rf img/ ui/ src/ $WINRELEASE
+		cp -rf img/ ui/ src/ $WINDEBUG
+	))
+
+	#upx *.exe *.dll 2>/dev/null
+	(mkdir $WINRELEASE 2>/dev/null; cd $WINRELEASE && (
+		ll *.exe *.dll 2>/dev/null
+		rm -f $CODEDIR/compiled.zip $CODEDIR/dependencies.zip 2>/dev/null
+		nice -n 19 zip -rq $CODEDIR/compiled.zip *.exe img/ ui/ src/
+		nice -n 19 zip -rq $CODEDIR/dependencies.zip *.dll platforms/ imageformats/ mediaservice/
+	))
+
+	rm -rf /data/share/test/*
+	echo A | nice -n 19 unzip -d /data/share/test/ $CODEDIR/dependencies.zip >/dev/null 2>&1
+	echo A | nice -n 19 unzip -d /data/share/test/ $CODEDIR/compiled.zip >/dev/null 2>&1
+	chmod -R 0777 /data/share/test/
 }
 
 function winerun() {
-	wine call-qt.exe
+	nice -n 19 wine call-qt.exe
 }
 
 function debug() {

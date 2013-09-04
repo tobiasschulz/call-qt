@@ -64,7 +64,7 @@ void Terminal::printLogMessage(QString message)
 	} else {
 		message = message.toHtmlEscaped();
 	}
-	if (ui->terminal->document()->lineCount() > 1000)
+	if (ui->terminal->document()->lineCount() > 5000)
 		ui->terminal->clear();
 	ui->terminal->append(BEFORE_MESSAGE + message + AFTER_MESSAGE);
 }
