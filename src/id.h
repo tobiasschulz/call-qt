@@ -93,6 +93,8 @@ public:
 	void error(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVariant arg4, QVariant arg5, QVariant arg6,
 			QVariant arg7, QVariant arg8) const;
 
+	static QString currentThreadName();
+
 private:
 	ID* m_id;
 };
@@ -110,7 +112,7 @@ public:
 #ifdef ERROR
 #undef ERROR
 #endif
-		ALL, DEBUG, INFO, WARN, ERROR, NONE
+		ALL, DEBUG, INFO, WARNING, ERROR, NONE
 	};
 	enum PrintFormat
 	{

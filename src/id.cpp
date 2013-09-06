@@ -23,7 +23,7 @@ using namespace std;
 
 #define LOG_DEBUG(str) SystemUtil::instance()->messageOutput(ID::DEBUG, str)
 #define LOG_INFO(str) SystemUtil::instance()->messageOutput(ID::INFO, str)
-#define LOG_WARN(str) SystemUtil::instance()->messageOutput(ID::WARN, str)
+#define LOG_WARN(str) SystemUtil::instance()->messageOutput(ID::WARNING, str)
 #define LOG_ERROR(str) SystemUtil::instance()->messageOutput(ID::ERROR, str)
 
 QString fill(const QString& str, int size)
@@ -31,7 +31,7 @@ QString fill(const QString& str, int size)
 	return str + QString().fill(' ', (str.size() < size ? size - str.size() : 0));
 }
 
-QString threadname()
+QString Log::currentThreadName()
 {
 	const QString& objectname = QThread::currentThread()->objectName();
 	return objectname.size() > 0 ? objectname : "main";
@@ -102,10 +102,10 @@ bool ID::isVerbose(ID::Verbosity verbose) const
 		return m_verbose == ALL || m_verbose == DEBUG;
 	case INFO:
 		return m_verbose == ALL || m_verbose == DEBUG || m_verbose == INFO;
-	case WARN:
-		return m_verbose == ALL || m_verbose == DEBUG || m_verbose == INFO || m_verbose == WARN;
+	case WARNING:
+		return m_verbose == ALL || m_verbose == DEBUG || m_verbose == INFO || m_verbose == WARNING;
 	case ERROR:
-		return m_verbose == ALL || m_verbose == DEBUG || m_verbose == INFO || m_verbose == WARN || m_verbose == ERROR;
+		return m_verbose == ALL || m_verbose == DEBUG || m_verbose == INFO || m_verbose == WARNING || m_verbose == ERROR;
 	case NONE:
 		return true;
 	}
@@ -138,7 +138,7 @@ void Log::debug(QString format) const
 {
 	if (!m_id->isVerbose(ID::DEBUG))
 		return;
-	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString thread(fill("(" + currentThreadName() + ")", PADDING_THREADNAME));
 	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
 	QString params(format);
 	LOG_DEBUG(QString("%1 %2 %3").arg(thread, classid, params));
@@ -147,7 +147,7 @@ void Log::debug(QString format, QVariant arg1) const
 {
 	if (!m_id->isVerbose(ID::DEBUG))
 		return;
-	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString thread(fill("(" + currentThreadName() + ")", PADDING_THREADNAME));
 	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
 	QString params(format.arg(arg1.toString()));
 	LOG_DEBUG(QString("%1 %2 %3").arg(thread, classid, params));
@@ -156,7 +156,7 @@ void Log::debug(QString format, QVariant arg1, QVariant arg2) const
 {
 	if (!m_id->isVerbose(ID::DEBUG))
 		return;
-	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString thread(fill("(" + currentThreadName() + ")", PADDING_THREADNAME));
 	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
 	QString params(format.arg(arg1.toString(), arg2.toString()));
 	LOG_DEBUG(QString("%1 %2 %3").arg(thread, classid, params));
@@ -165,7 +165,7 @@ void Log::debug(QString format, QVariant arg1, QVariant arg2, QVariant arg3) con
 {
 	if (!m_id->isVerbose(ID::DEBUG))
 		return;
-	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString thread(fill("(" + currentThreadName() + ")", PADDING_THREADNAME));
 	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
 	QString params(format.arg(arg1.toString(), arg2.toString(), arg3.toString()));
 	LOG_DEBUG(QString("%1 %2 %3").arg(thread, classid, params));
@@ -174,7 +174,7 @@ void Log::debug(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVa
 {
 	if (!m_id->isVerbose(ID::DEBUG))
 		return;
-	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString thread(fill("(" + currentThreadName() + ")", PADDING_THREADNAME));
 	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
 	QString params(format.arg(arg1.toString(), arg2.toString(), arg3.toString(), arg4.toString()));
 	LOG_DEBUG(QString("%1 %2 %3").arg(thread, classid, params));
@@ -183,7 +183,7 @@ void Log::debug(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVa
 {
 	if (!m_id->isVerbose(ID::DEBUG))
 		return;
-	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString thread(fill("(" + currentThreadName() + ")", PADDING_THREADNAME));
 	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
 	QString params(format.arg(arg1.toString(), arg2.toString(), arg3.toString(), arg4.toString(), arg5.toString()));
 	LOG_DEBUG(QString("%1 %2 %3").arg(thread, classid, params));
@@ -193,7 +193,7 @@ void Log::debug(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVa
 {
 	if (!m_id->isVerbose(ID::DEBUG))
 		return;
-	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString thread(fill("(" + currentThreadName() + ")", PADDING_THREADNAME));
 	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
 	QString params(
 			format.arg(arg1.toString(), arg2.toString(), arg3.toString(), arg4.toString(), arg5.toString(),
@@ -205,7 +205,7 @@ void Log::debug(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVa
 {
 	if (!m_id->isVerbose(ID::DEBUG))
 		return;
-	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString thread(fill("(" + currentThreadName() + ")", PADDING_THREADNAME));
 	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
 	QString params(
 			format.arg(arg1.toString(), arg2.toString(), arg3.toString(), arg4.toString(), arg5.toString(),
@@ -217,7 +217,7 @@ void Log::debug(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVa
 {
 	if (!m_id->isVerbose(ID::DEBUG))
 		return;
-	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString thread(fill("(" + currentThreadName() + ")", PADDING_THREADNAME));
 	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
 	QString params(
 			format.arg(arg1.toString(), arg2.toString(), arg3.toString(), arg4.toString(), arg5.toString(),
@@ -229,7 +229,7 @@ void Log::info(QString format) const
 {
 	if (!m_id->isVerbose(ID::INFO))
 		return;
-	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString thread(fill("(" + currentThreadName() + ")", PADDING_THREADNAME));
 	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
 	QString params(format);
 	LOG_INFO(QString("%1 %2 %3").arg(thread, classid, params));
@@ -238,7 +238,7 @@ void Log::info(QString format, QVariant arg1) const
 {
 	if (!m_id->isVerbose(ID::INFO))
 		return;
-	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString thread(fill("(" + currentThreadName() + ")", PADDING_THREADNAME));
 	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
 	QString params(format.arg(arg1.toString()));
 	LOG_INFO(QString("%1 %2 %3").arg(thread, classid, params));
@@ -247,7 +247,7 @@ void Log::info(QString format, QVariant arg1, QVariant arg2) const
 {
 	if (!m_id->isVerbose(ID::INFO))
 		return;
-	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString thread(fill("(" + currentThreadName() + ")", PADDING_THREADNAME));
 	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
 	QString params(format.arg(arg1.toString(), arg2.toString()));
 	LOG_INFO(QString("%1 %2 %3").arg(thread, classid, params));
@@ -256,7 +256,7 @@ void Log::info(QString format, QVariant arg1, QVariant arg2, QVariant arg3) cons
 {
 	if (!m_id->isVerbose(ID::INFO))
 		return;
-	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString thread(fill("(" + currentThreadName() + ")", PADDING_THREADNAME));
 	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
 	QString params(format.arg(arg1.toString(), arg2.toString(), arg3.toString()));
 	LOG_INFO(QString("%1 %2 %3").arg(thread, classid, params));
@@ -265,7 +265,7 @@ void Log::info(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVar
 {
 	if (!m_id->isVerbose(ID::INFO))
 		return;
-	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString thread(fill("(" + currentThreadName() + ")", PADDING_THREADNAME));
 	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
 	QString params(format.arg(arg1.toString(), arg2.toString(), arg3.toString(), arg4.toString()));
 	LOG_INFO(QString("%1 %2 %3").arg(thread, classid, params));
@@ -274,7 +274,7 @@ void Log::info(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVar
 {
 	if (!m_id->isVerbose(ID::INFO))
 		return;
-	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString thread(fill("(" + currentThreadName() + ")", PADDING_THREADNAME));
 	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
 	QString params(format.arg(arg1.toString(), arg2.toString(), arg3.toString(), arg4.toString(), arg5.toString()));
 	LOG_INFO(QString("%1 %2 %3").arg(thread, classid, params));
@@ -284,7 +284,7 @@ void Log::info(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVar
 {
 	if (!m_id->isVerbose(ID::INFO))
 		return;
-	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString thread(fill("(" + currentThreadName() + ")", PADDING_THREADNAME));
 	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
 	QString params(
 			format.arg(arg1.toString(), arg2.toString(), arg3.toString(), arg4.toString(), arg5.toString(),
@@ -296,7 +296,7 @@ void Log::info(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVar
 {
 	if (!m_id->isVerbose(ID::INFO))
 		return;
-	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString thread(fill("(" + currentThreadName() + ")", PADDING_THREADNAME));
 	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
 	QString params(
 			format.arg(arg1.toString(), arg2.toString(), arg3.toString(), arg4.toString(), arg5.toString(),
@@ -308,7 +308,7 @@ void Log::info(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVar
 {
 	if (!m_id->isVerbose(ID::INFO))
 		return;
-	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString thread(fill("(" + currentThreadName() + ")", PADDING_THREADNAME));
 	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
 	QString params(
 			format.arg(arg1.toString(), arg2.toString(), arg3.toString(), arg4.toString(), arg5.toString(),
@@ -318,54 +318,54 @@ void Log::info(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVar
 
 void Log::warn(QString format) const
 {
-	if (!m_id->isVerbose(ID::WARN))
+	if (!m_id->isVerbose(ID::WARNING))
 		return;
-	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString thread(fill("(" + currentThreadName() + ")", PADDING_THREADNAME));
 	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
 	QString params(format);
 	LOG_WARN(QString("%1 %2 %3").arg(thread, classid, params));
 }
 void Log::warn(QString format, QVariant arg1) const
 {
-	if (!m_id->isVerbose(ID::WARN))
+	if (!m_id->isVerbose(ID::WARNING))
 		return;
-	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString thread(fill("(" + currentThreadName() + ")", PADDING_THREADNAME));
 	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
 	QString params(format.arg(arg1.toString()));
 	LOG_WARN(QString("%1 %2 %3").arg(thread, classid, params));
 }
 void Log::warn(QString format, QVariant arg1, QVariant arg2) const
 {
-	if (!m_id->isVerbose(ID::WARN))
+	if (!m_id->isVerbose(ID::WARNING))
 		return;
-	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString thread(fill("(" + currentThreadName() + ")", PADDING_THREADNAME));
 	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
 	QString params(format.arg(arg1.toString(), arg2.toString()));
 	LOG_WARN(QString("%1 %2 %3").arg(thread, classid, params));
 }
 void Log::warn(QString format, QVariant arg1, QVariant arg2, QVariant arg3) const
 {
-	if (!m_id->isVerbose(ID::WARN))
+	if (!m_id->isVerbose(ID::WARNING))
 		return;
-	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString thread(fill("(" + currentThreadName() + ")", PADDING_THREADNAME));
 	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
 	QString params(format.arg(arg1.toString(), arg2.toString(), arg3.toString()));
 	LOG_WARN(QString("%1 %2 %3").arg(thread, classid, params));
 }
 void Log::warn(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVariant arg4) const
 {
-	if (!m_id->isVerbose(ID::WARN))
+	if (!m_id->isVerbose(ID::WARNING))
 		return;
-	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString thread(fill("(" + currentThreadName() + ")", PADDING_THREADNAME));
 	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
 	QString params(format.arg(arg1.toString(), arg2.toString(), arg3.toString(), arg4.toString()));
 	LOG_WARN(QString("%1 %2 %3").arg(thread, classid, params));
 }
 void Log::warn(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVariant arg4, QVariant arg5) const
 {
-	if (!m_id->isVerbose(ID::WARN))
+	if (!m_id->isVerbose(ID::WARNING))
 		return;
-	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString thread(fill("(" + currentThreadName() + ")", PADDING_THREADNAME));
 	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
 	QString params(format.arg(arg1.toString(), arg2.toString(), arg3.toString(), arg4.toString(), arg5.toString()));
 	LOG_WARN(QString("%1 %2 %3").arg(thread, classid, params));
@@ -373,9 +373,9 @@ void Log::warn(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVar
 void Log::warn(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVariant arg4, QVariant arg5,
 		QVariant arg6) const
 {
-	if (!m_id->isVerbose(ID::WARN))
+	if (!m_id->isVerbose(ID::WARNING))
 		return;
-	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString thread(fill("(" + currentThreadName() + ")", PADDING_THREADNAME));
 	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
 	QString params(
 			format.arg(arg1.toString(), arg2.toString(), arg3.toString(), arg4.toString(), arg5.toString(),
@@ -385,9 +385,9 @@ void Log::warn(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVar
 void Log::warn(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVariant arg4, QVariant arg5, QVariant arg6,
 		QVariant arg7) const
 {
-	if (!m_id->isVerbose(ID::WARN))
+	if (!m_id->isVerbose(ID::WARNING))
 		return;
-	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString thread(fill("(" + currentThreadName() + ")", PADDING_THREADNAME));
 	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
 	QString params(
 			format.arg(arg1.toString(), arg2.toString(), arg3.toString(), arg4.toString(), arg5.toString(),
@@ -397,9 +397,9 @@ void Log::warn(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVar
 void Log::warn(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVariant arg4, QVariant arg5, QVariant arg6,
 		QVariant arg7, QVariant arg8) const
 {
-	if (!m_id->isVerbose(ID::WARN))
+	if (!m_id->isVerbose(ID::WARNING))
 		return;
-	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString thread(fill("(" + currentThreadName() + ")", PADDING_THREADNAME));
 	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
 	QString params(
 			format.arg(arg1.toString(), arg2.toString(), arg3.toString(), arg4.toString(), arg5.toString(),
@@ -411,7 +411,7 @@ void Log::error(QString format) const
 {
 	if (!m_id->isVerbose(ID::ERROR))
 		return;
-	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString thread(fill("(" + currentThreadName() + ")", PADDING_THREADNAME));
 	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
 	QString params(format);
 	LOG_ERROR(QString("%1 %2 %3").arg(thread, classid, params));
@@ -420,7 +420,7 @@ void Log::error(QString format, QVariant arg1) const
 {
 	if (!m_id->isVerbose(ID::ERROR))
 		return;
-	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString thread(fill("(" + currentThreadName() + ")", PADDING_THREADNAME));
 	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
 	QString params(format.arg(arg1.toString()));
 	LOG_ERROR(QString("%1 %2 %3").arg(thread, classid, params));
@@ -429,7 +429,7 @@ void Log::error(QString format, QVariant arg1, QVariant arg2) const
 {
 	if (!m_id->isVerbose(ID::ERROR))
 		return;
-	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString thread(fill("(" + currentThreadName() + ")", PADDING_THREADNAME));
 	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
 	QString params(format.arg(arg1.toString(), arg2.toString()));
 	LOG_ERROR(QString("%1 %2 %3").arg(thread, classid, params));
@@ -438,7 +438,7 @@ void Log::error(QString format, QVariant arg1, QVariant arg2, QVariant arg3) con
 {
 	if (!m_id->isVerbose(ID::ERROR))
 		return;
-	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString thread(fill("(" + currentThreadName() + ")", PADDING_THREADNAME));
 	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
 	QString params(format.arg(arg1.toString(), arg2.toString(), arg3.toString()));
 	LOG_ERROR(QString("%1 %2 %3").arg(thread, classid, params));
@@ -447,7 +447,7 @@ void Log::error(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVa
 {
 	if (!m_id->isVerbose(ID::ERROR))
 		return;
-	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString thread(fill("(" + currentThreadName() + ")", PADDING_THREADNAME));
 	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
 	QString params(format.arg(arg1.toString(), arg2.toString(), arg3.toString(), arg4.toString()));
 	LOG_ERROR(QString("%1 %2 %3").arg(thread, classid, params));
@@ -456,7 +456,7 @@ void Log::error(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVa
 {
 	if (!m_id->isVerbose(ID::ERROR))
 		return;
-	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString thread(fill("(" + currentThreadName() + ")", PADDING_THREADNAME));
 	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
 	QString params(format.arg(arg1.toString(), arg2.toString(), arg3.toString(), arg4.toString(), arg5.toString()));
 	LOG_ERROR(QString("%1 %2 %3").arg(thread, classid, params));
@@ -466,7 +466,7 @@ void Log::error(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVa
 {
 	if (!m_id->isVerbose(ID::ERROR))
 		return;
-	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString thread(fill("(" + currentThreadName() + ")", PADDING_THREADNAME));
 	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
 	QString params(
 			format.arg(arg1.toString(), arg2.toString(), arg3.toString(), arg4.toString(), arg5.toString(),
@@ -478,7 +478,7 @@ void Log::error(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVa
 {
 	if (!m_id->isVerbose(ID::ERROR))
 		return;
-	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString thread(fill("(" + currentThreadName() + ")", PADDING_THREADNAME));
 	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
 	QString params(
 			format.arg(arg1.toString(), arg2.toString(), arg3.toString(), arg4.toString(), arg5.toString(),
@@ -490,7 +490,7 @@ void Log::error(QString format, QVariant arg1, QVariant arg2, QVariant arg3, QVa
 {
 	if (!m_id->isVerbose(ID::ERROR))
 		return;
-	QString thread(fill("(" + threadname() + ")", PADDING_THREADNAME));
+	QString thread(fill("(" + currentThreadName() + ")", PADDING_THREADNAME));
 	QString classid(fill("[" + m_id->print() + "]:", PADDING_ID));
 	QString params(
 			format.arg(arg1.toString(), arg2.toString(), arg3.toString(), arg4.toString(), arg5.toString(),

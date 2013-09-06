@@ -37,6 +37,7 @@ int main(int argv, char** args)
 	qRegisterMetaTypeStreamOperators<Host>("Host");
 	qRegisterMetaType<Contact>("Contact");
 	qRegisterMetaTypeStreamOperators<Contact>("Contact");
+	qRegisterMetaType<ID::Verbosity>("ID::Verbosity");
 	qInstallMessageHandler(messageHandler);
 	qDebug() << "starting app";
 

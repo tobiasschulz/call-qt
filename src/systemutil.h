@@ -26,11 +26,11 @@ public:
 	void messageOutput(ID::Verbosity type, const QString &msg);
 
 signals:
-	void newLogMessage(QString message);
+	void newLogMessage(ID::Verbosity type, QString thread, QString message);
 
 public slots:
-	void printLogMessageConsole(QString str);
-	void printLogMessageFile(QString str);
+	void printLogMessageConsole(ID::Verbosity type, QString thread, QString str);
+	void printLogMessageFile(ID::Verbosity type, QString thread, QString str);
 
 private:
 	explicit SystemUtil(QObject *parent = 0);

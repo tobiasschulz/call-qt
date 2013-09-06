@@ -55,21 +55,29 @@ QString SystemUtil::getUserName()
 
 void SystemUtil::messageOutput(QtMsgType type, const QMessageLogContext &context, const QString& msg)
 {
-	QString str = createLogMessage(type == QtDebugMsg ? ID::DEBUG : type == QtWarningMsg ? ID::WARN : ID::ERROR, msg);
-	emit newLogMessage(str);
+	Q_UNUSED(context);
+	ID::Verbosity verbosity = type == QtDebugMsg ? ID::DEBUG : type == QtWarningMsg ? ID::WARNING : ID::ERROR;
+	QString str = createLogMessage(verbosity, msg);
+	emit newLogMessage(verbosity, Log::currentThreadName(), str);
 }
-void SystemUtil::messageOutput(ID::Verbosity type, const QString& msg)
-{
-	QString str = createLogMessage(type, msg);
-	emit newLogMessage(str);
-}
-void SystemUtil::printLogMessageConsole(QString str)
-{
-	std::cout << str.toLocal8Bit().constData() << std::flush;
 
-}
-void SystemUtil::printLogMessageFile(QString str)
+void SystemUtil::messageOutput(ID::Verbosity verbosity, const QString& msg)
 {
+	QString str = createLogMessage(verbosity, msg);
+	emit newLogMessage(verbosity, Log::currentThreadName(), str);
+}
+
+void SystemUtil::printLogMessageConsole(ID::Verbosity type, QString thread, QString str)
+{
+	Q_UNUSED(type);
+	Q_UNUSED(thread);
+	std::cout << str.toLocal8Bit().constData() << std::flush;
+}
+
+void SystemUtil::printLogMessageFile(ID::Verbosity type, QString thread, QString str)
+{
+	Q_UNUSED(type);
+	Q_UNUSED(thread);
 #if !defined(Q_OS_WIN)
 	static QTextStream* out = 0;
 	static bool initialized = false;
@@ -102,11 +110,15 @@ QString SystemUtil::createLogMessage(ID::Verbosity type, const QString &msg)
 	case ID::INFO:
 		str += "(info) ";
 		break;
-	case ID::WARN:
+	case ID::WARNING:
 		str += "(warn) ";
 		break;
 	case ID::ERROR:
 		str += "(error)";
+		break;
+	case ID::ALL:
+	case ID::NONE:
+		str += "(?????)";
 		break;
 	}
 
