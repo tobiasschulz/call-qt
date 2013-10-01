@@ -1,6 +1,5 @@
 #include <QtGlobal>
 #include <QTimer>
-#include <QSettings>
 #include <QBuffer>
 
 #include "id.h"
@@ -21,7 +20,7 @@ void ContactScanner::increasePriority(Host host)
 {
 	if (host == Host::INVALID_HOST) {
 		// invalid
-	} else if (host.isUnreachable()&&0) {
+	} else if (host.isUnreachable() && 0) {
 		log.debug("host is unreachable: %1", Log::print(host));
 		QList<quint16> ports = Config::instance()->defaultPorts();
 		QList<Host> hosts;
@@ -43,8 +42,7 @@ void ContactScanner::increasePriority(Host host)
 		m_knownhosts.prepend(host);
 		m_hosts_mutex.unlock();
 
-		QSettings settings;
-		settings.setValue("contacts/known-hosts", serializeList(m_knownhosts));
+		Config::instance()->setKnownHosts(m_knownhosts);
 	}
 }
 
@@ -58,16 +56,12 @@ void ContactScanner::start()
 	m_unknownhosts << Config::instance()->defaultHosts();
 	QObject::connect(ContactList::instance(), &ContactList::hostOnline, this, &ContactScanner::increasePriority);
 
-	QSettings settings;
-	m_knownhosts = deserializeList<Host>(settings.value("contacts/known-hosts", QStringList()).toStringList());
-	m_knownhosts.removeAll(Host::INVALID_HOST);
+	m_knownhosts = Config::instance()->knownHosts();
 	foreach (const Host& host, m_knownhosts)
 	{
 		log.debug("known host: %1", Log::print(host));
-		if (m_unknownhosts.contains(host))
+		if (m_unknownhosts.contains(host)) {
 			m_unknownhosts.removeAll(host);
-		if (host.isUnreachable()) {
-			m_knownhosts.removeAll(host);
 		}
 	}
 

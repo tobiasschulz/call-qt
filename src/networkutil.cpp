@@ -96,6 +96,8 @@ void NetworkUtil::writeHeaders(QTcpSocket* socket, Connection::Type type, const 
 	writeLine(socket, "Microphone-Format: ",
 			QString("%1,%2,%3").arg(QString::number(format.sampleRate()), QString::number(format.sampleSize()),
 					QString::number(format.channelCount())));
+//	QList<Host> knownhosts = Config::instance()->knownHosts();
+
 
 	writeLine(socket, "");
 	socket->flush();

@@ -1,10 +1,14 @@
+#include <QSettings>
+
 #include "contactlist.h"
+#include "config.h"
+#include "dnscache.h"
 
 ContactList* ContactList::m_instance;
 QMutex ContactList::m_lock;
 
 ContactList::ContactList(QObject *parent)
-		: QObject(parent), m_set(), m_onlinehosts(), m_list()
+		: QObject(parent), m_set(), m_onlinehosts(), m_list(), m_unknownhosts()
 {
 }
 
@@ -55,24 +59,44 @@ const Contact& ContactList::getReachableContact(const Contact& unreachable) cons
 int ContactList::size() const
 {
 	QMutexLocker locker(&m_lock);
-	int size = 0;
-	size = m_list.size();
-	return size;
+	return m_list.size();
 }
 
 void ContactList::buildSortedList()
 {
 	emit this->beginRemoveItems(0, m_list.size());
 	emit this->endRemoveItems();
+
+	// create contact unique list from set
 	QList<Contact> list;
 	list = QList<Contact>::fromSet(m_set);
 	qSort(list.begin(), list.end(), compareContacts);
+
+	// create unknown/offline host list
+	QStringList offlinehosts;
+	QSettings settings;
+	offlinehosts << Config::instance()->knownHostnames();
+	offlinehosts << Config::instance()->defaultHostnames();
+	foreach (const Contact& contact, list)
+	{
+		offlinehosts.removeAll(contact.hostname());
+		offlinehosts.removeAll(contact.address().toString());
+	}
+	offlinehosts = DnsCache::instance()->lookup(offlinehosts, DnsCache::HOSTNAME, DnsCache::CACHE_ONLY);
+	qSort(offlinehosts.begin(), offlinehosts.end(), compareHostnamesAndAddresses);
+
 	emit this->beginInsertItems(0, list.size());
 	{
 		QMutexLocker locker(&m_lock);
 		m_list = list;
+		m_unknownhosts = offlinehosts;
 	}
 	emit this->endInsertItems();
+}
+
+QStringList ContactList::unknownHosts()
+{
+	return m_unknownhosts;
 }
 
 void ContactList::onResetContacts()

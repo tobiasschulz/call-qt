@@ -2,6 +2,7 @@
 #define CONTACTMODEL_H
 
 #include <QObject>
+#include <QPointer>
 #include <QAbstractItemModel>
 
 #include "contact.h"

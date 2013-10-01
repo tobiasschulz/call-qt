@@ -1,5 +1,6 @@
 #include <QThread>
 #include <QTimer>
+#include <QRegExp>
 
 #include "contact.h"
 #include "contactlist.h"
@@ -36,6 +37,11 @@ Host::Host(QString hostname, quint16 port, QObject* parent)
 		//log.debug("Got a hostname: %1", hostname);
 		lookupAddress();
 	}
+}
+Host::Host(QHostAddress address, QString hostname, quint16 port, QObject* parent)
+		: QObject(parent), m_address(address), m_address_valid(true), m_hostname(hostname), m_port(port)
+{
+	m_hostname_valid = m_hostname.size() > 0;
 }
 Host::Host(QObject * parent)
 		: QObject(parent), m_address(), m_address_valid(true), m_hostname(), m_hostname_valid(true), m_port(0)
@@ -99,7 +105,7 @@ bool Host::isLoopback() const
 }
 void Host::lookupAddress()
 {
-	QHostInfo info = DnsCache::instance()->forceLookup(m_hostname);
+	QHostInfo info = DnsCache::instance()->lookup(m_hostname, DnsCache::BLOCK_IF_NEEDED);
 	if (info.addresses().size() != 0) {
 		m_address = info.addresses().first();
 		m_address_valid = true;
@@ -112,7 +118,7 @@ void Host::lookupAddress()
 }
 void Host::lookupHostname()
 {
-	QHostInfo info = DnsCache::instance()->forceLookup(m_address.toString());
+	QHostInfo info = DnsCache::instance()->lookup(m_address.toString(), DnsCache::BLOCK_IF_NEEDED);
 	if (info.hostName().size() > 0) {
 		m_hostname = info.hostName();
 		m_hostname_valid = true;
@@ -160,7 +166,7 @@ QString Host::print(PrintFormat format) const
 }
 QString Host::serialize() const
 {
-	return "Host<" + address().toString() + ":" + QString::number(m_port) + ">";
+	return "Host<" + m_hostname + "~" + address().toString() + ":" + QString::number(m_port) + ">";
 }
 Host Host::deserialize(QString _str)
 {
@@ -168,9 +174,16 @@ Host Host::deserialize(QString _str)
 	if (_str.startsWith("Host<") && _str.endsWith(">")) {
 		QString str = _str.mid(5);
 		str = str.left(str.size() - 1);
-		QStringList parts = str.split(":");
+		QStringList parts = str.split(QRegExp("[:~]"), QString::SkipEmptyParts);
+		foreach (QString p, parts)
+			id.logger().debug("deserialization: %1", p);
 		if (parts.size() == 2) {
 			Host obj = Host(QHostAddress(parts[0]), parts[1].toInt());
+			id.logger().debug("deserialization successful: %1 = %2", _str, Log::print(obj));
+			return obj;
+		}
+		if (parts.size() == 3) {
+			Host obj = Host(QHostAddress(parts[1]), parts[0], parts[2].toInt());
 			id.logger().debug("deserialization successful: %1 = %2", _str, Log::print(obj));
 			return obj;
 		}
@@ -271,7 +284,7 @@ Contact Contact::deserialize(QString _str)
 	if (_str.startsWith("Contact<") && _str.endsWith(">")) {
 		QString str = _str.mid(8);
 		str = str.left(str.size() - 1);
-		QStringList parts = str.split("[@=]");
+		QStringList parts = str.split(QRegExp("[@=]"));
 		if (parts.size() == 3) {
 			Host host = Host::deserialize(parts[2]);
 			Contact obj = Contact(parts[0], parts[1], host);
@@ -286,6 +299,19 @@ Contact Contact::deserialize(QString _str)
 bool compareContacts(const Contact& left, const Contact& right)
 {
 	return left.id() < right.id();
+}
+
+bool compareHostnamesAndAddresses(const QString& left, const QString& right)
+{
+	if (left.size() > 0 && right.size() > 0) {
+		if (left.at(0).isDigit() != right.at(0).isDigit()) {
+			return !left.at(0).isDigit();
+		} else {
+			return left < right;
+		}
+	} else {
+		return left < right;
+	}
 }
 
 QDataStream& operator<<(QDataStream& out, const Host& myObj)

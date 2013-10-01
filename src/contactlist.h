@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QList>
+#include <QStringList>
 #include <QSet>
 #include <QMutex>
 #include <QMutexLocker>
@@ -23,6 +24,7 @@ public:
 
 	bool isHostOnline(Host host);
 	void addSignals(Connection* connection);
+	QStringList unknownHosts();
 
 signals:
 	void hostOnline(Host host);
@@ -49,6 +51,7 @@ private:
 	QSet<Contact> m_set;
 	QSet<Host> m_onlinehosts;
 	QList<Contact> m_list;
+	QStringList m_unknownhosts;
 	static QMutex m_lock;
 };
 

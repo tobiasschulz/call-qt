@@ -96,10 +96,10 @@ function winezip() {
 		nice -n 19 zip -rq $CODEDIR/dependencies.zip *.dll platforms/ imageformats/ mediaservice/
 	))
 
-	rm -rf /data/share/test/*
-	echo A | nice -n 19 unzip -d /data/share/test/ $CODEDIR/dependencies.zip >/dev/null 2>&1
-	echo A | nice -n 19 unzip -d /data/share/test/ $CODEDIR/compiled.zip >/dev/null 2>&1
-	chmod -R 0777 /data/share/test/
+	rm -rf /data/share/call-win32/*
+	echo A | nice -n 19 unzip -d /data/share/call-win32/ $CODEDIR/dependencies.zip >/dev/null 2>&1
+	echo A | nice -n 19 unzip -d /data/share/call-win32/ $CODEDIR/compiled.zip >/dev/null 2>&1
+	chmod -R 0777 /data/share/call-win32/
 }
 
 function winerun() {

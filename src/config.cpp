@@ -11,6 +11,7 @@
 #include <QAudioDeviceInfo>
 
 #include "config.h"
+#include "dnscache.h"
 #include "networkutil.h"
 
 Config* Config::m_instance(0);
@@ -48,17 +49,16 @@ Config* Config::instance()
 
 QStringList Config::defaultHostnames()
 {
-	QStringList list;
-	if (1)
-		list << "127.0.0.1" << "dsl-ka.tobias-schulz.eu" << "192.168.224.3" << "192.168.224.5" << "192.168.224.150";
+	QStringList addresses;
+	if (0)
+		addresses << "127.0.0.1" << "dsl-ka.tobias-schulz.eu" << "192.168.224.3" << "192.168.224.5"
+				<< "192.168.224.150";
 	else
-		list << "127.0.0.1" << "192.168.223.3" << "192.168.223.5" << "192.168.223.7" << "192.168.223.9"
-				<< "192.168.223.150" << "192.168.223.151" << "192.168.223.152" << "192.168.223.153" << "192.168.223.154"
-				<< "192.168.224.3" << "192.168.224.5" << "192.168.224.7" << "192.168.224.9" << "192.168.224.150"
-				<< "192.168.224.151" << "192.168.224.152" << "192.168.224.153" << "192.168.224.154" << "192.168.25.100"
-				<< "192.168.25.101" << "192.168.25.102" << "192.168.25.103" << "dsl-ka.tobias-schulz.eu"
-				<< "dsl-hg.tobias-schulz.eu" << "freehal.net";
-	return list;
+		addresses << "127.0.0.1" << "192.168.224.3" << "192.168.224.5" << "192.168.224.7" << "192.168.224.9"
+				<< "192.168.224.150" << "192.168.224.151" << "192.168.224.152" << "192.168.224.153" << "192.168.224.154"
+				<< "192.168.25.100" << "192.168.25.101" << "192.168.25.102" << "192.168.25.103"
+				<< "dsl-ka.tobias-schulz.eu" << "dsl-hg.tobias-schulz.eu" << "freehal.net";
+	return addresses;
 }
 
 QList<quint16> Config::defaultPorts()
@@ -74,7 +74,8 @@ QList<Host> Config::defaultHosts()
 {
 	QList<quint16> ports = defaultPorts();
 	QList<Host> hosts;
-	foreach (quint16 port, ports) {
+	foreach (quint16 port, ports)
+	{
 		foreach (const QString & hostname, defaultHostnames())
 		{
 			hosts << Host(hostname, port);
@@ -219,5 +220,38 @@ QAudioDeviceInfo Config::getSpeaker(QString devicename)
 		}
 	}
 	return QAudioDeviceInfo::defaultOutputDevice();
+}
+
+QList<Host> Config::knownHosts()
+{
+	QSettings settings;
+	QList<Host> knownhosts = deserializeList<Host>(
+			settings.value("contacts/known-hosts", QStringList()).toStringList());
+	knownhosts.removeAll(Host::INVALID_HOST);
+	foreach (const Host& host, knownhosts)
+	{
+		log.debug("known host: %1", Log::print(host));
+		if (host.isUnreachable()) {
+			knownhosts.removeAll(host);
+		}
+	}
+	return knownhosts;
+}
+
+QStringList Config::knownHostnames()
+{
+	QStringList hostnames;
+	QList<Host> knownhosts(knownHosts());
+	foreach (const Host& host, knownhosts)
+	{
+		hostnames << host.hostname();
+	}
+	return hostnames;
+}
+
+void Config::setKnownHosts(QList<Host> knownhosts)
+{
+	QSettings settings;
+	settings.setValue("contacts/known-hosts", serializeList(knownhosts));
 }
 

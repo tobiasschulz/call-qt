@@ -27,7 +27,7 @@ ContactModel::ContactModel(QObject* parent)
 
 int ContactModel::rowCount(const QModelIndex& parent) const
 {
-	return !parent.isValid() ? ContactList::instance()->size() : 0;
+	return !parent.isValid() ? ContactList::instance()->size() + ContactList::instance()->unknownHosts().size() : 0;
 }
 
 int ContactModel::columnCount(const QModelIndex& parent) const
@@ -49,18 +49,36 @@ QModelIndex ContactModel::parent(const QModelIndex& child) const
 
 QVariant ContactModel::data(const QModelIndex& index, int role) const
 {
-	if (index.isValid() && index.row() < ContactList::instance()->size()) {
-		const Contact& contact = ContactList::instance()->getContact(index.row());
+	QPointer<ContactList> contactlist = ContactList::instance();
+	QStringList unknownhosts = contactlist->unknownHosts();
+	int indexContact = index.row();
+	int indexHost = index.row() - contactlist->size();
+
+	if (index.isValid() && indexContact >= 0 && indexContact < contactlist->size()) {
+		const Contact& contact = contactlist->getContact(index.row());
 
 		if (role == Qt::DisplayRole) {
 			QVariant value = contact.toString();
 			return value;
 		} else if (role == Qt::DecorationRole) {
-			if (ContactList::instance()->isHostOnline(contact.host())) {
+			if (contactlist->isHostOnline(contact.host())) {
 				return Config::instance()->icon("user-available");
 			} else {
 				return Config::instance()->icon("user-offline");
 			}
+		} else {
+			return QVariant();
+		}
+	} else if (index.isValid() && indexHost >= 0 && indexHost < unknownhosts.size()) {
+		QString hostname = unknownhosts.at(indexHost);
+
+		if (role == Qt::DisplayRole) {
+			QVariant value = hostname;
+			return value;
+		} else if (role == Qt::DecorationRole) {
+			return Config::instance()->icon("user-disabled");
+		} else if (role == Qt::TextColorRole) {
+			return QColor(Qt::darkGray);
 		} else {
 			return QVariant();
 		}
@@ -88,9 +106,9 @@ bool ContactModel::setData(const QModelIndex& index, const QVariant& value, int 
 	Q_UNUSED(index);
 	Q_UNUSED(value);
 	Q_UNUSED(role);
-	// m_data[index] = value;
-	// emit dataChanged(index, index);
-	// return true;
+// m_data[index] = value;
+// emit dataChanged(index, index);
+// return true;
 	return false;
 }
 
@@ -101,7 +119,7 @@ void ContactModel::onResetContacts()
 
 void ContactModel::beginInsertItems(int start, int end)
 {
-	// m_data.clear();
+// m_data.clear();
 	beginInsertRows(QModelIndex(), start, end);
 }
 
@@ -112,7 +130,7 @@ void ContactModel::endInsertItems()
 
 void ContactModel::beginRemoveItems(int start, int end)
 {
-	// m_data.clear();
+// m_data.clear();
 	beginRemoveRows(QModelIndex(), start, end);
 }
 
@@ -123,6 +141,6 @@ void ContactModel::endRemoveItems()
 
 void ContactModel::changeItems(int start, int end)
 {
-	// m_data.clear();
+// m_data.clear();
 	emit dataChanged(index(start, 0), index(end, columnCount(QModelIndex())));
 }

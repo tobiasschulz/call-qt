@@ -104,16 +104,20 @@ void Tabs::onTabChanged(int index)
 void Tabs::addContactTab(Contact contact)
 {
 	ChatTab* chattab = ChatTab::instance(contact);
-	log.debug("add contact tab: %1 (tab: %2)", contact.id(), chattab->id());
-	addTab(chattab);
-	emit contactTabAvailable(contact);
+	if (contact != Contact::INVALID_CONTACT) {
+		log.debug("add contact tab: %1 (tab: %2)", contact.id(), chattab->id());
+		addTab(chattab);
+		emit contactTabAvailable(contact);
+	}
 }
 
 void Tabs::openContactTab(Contact contact)
 {
-	ChatTab* chattab = ChatTab::instance(contact);
-	log.debug("open contact tab: %1 (tab: %2)", contact.id(), chattab->id());
-	openTab(chattab);
+	if (contact != Contact::INVALID_CONTACT) {
+		ChatTab* chattab = ChatTab::instance(contact);
+		log.debug("open contact tab: %1 (tab: %2)", contact.id(), chattab->id());
+		openTab(chattab);
+	}
 }
 
 void Tabs::onTabIconChanged()

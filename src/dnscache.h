@@ -3,7 +3,12 @@
 
 #include <QThread>
 #include <QHostInfo>
+#include <QHostAddress>
 #include <QMutex>
+#include <QList>
+#include <QHash>
+#include <QString>
+#include <QStringList>
 
 #include "id.h"
 #include "thread.h"
@@ -16,16 +21,20 @@ public:
 	virtual ~DnsCache();
 	QString id() const;
 
-	QHostInfo forceLookup(QString host);
+	enum LookupMode
+	{
+		CACHE_ONLY, BLOCK_IF_NEEDED
+	};
+	enum HostInfo
+	{
+		HOSTNAME, ADDRESS
+	};
+
+	QHostInfo lookup(QString host, LookupMode mode = BLOCK_IF_NEEDED);
+	QString lookup(QString host, HostInfo preferred, LookupMode mode = BLOCK_IF_NEEDED);
+	QHash<QString, QHostInfo> lookup(QStringList hosts, LookupMode mode = BLOCK_IF_NEEDED);
+	QStringList lookup(QStringList hosts, HostInfo preferred, LookupMode mode = BLOCK_IF_NEEDED);
 	bool isCached(QString host);
-	QHostInfo cachedLookup(QString host);
-
-signals:
-	void lookedUp(QHostInfo info);
-
-public slots:
-	void lookup(QString hostname);
-	void onLookedUp(QHostInfo info);
 
 private:
 	explicit DnsCache(QObject* parent = 0);

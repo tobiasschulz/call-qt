@@ -13,6 +13,7 @@ Q_OBJECT
 public:
 	explicit Host(QHostAddress address, quint16 port, QObject* parent = 0);
 	explicit Host(QString hostname, quint16 port, QObject* parent = 0);
+	explicit Host(QHostAddress address, QString hostname, quint16 port, QObject* parent = 0);
 	explicit Host(QObject* parent = 0);
 	Host(const Host& other);
 	Host& operator=(const Host& other);
@@ -102,6 +103,7 @@ Q_DECLARE_METATYPE(Host);
 Q_DECLARE_METATYPE(Contact);
 
 bool compareContacts(const Contact& left, const Contact& right);
+bool compareHostnamesAndAddresses(const QString& left, const QString& right);
 
 QDataStream &operator<<(QDataStream &out, const Host& myObj);
 QDataStream &operator>>(QDataStream &in, Host& myObj);

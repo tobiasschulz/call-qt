@@ -54,6 +54,9 @@ public:
 	void setCurrentSpeaker(QAudioDeviceInfo device);
 	QAudioDeviceInfo getMicrophone(QString devicename);
 	QAudioDeviceInfo getSpeaker(QString devicename);
+	QList<Host> knownHosts();
+	QStringList knownHostnames();
+	void setKnownHosts(QList<Host> knownhosts);
 
 	int DEFAULT_PORT;
 	int SOCKET_READ_TIMEOUT;

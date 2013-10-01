@@ -22,33 +22,28 @@ DnsCache* DnsCache::instance()
 	}
 	return m_instance;
 }
+
 DnsCache::DnsCache(QObject* parent)
 		: QObject(parent), m_hash(), m_mutex()
 {
 }
+
 DnsCache::~DnsCache()
 {
 }
+
 QString DnsCache::id() const
 {
 	return "DnsCache";
 }
-void DnsCache::lookup(QString host)
-{
-	QMutexLocker locker(&m_mutex);
-	if (m_hash.contains(host)) {
-		emit lookedUp(m_hash[host]);
-	} else {
-		QHostInfo::lookupHost(host, this, SLOT(onLookedUp(QHostInfo)));
-	}
-}
-QHostInfo DnsCache::forceLookup(QString host)
+
+QHostInfo DnsCache::lookup(QString host, LookupMode mode)
 {
 	if (host.size() > 0) {
-		QMutexLocker locker(&m_mutex);
 		if (m_hash.contains(host)) {
 			return m_hash[host];
-		} else {
+		} else if (mode == BLOCK_IF_NEEDED) {
+			QMutexLocker locker(&m_mutex);
 			QHostInfo info = QHostInfo::fromName(host);
 			QString addressStr = info.addresses().size() > 0 ? info.addresses().first().toString() : "";
 			QString hostname = info.hostName();
@@ -58,24 +53,58 @@ QHostInfo DnsCache::forceLookup(QString host)
 			m_hash[hostname] = info;
 			m_hash[host] = info;
 			return m_hash[host];
+		} else {
+			return QHostInfo();
 		}
 	} else {
 		return QHostInfo();
 	}
 }
+
+QString DnsCache::lookup(QString host, HostInfo preferred, LookupMode mode)
+{
+	QHostInfo info = lookup(host, mode);
+
+	if (preferred == HOSTNAME) {
+		return info.hostName().size() > 0 ? info.hostName() : host;
+	} else if (preferred == ADDRESS) {
+		return info.addresses().size() > 0 ? info.addresses().at(0).toString() : host;
+	} else {
+		return host;
+	}
+}
+
+QHash<QString, QHostInfo> DnsCache::lookup(QStringList hosts, LookupMode mode)
+{
+	QHash<QString, QHostInfo> resolved;
+	foreach (QString host, hosts)
+	{
+		resolved[host] = lookup(host, mode);
+	}
+	return resolved;
+}
+
+QStringList DnsCache::lookup(QStringList hosts, HostInfo preferred, LookupMode mode)
+{
+	QHash<QString, QHostInfo> resolved = lookup(hosts, mode);
+
+	QStringList mapped;
+	QHash<QString, QHostInfo>::const_iterator i = resolved.constBegin();
+	for (; i != resolved.constEnd(); ++i) {
+		QHostInfo info = i.value();
+		if (preferred == HOSTNAME) {
+			mapped << (info.hostName().size() > 0 ? info.hostName() : i.key());
+		} else if (preferred == ADDRESS) {
+			mapped << (info.addresses().size() > 0 ? info.addresses().at(0).toString() : i.key());
+		} else {
+			mapped << i.key();
+		}
+	}
+	return mapped;
+}
+
 bool DnsCache::isCached(QString host)
 {
 	QMutexLocker locker(&m_mutex);
 	return m_hash.contains(host);
-}
-void DnsCache::onLookedUp(QHostInfo info)
-{
-	QMutexLocker locker(&m_mutex);
-	QString addressStr = info.addresses().size() > 0 ? info.addresses().first().toString() : "";
-	QString hostname = info.hostName();
-	log.debug("delayed lookup: %1 = %2", addressStr, hostname);
-	if (addressStr.size() > 0)
-		m_hash[addressStr] = info;
-	m_hash[hostname] = info;
-	emit lookedUp(info);
 }
