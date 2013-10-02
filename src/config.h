@@ -9,12 +9,15 @@
 #define CONFIG_H
 
 #include <QObject>
+#include <QHash>
 #include <QString>
 #include <QList>
 #include <QStringList>
 #include <QIcon>
 #include <QAudioFormat>
 #include <QAudioDeviceInfo>
+#include <QMutex>
+#include <QMutexLocker>
 
 #include "contact.h"
 #include "id.h"
@@ -34,13 +37,21 @@ public:
 	QString version();
 	QString build();
 
+	enum HostType
+	{
+		LOCALHOST, KNOWN_HOST, UNKNOWN_HOST
+	};
+
 	// host-related
-	QStringList localhosts();
 	QStringList defaultHostnames();
 	QList<quint16> defaultPorts();
 	QList<Host> defaultHosts();
-	void addLocalhost(Host host);
-	bool isLocalhost(QString host);
+	QStringList hostnames(HostType type);
+	QList<Host> hosts(HostType type);
+	bool isHost(Host host, HostType type);
+	bool isHostname(QString host, HostType type);
+	void addHost(Host host, HostType type);
+	void addHosts(QList<Host> knownhosts, HostType type);
 
 	// audio-related
 	QAudioFormat defaultAudioFormat();
@@ -54,9 +65,6 @@ public:
 	void setCurrentSpeaker(QAudioDeviceInfo device);
 	QAudioDeviceInfo getMicrophone(QString devicename);
 	QAudioDeviceInfo getSpeaker(QString devicename);
-	QList<Host> knownHosts();
-	QStringList knownHostnames();
-	void setKnownHosts(QList<Host> knownhosts);
 
 	int DEFAULT_PORT;
 	int SOCKET_READ_TIMEOUT;
@@ -66,12 +74,21 @@ public:
 	QString DEFAULT_CONTACT_HOSTS[];
 
 private:
-	void readConfigLocalhosts();
-	void writeConfigLocalhosts();
+	void readHostConfig(HostType type);
+	void writeHostConfig();
 
+	// host-related
 	QStringList m_localhosts;
+	QList<Host> m_knownhosts;
+	QList<Host> m_unknownhosts;
+	QMutex m_hosts_lock;
+	QHash<HostType, bool> m_hosts_initialized;
+
+	// system-related
 	long m_uid;
 	long m_uptime;
+
+	// audio-related
 	QAudioFormat m_audioinputformat;
 	QAudioDeviceInfo m_audioinputdevice;
 	QAudioDeviceInfo m_audiooutputdevice;

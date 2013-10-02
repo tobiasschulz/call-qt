@@ -100,6 +100,7 @@ QStringList DnsCache::lookup(QStringList hosts, HostInfo preferred, LookupMode m
 			mapped << i.key();
 		}
 	}
+	mapped = mapped.toSet().toList();
 	return mapped;
 }
 

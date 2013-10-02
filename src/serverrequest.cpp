@@ -54,7 +54,11 @@ void ServerRequest::onConnected()
 	QHash<QString, QString> headers = m_connection->headers();
 	QString uid = headers["uid"];
 	if (uid.toInt() == Config::instance()->uid()) {
-		Config::instance()->addLocalhost(m_connection->host());
+		Config::instance()->addHost(m_connection->host(), Config::LOCALHOST);
+	}
+	if (headers.contains("known-hosts")) {
+		QList<Host> remoteKnownHosts = deserializeList<Host>(headers["known-hosts"].split(", "));
+		Config::instance()->addHosts(remoteKnownHosts, Config::KNOWN_HOST);
 	}
 	QString request = headers["request"];
 	log.debug("request = %1", request);

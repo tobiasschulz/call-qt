@@ -101,7 +101,7 @@ bool Host::isUnreachable() const
 }
 bool Host::isLoopback() const
 {
-	return !isReachable() && Config::instance()->isLocalhost(m_address.toString());
+	return !isReachable() && Config::instance()->isHostname(m_address.toString(), Config::LOCALHOST);
 }
 void Host::lookupAddress()
 {

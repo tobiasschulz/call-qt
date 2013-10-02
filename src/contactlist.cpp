@@ -75,7 +75,7 @@ void ContactList::buildSortedList()
 	// create unknown/offline host list
 	QStringList offlinehosts;
 	QSettings settings;
-	offlinehosts << Config::instance()->knownHostnames();
+	offlinehosts << Config::instance()->hostnames(Config::KNOWN_HOST);
 	offlinehosts << Config::instance()->defaultHostnames();
 	foreach (const Contact& contact, list)
 	{
@@ -90,6 +90,9 @@ void ContactList::buildSortedList()
 		QMutexLocker locker(&m_lock);
 		m_list = list;
 		m_unknownhosts = offlinehosts;
+		foreach (QString host, offlinehosts) {
+			log.debug("host = %1", host);
+		}
 	}
 	emit this->endInsertItems();
 }

@@ -31,9 +31,6 @@ public slots:
 
 private:
 	QHash<Host, PingClient *> m_connections;
-	QList<Host> m_unknownhosts;
-	QList<Host> m_knownhosts;
-	QMutex m_hosts_mutex;
 
 };
 

@@ -12,7 +12,7 @@
 #include "networkutil.h"
 
 ContactScanner::ContactScanner(QObject* parent)
-		: QObject(parent), m_connections(), m_unknownhosts(), m_knownhosts(), m_hosts_mutex()
+		: QObject(parent), m_connections()
 {
 }
 
@@ -34,15 +34,7 @@ void ContactScanner::increasePriority(Host host)
 			log.debug("=> pingclient: %1 (immediately)", Log::print(m_connections[host]));
 		}
 	} else {
-		m_hosts_mutex.lock();
-		if (m_unknownhosts.contains(host))
-			m_unknownhosts.removeAll(host);
-		if (m_knownhosts.contains(host))
-			m_knownhosts.removeAll(host);
-		m_knownhosts.prepend(host);
-		m_hosts_mutex.unlock();
-
-		Config::instance()->setKnownHosts(m_knownhosts);
+		Config::instance()->addHost(host, Config::KNOWN_HOST);
 	}
 }
 
@@ -53,17 +45,7 @@ QString ContactScanner::id() const
 
 void ContactScanner::start()
 {
-	m_unknownhosts << Config::instance()->defaultHosts();
 	QObject::connect(ContactList::instance(), &ContactList::hostOnline, this, &ContactScanner::increasePriority);
-
-	m_knownhosts = Config::instance()->knownHosts();
-	foreach (const Host& host, m_knownhosts)
-	{
-		log.debug("known host: %1", Log::print(host));
-		if (m_unknownhosts.contains(host)) {
-			m_unknownhosts.removeAll(host);
-		}
-	}
 
 	QTimer *timer = new QTimer();
 	QObject::connect(timer, SIGNAL(timeout()), this, SLOT(scanNow()));
@@ -78,8 +60,10 @@ void ContactScanner::scanSoon()
 void ContactScanner::scanNow()
 {
 	log.debug("scan()");
+	QList<Host> unknownhosts = Config::instance()->hosts(Config::UNKNOWN_HOST);
+	QList<Host> knownhosts = Config::instance()->hosts(Config::KNOWN_HOST);
 
-	foreach (const Host & host, m_knownhosts)
+	foreach (const Host & host, knownhosts)
 	{
 		if (!m_connections.contains(host)) {
 			m_connections[host] = new PingClient(host, this);
@@ -88,9 +72,9 @@ void ContactScanner::scanNow()
 		log.debug("pingclient: %1 (immediately)", Log::print(m_connections[host]));
 	}
 
-	int interval = Config::instance()->CONTACT_SCAN_INTERVAL / (1 + m_unknownhosts.size());
+	int interval = Config::instance()->CONTACT_SCAN_INTERVAL / (1 + unknownhosts.size());
 	int i = 0;
-	foreach (const Host & host, m_unknownhosts)
+	foreach (const Host & host, unknownhosts)
 	{
 		if (!m_connections.contains(host)) {
 			m_connections[host] = new PingClient(host, this);
