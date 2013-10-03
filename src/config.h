@@ -81,8 +81,8 @@ private:
 	QStringList m_localhosts;
 	QList<Host> m_knownhosts;
 	QList<Host> m_unknownhosts;
-	QMutex m_hosts_lock;
 	QHash<HostType, bool> m_hosts_initialized;
+	QHash<HostType, QMutex*> m_hosts_lock;
 
 	// system-related
 	long m_uid;

@@ -8,13 +8,13 @@
 #include "dnscache.h"
 #include "config.h"
 
-const Host Host::INVALID_HOST;
 const QHostAddress Host::INVALID_ADDRESS;
 const QString Host::INVALID_HOSTNAME;
 const quint16 Host::INVALID_PORT = 0;
+const Host Host::INVALID_HOST;
 
-const Contact Contact::INVALID_CONTACT;
 const QString Contact::INVALID_USER("nobody");
+const Contact Contact::INVALID_CONTACT;
 
 Host::Host(QHostAddress address, quint16 port, QObject* parent)
 		: QObject(parent), m_address(address), m_address_valid(true), m_hostname(), m_hostname_valid(false),
@@ -103,6 +103,22 @@ bool Host::isLoopback() const
 {
 	return !isReachable() && Config::instance()->isHostname(m_address.toString(), Config::LOCALHOST);
 }
+bool Host::isDynamicIP() const
+{
+	return !isLocalIP() && !isLanIP();
+}
+bool Host::isWanIP() const
+{
+	return !isLocalIP() && !isLanIP();
+}
+bool Host::isLanIP() const
+{
+	return m_address.toString().startsWith("10.") || m_address.toString().startsWith("192.168.");
+}
+bool Host::isLocalIP() const
+{
+	return m_address.toString().startsWith("127.");
+}
 void Host::lookupAddress()
 {
 	QHostInfo info = DnsCache::instance()->lookup(m_hostname, DnsCache::BLOCK_IF_NEEDED);
@@ -175,8 +191,7 @@ Host Host::deserialize(QString _str)
 		QString str = _str.mid(5);
 		str = str.left(str.size() - 1);
 		QStringList parts = str.split(QRegExp("[:~]"), QString::SkipEmptyParts);
-		foreach (QString p, parts)
-			id.logger().debug("deserialization: %1", p);
+		// foreach (QString p, parts) id.logger().debug("deserialization: %1", p);
 		if (parts.size() == 2) {
 			Host obj = Host(QHostAddress(parts[0]), parts[1].toInt());
 			id.logger().debug("deserialization successful: %1 = %2", _str, Log::print(obj));
@@ -195,9 +210,12 @@ Host Host::deserialize(QString _str)
 Contact::Contact(QString user, QString computername, Host host, QObject* parent)
 		: QObject(parent), m_user(user), m_computername(computername), m_host(host)
 {
+	if (user.size() == 0) {
+		m_user = INVALID_USER;
+	}
 }
 Contact::Contact(QObject * parent)
-		: QObject(parent), m_user(), m_computername(), m_host()
+		: QObject(parent), m_user(INVALID_USER), m_computername(), m_host()
 {
 }
 Contact::Contact(const Contact& other)

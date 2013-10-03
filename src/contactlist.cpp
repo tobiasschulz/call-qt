@@ -31,9 +31,11 @@ QString ContactList::id() const
 
 void ContactList::addContact(Contact contact)
 {
-	log.debug("add: %1", contact.id());
-	m_set << contact;
-	buildSortedList();
+	if (contact != Contact::INVALID_CONTACT) {
+		log.debug("add: %1", contact.id());
+		m_set << contact;
+		buildSortedList();
+	}
 }
 
 const Contact& ContactList::getContact(int index) const
@@ -90,7 +92,8 @@ void ContactList::buildSortedList()
 		QMutexLocker locker(&m_lock);
 		m_list = list;
 		m_unknownhosts = offlinehosts;
-		foreach (QString host, offlinehosts) {
+		foreach (QString host, offlinehosts)
+		{
 			log.debug("host = %1", host);
 		}
 	}

@@ -89,13 +89,9 @@ QVariant ContactModel::data(const QModelIndex& index, int role) const
 
 const Contact& ContactModel::getContact(const QModelIndex& index) const
 {
-	if (index.isValid()) {
-		if (index.row() < ContactList::instance()->size()) {
-			const Contact& contact = ContactList::instance()->getContact(index.row());
-			return contact;
-		} else {
-			return Contact::INVALID_CONTACT;
-		}
+	if (index.isValid() && index.row() < ContactList::instance()->size()) {
+		const Contact& contact = ContactList::instance()->getContact(index.row());
+		return contact;
 	} else {
 		return Contact::INVALID_CONTACT;
 	}

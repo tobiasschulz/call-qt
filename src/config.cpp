@@ -19,7 +19,7 @@ Config* Config::m_instance(0);
 Config::Config(QObject *parent)
 		: QObject(parent), DEFAULT_PORT(4000), SOCKET_READ_TIMEOUT(7000), SOCKET_CONNECT_TIMEOUT(2000),
 			CONTACT_SCAN_INTERVAL(60000), DEFAULT_CONTACT_HOSTS(), m_localhosts(), m_knownhosts(), m_unknownhosts(),
-			m_hosts_lock(), m_hosts_initialized(), m_uid(0), m_uptime(QDateTime::currentMSecsSinceEpoch()),
+			m_hosts_initialized(), m_hosts_lock(), m_uid(0), m_uptime(QDateTime::currentMSecsSinceEpoch()),
 			m_audioinputdevice(), m_audiooutputdevice()
 {
 	m_audioinputformat = defaultAudioFormat();
@@ -88,8 +88,9 @@ QList<Host> Config::defaultHosts()
 void Config::readHostConfig(HostType type)
 {
 	// log.debug("%1", "1");
-	static QMutex lock;
-	QMutexLocker locker(&lock);
+	if (m_hosts_lock[type] == 0)
+		m_hosts_lock[type] = new QMutex;
+	QMutexLocker locker(m_hosts_lock[type]);
 	if (!m_hosts_initialized[type]) {
 		m_hosts_initialized[type] = true;
 		QSettings settings;
@@ -112,6 +113,9 @@ void Config::readHostConfig(HostType type)
 			{
 				log.debug("known host: %1", Log::print(host));
 				if (host.isUnreachable()) {
+					m_knownhosts.removeAll(host);
+				}
+				if (host.isDynamicIP()) {
 					m_knownhosts.removeAll(host);
 				}
 				if (m_unknownhosts.contains(host)) {
@@ -212,7 +216,8 @@ bool Config::isHostname(QString hostname, HostType type)
 void Config::addHost(Host host, HostType type)
 {
 	// log.debug("%1", "7");
-	QMutexLocker locker(&m_hosts_lock);
+	static QMutex lock;
+	QMutexLocker locker(&lock);
 
 	if (host == Host::INVALID_HOST) {
 		// ignore
@@ -228,7 +233,7 @@ void Config::addHost(Host host, HostType type)
 		readHostConfig(KNOWN_HOST);
 		readHostConfig(UNKNOWN_HOST);
 		m_unknownhosts.removeAll(host);
-		if (!m_knownhosts.contains(host)) {
+		if (!m_knownhosts.contains(host) && host.isReachable()) {
 			m_knownhosts.prepend(host);
 			writeHostConfig();
 		}
@@ -236,7 +241,7 @@ void Config::addHost(Host host, HostType type)
 		readHostConfig(KNOWN_HOST);
 		readHostConfig(UNKNOWN_HOST);
 		m_knownhosts.removeAll(host);
-		if (!m_unknownhosts.contains(host)) {
+		if (!m_unknownhosts.contains(host) && host.isReachable()) {
 			m_unknownhosts.prepend(host);
 			writeHostConfig();
 		}

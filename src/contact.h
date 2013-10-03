@@ -27,6 +27,10 @@ public:
 	bool isReachable() const;
 	bool isUnreachable() const;
 	bool isLoopback() const;
+	bool isDynamicIP() const;
+	bool isWanIP() const;
+	bool isLanIP() const;
+	bool isLocalIP() const;
 
 	enum PortFormat
 	{

@@ -146,18 +146,29 @@ void Connection::onSocketConnected()
 	QHostAddress host = m_socket->peerAddress();
 	quint16 port = m_socket->peerPort();
 	m_host = Host(host, port);
-	QString user = m_headers.value("user", Contact::INVALID_USER);
-	QString computername = m_headers.value("computername", "");
-	m_contact = Contact(user, computername, m_host);
-	m_contact = ContactList::instance()->getReachableContact(m_contact);
-	emit contactFound(m_contact);
 
-	m_state = CONNECTED;
-	emit connected();
-	emit hostOnline(m_host);
-	log.debug("emit connected()");
-	if (m_socket->canReadLine()) {
-		onSocketReadyRead();
+	if (m_headers.contains("user")) {
+		QString user = m_headers.value("user", Contact::INVALID_USER);
+		QString computername = m_headers.value("computername", "");
+		m_contact = Contact(user, computername, m_host);
+		m_contact = ContactList::instance()->getReachableContact(m_contact);
+		emit contactFound(m_contact);
+
+		m_state = CONNECTED;
+		emit connected();
+		emit hostOnline(m_host);
+		log.debug("emit connected()");
+		if (m_socket->canReadLine()) {
+			onSocketReadyRead();
+		}
+	} else {
+		log.debug("connection aborted; missing 'user' header!");
+		m_readtimer.stop();
+		if (m_socket) {
+			m_socket->abort();
+		}
+		m_state = CLOSED;
+		emit hostOnline(m_host);
 	}
 }
 
