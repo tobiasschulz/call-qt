@@ -33,7 +33,7 @@ public:
 	// general
 	long uid();
 	long uptime();
-	QIcon icon(QString iconname);
+	QIcon icon(QString iconname, QString ext = "png");
 	QString version();
 	QString build();
 

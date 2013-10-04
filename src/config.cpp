@@ -75,9 +75,9 @@ QList<Host> Config::defaultHosts()
 {
 	QList<quint16> ports = defaultPorts();
 	QList<Host> hosts;
-	foreach (quint16 port, ports)
+	foreach (const QString & hostname, defaultHostnames())
 	{
-		foreach (const QString & hostname, defaultHostnames())
+		foreach (quint16 port, ports)
 		{
 			hosts << Host(hostname, port);
 		}
@@ -272,9 +272,9 @@ long Config::uptime()
 	return m_uptime;
 }
 
-QIcon Config::icon(QString iconname)
+QIcon Config::icon(QString iconname, QString ext)
 {
-	return QIcon("img/" + iconname + ".png");
+	return QIcon("img/" + iconname + "." + ext);
 }
 
 QAudioFormat Config::defaultAudioFormat()

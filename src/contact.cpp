@@ -134,7 +134,9 @@ void Host::lookupAddress()
 }
 void Host::lookupHostname()
 {
+	ContactList::instance()->addHostState(*this, ContactList::CONNECTING);
 	QHostInfo info = DnsCache::instance()->lookup(m_address.toString(), DnsCache::BLOCK_IF_NEEDED);
+	ContactList::instance()->removeHostState(*this, ContactList::CONNECTING);
 	if (info.hostName().size() > 0) {
 		m_hostname = info.hostName();
 		m_hostname_valid = true;

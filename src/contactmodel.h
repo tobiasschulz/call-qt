@@ -37,6 +37,8 @@ public slots:
 	void endRemoveItems();
 	void changeItems(int start, int end);
 	void onResetContacts();
+	void onContactStateChanged(int i);
+	void onUnknownHostStateChanged(int i);
 
 private:
 

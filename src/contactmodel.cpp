@@ -14,7 +14,9 @@ ContactModel::ContactModel(QObject* parent)
 	QObject::connect(m_contactlist, &ContactList::endInsertItems, this, &ContactModel::endInsertItems);
 	QObject::connect(m_contactlist, &ContactList::beginRemoveItems, this, &ContactModel::beginRemoveItems);
 	QObject::connect(m_contactlist, &ContactList::endRemoveItems, this, &ContactModel::endRemoveItems);
-	QObject::connect(m_contactlist, &ContactList::changeItems, this, &ContactModel::changeItems);
+	QObject::connect(m_contactlist, &ContactList::contactStateChanged, this, &ContactModel::onContactStateChanged);
+	QObject::connect(m_contactlist, &ContactList::unknownHostStateChanged, this,
+			&ContactModel::onUnknownHostStateChanged);
 
 	Thread* thread = new Thread("Contacts", this);
 	thread->start();
@@ -55,13 +57,16 @@ QVariant ContactModel::data(const QModelIndex& index, int role) const
 	int indexHost = index.row() - contactlist->size();
 
 	if (index.isValid() && indexContact >= 0 && indexContact < contactlist->size()) {
-		const Contact& contact = contactlist->getContact(index.row());
+		const Contact& contact = contactlist->contact(index.row());
 
 		if (role == Qt::DisplayRole) {
 			QVariant value = contact.toString();
 			return value;
 		} else if (role == Qt::DecorationRole) {
-			if (contactlist->isHostOnline(contact.host())) {
+			ContactList::HostStateSet states = contactlist->hostState(contact.host());
+			if (states.contains(ContactList::CONNECTING)) {
+				return Config::instance()->icon("reload", "gif");
+			} else if (states.contains(ContactList::HOST_ONLINE)) {
 				return Config::instance()->icon("user-available");
 			} else {
 				return Config::instance()->icon("user-offline");
@@ -76,7 +81,12 @@ QVariant ContactModel::data(const QModelIndex& index, int role) const
 			QVariant value = hostname;
 			return value;
 		} else if (role == Qt::DecorationRole) {
-			return Config::instance()->icon("user-disabled");
+			ContactList::HostStateSet states = contactlist->hostState(hostname);
+			if (states.contains(ContactList::CONNECTING)) {
+				return Config::instance()->icon("reload", "gif");
+			} else {
+				return Config::instance()->icon("user-disabled");
+			}
 		} else if (role == Qt::TextColorRole) {
 			return QColor(Qt::darkGray);
 		} else {
@@ -90,7 +100,7 @@ QVariant ContactModel::data(const QModelIndex& index, int role) const
 const Contact& ContactModel::getContact(const QModelIndex& index) const
 {
 	if (index.isValid() && index.row() < ContactList::instance()->size()) {
-		const Contact& contact = ContactList::instance()->getContact(index.row());
+		const Contact& contact = ContactList::instance()->contact(index.row());
 		return contact;
 	} else {
 		return Contact::INVALID_CONTACT;
@@ -137,6 +147,18 @@ void ContactModel::endRemoveItems()
 
 void ContactModel::changeItems(int start, int end)
 {
-// m_data.clear();
+	// m_data.clear();
 	emit dataChanged(index(start, 0), index(end, columnCount(QModelIndex())));
 }
+
+void ContactModel::onContactStateChanged(int i)
+{
+	changeItems(i, i);
+}
+
+void ContactModel::onUnknownHostStateChanged(int i)
+{
+	int contacts = ContactList::instance()->size();
+	changeItems(contacts + i, contacts + i);
+}
+

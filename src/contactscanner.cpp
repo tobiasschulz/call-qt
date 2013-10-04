@@ -72,14 +72,14 @@ void ContactScanner::scanNow()
 		log.debug("pingclient: %1 (immediately)", Log::print(m_connections[host]));
 	}
 
-	int interval = Config::instance()->CONTACT_SCAN_INTERVAL / (1 + unknownhosts.size());
+	int interval = Config::instance()->CONTACT_SCAN_INTERVAL / (1 + unknownhosts.size() / 5);
 	int i = 0;
 	foreach (const Host & host, unknownhosts)
 	{
 		if (!m_connections.contains(host)) {
 			m_connections[host] = new PingClient(host, this);
 		}
-		int after = interval * (i / 10 + 1);
+		int after = interval * (i / 5 + 1);
 		QTimer::singleShot(after, m_connections[host], SLOT(ping()));
 		log.debug("pingclient: %1 (after %2 ms)", Log::print(m_connections[host]), after);
 		++i;

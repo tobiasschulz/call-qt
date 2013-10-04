@@ -19,6 +19,8 @@ signals:
 
 public slots:
 	void ping();
+	void onConnected();
+	void onError(QString error);
 
 private:
 	Host m_host;

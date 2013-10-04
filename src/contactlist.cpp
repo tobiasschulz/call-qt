@@ -8,8 +8,9 @@ ContactList* ContactList::m_instance;
 QMutex ContactList::m_lock;
 
 ContactList::ContactList(QObject *parent)
-		: QObject(parent), m_set(), m_onlinehosts(), m_list(), m_unknownhosts()
+		: QObject(parent), m_contacts(), m_hoststate(), m_unknownhosts()
 {
+	QObject::connect(this, &ContactList::hostChanged, this, &ContactList::onHostStateChanged);
 }
 
 ContactList* ContactList::instance()
@@ -31,23 +32,23 @@ QString ContactList::id() const
 
 void ContactList::addContact(Contact contact)
 {
-	if (contact != Contact::INVALID_CONTACT) {
+	if (contact != Contact::INVALID_CONTACT && !m_contacts.contains(contact)) {
 		log.debug("add: %1", contact.id());
-		m_set << contact;
+		m_contacts << contact;
 		buildSortedList();
 	}
 }
 
-const Contact& ContactList::getContact(int index) const
+const Contact& ContactList::contact(int index) const
 {
 	QMutexLocker locker(&m_lock);
-	return index < m_list.size() ? m_list.at(index) : Contact::INVALID_CONTACT;
+	return index < m_contacts.size() ? m_contacts.at(index) : Contact::INVALID_CONTACT;
 }
 
-const Contact& ContactList::getReachableContact(const Contact& unreachable) const
+const Contact& ContactList::reachableContact(const Contact& unreachable) const
 {
 	if (unreachable.host().isUnreachable() && !unreachable.host().isLoopback()) {
-		foreach (const Contact& contact, m_set)
+		foreach (const Contact& contact, m_contacts)
 		{
 			if (contact.user() == unreachable.user() && contact.host().address() == unreachable.host().address()
 					&& contact.host().isReachable()) {
@@ -61,38 +62,37 @@ const Contact& ContactList::getReachableContact(const Contact& unreachable) cons
 int ContactList::size() const
 {
 	QMutexLocker locker(&m_lock);
-	return m_list.size();
+	return m_contacts.size();
 }
 
 void ContactList::buildSortedList()
 {
-	emit this->beginRemoveItems(0, m_list.size());
+	emit this->beginRemoveItems(0, m_contacts.size());
 	emit this->endRemoveItems();
 
 	// create contact unique list from set
-	QList<Contact> list;
-	list = QList<Contact>::fromSet(m_set);
-	qSort(list.begin(), list.end(), compareContacts);
+	QList<Contact> contacts(m_contacts);
+	qSort(contacts.begin(), contacts.end(), compareContacts);
 
 	// create unknown/offline host list
-	QStringList offlinehosts;
+	QStringList unknownhosts;
 	QSettings settings;
-	offlinehosts << Config::instance()->hostnames(Config::KNOWN_HOST);
-	offlinehosts << Config::instance()->defaultHostnames();
-	foreach (const Contact& contact, list)
+	unknownhosts << Config::instance()->hostnames(Config::KNOWN_HOST);
+	unknownhosts << Config::instance()->defaultHostnames();
+	foreach (const Contact& contact, contacts)
 	{
-		offlinehosts.removeAll(contact.hostname());
-		offlinehosts.removeAll(contact.address().toString());
+		unknownhosts.removeAll(contact.hostname());
+		unknownhosts.removeAll(contact.address().toString());
 	}
-	offlinehosts = DnsCache::instance()->lookup(offlinehosts, DnsCache::HOSTNAME, DnsCache::CACHE_ONLY);
-	qSort(offlinehosts.begin(), offlinehosts.end(), compareHostnamesAndAddresses);
+	unknownhosts = DnsCache::instance()->lookup(unknownhosts, DnsCache::HOSTNAME, DnsCache::CACHE_ONLY);
+	qSort(unknownhosts.begin(), unknownhosts.end(), compareHostnamesAndAddresses);
 
-	emit this->beginInsertItems(0, list.size());
+	emit this->beginInsertItems(0, contacts.size());
 	{
 		QMutexLocker locker(&m_lock);
-		m_list = list;
-		m_unknownhosts = offlinehosts;
-		foreach (QString host, offlinehosts)
+		m_contacts = contacts;
+		m_unknownhosts = unknownhosts;
+		foreach (QString host, unknownhosts)
 		{
 			log.debug("host = %1", host);
 		}
@@ -107,31 +107,31 @@ QStringList ContactList::unknownHosts()
 
 void ContactList::onResetContacts()
 {
-	emit this->beginRemoveItems(0, m_set.size());
-	m_set.clear();
+	emit this->beginRemoveItems(0, m_contacts.size());
+	m_contacts.clear();
 	buildSortedList();
 	emit this->endRemoveItems();
 }
 
 void ContactList::setHostOnline(Host host)
 {
-	if (!m_onlinehosts.contains(host)) {
-		m_onlinehosts << host;
+	if (!m_hoststate[host].contains(HOST_ONLINE)) {
+		m_hoststate[host] << HOST_ONLINE;
 		emit hostOnline(host);
 	}
 }
 
 void ContactList::setHostOffline(Host host)
 {
-	if (m_onlinehosts.contains(host)) {
-		m_onlinehosts.remove(host);
+	if (m_hoststate[host].contains(HOST_ONLINE)) {
+		m_hoststate[host].remove(HOST_ONLINE);
 		emit hostOffline(host);
 	}
 }
 
 bool ContactList::isHostOnline(Host host)
 {
-	return m_onlinehosts.contains(host);
+	return m_hoststate[host].contains(HOST_ONLINE);
 }
 
 void ContactList::addSignals(Connection* connection)
@@ -139,5 +139,61 @@ void ContactList::addSignals(Connection* connection)
 	QObject::connect(connection, &Connection::contactFound, this, &ContactList::addContact);
 	QObject::connect(connection, &Connection::hostOnline, this, &ContactList::setHostOnline);
 	QObject::connect(connection, &Connection::hostOffline, this, &ContactList::setHostOffline);
+}
+
+void ContactList::addHostState(Host host, HostState state)
+{
+	m_hoststate[host] << state;
+	emit hostChanged(host);
+}
+
+void ContactList::removeHostState(Host host, HostState state)
+{
+	m_hoststate[host].remove(state);
+	emit hostChanged(host);
+}
+
+ContactList::HostStateSet ContactList::hostState(Host host)
+{
+	return m_hoststate[host];
+}
+
+ContactList::HostStateSet ContactList::hostState(QString hostname)
+{
+	HostStateSet state;
+	foreach (const Host& host, m_hoststate.keys())
+	{
+		if (hostname == host.hostname() || hostname == host.address().toString()) {
+			state.unite(m_hoststate[host]);
+		}
+	}
+	return state;
+}
+
+void ContactList::onHostStateChanged(Host host)
+{
+	QList<int> changedContacts;
+	QList<int> changedUnknownHosts;
+	{
+		QMutexLocker locker(&m_lock);
+		for (int i = 0; i < m_contacts.size(); ++i) {
+			if (host == m_contacts[i].host()) {
+				changedContacts << i;
+			}
+		}
+		for (int i = 0; i < m_unknownhosts.size(); ++i) {
+			if (host.hostname() == m_unknownhosts[i] || host.address().toString() == m_unknownhosts[i]) {
+				changedUnknownHosts << i;
+			}
+		}
+	}
+	foreach (int i, changedContacts)
+	{
+		emit contactStateChanged(i);
+	}
+	foreach (int i, changedUnknownHosts)
+	{
+		emit unknownHostStateChanged(i);
+	}
 }
 
