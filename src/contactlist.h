@@ -26,7 +26,7 @@ public:
 
 	enum HostState
 	{
-		HOST_OFFLINE, CONNECTING, HOST_ONLINE
+		CONNECTING, DNS_LOOKUP, HOST_ONLINE
 	};
 	typedef QSet<HostState> HostStateSet;
 
@@ -42,10 +42,10 @@ signals:
 	void contactStateChanged(int i);
 	void unknownHostStateChanged(int i);
 
-	void beginInsertItems(int start, int end);
-	void endInsertItems();
-	void beginRemoveItems(int start, int end);
-	void endRemoveItems();
+	void beginSetContacts(int oldcount, int newcount);
+	void endSetContacts();
+	void beginSetUnknownHosts(int oldcount, int newcount);
+	void endSetUnknownHosts();
 
 public slots:
 	void addContact(Contact contact);
@@ -61,7 +61,7 @@ private slots:
 private:
 	explicit ContactList(QObject* parent = 0);
 
-	void buildSortedList();
+	void rebuildItems();
 
 	static ContactList* m_instance;
 	QList<Contact> m_contacts;

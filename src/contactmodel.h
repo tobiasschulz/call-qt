@@ -10,11 +10,12 @@
 class ContactList;
 class ContactScanner;
 
-class ContactModel: public QAbstractItemModel
+class ContactModel: public QAbstractItemModel, public ID
 {
 Q_OBJECT
 public:
 	explicit ContactModel(QObject* parent = 0);
+	QString id() const;
 
 	int rowCount(const QModelIndex& parent = QModelIndex()) const;
 	int columnCount(const QModelIndex& parent = QModelIndex()) const;
@@ -39,6 +40,10 @@ public slots:
 	void onResetContacts();
 	void onContactStateChanged(int i);
 	void onUnknownHostStateChanged(int i);
+	void onBeginSetContacts(int oldcount, int newcount);
+	void onEndSetContacts();
+	void onBeginSetUnknownHosts(int oldcount, int newcount);
+	void onEndSetUnknownHosts();
 
 private:
 

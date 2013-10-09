@@ -35,7 +35,7 @@ void ContactList::addContact(Contact contact)
 	if (contact != Contact::INVALID_CONTACT && !m_contacts.contains(contact)) {
 		log.debug("add: %1", contact.id());
 		m_contacts << contact;
-		buildSortedList();
+		rebuildItems();
 	}
 }
 
@@ -65,14 +65,18 @@ int ContactList::size() const
 	return m_contacts.size();
 }
 
-void ContactList::buildSortedList()
+void ContactList::rebuildItems()
 {
-	emit this->beginRemoveItems(0, m_contacts.size());
-	emit this->endRemoveItems();
-
 	// create contact unique list from set
 	QList<Contact> contacts(m_contacts);
 	qSort(contacts.begin(), contacts.end(), compareContacts);
+
+	emit this->beginSetContacts(m_contacts.size(), contacts.size());
+	{
+		QMutexLocker locker(&m_lock);
+		m_contacts = contacts;
+	}
+	emit this->endSetContacts();
 
 	// create unknown/offline host list
 	QStringList unknownhosts;
@@ -87,17 +91,17 @@ void ContactList::buildSortedList()
 	unknownhosts = DnsCache::instance()->lookup(unknownhosts, DnsCache::HOSTNAME, DnsCache::CACHE_ONLY);
 	qSort(unknownhosts.begin(), unknownhosts.end(), compareHostnamesAndAddresses);
 
-	emit this->beginInsertItems(0, contacts.size());
+	foreach (QString host, unknownhosts)
+	{
+		log.debug("host = %1", host);
+	}
+
+	emit this->beginSetUnknownHosts(m_unknownhosts.size(), unknownhosts.size());
 	{
 		QMutexLocker locker(&m_lock);
-		m_contacts = contacts;
 		m_unknownhosts = unknownhosts;
-		foreach (QString host, unknownhosts)
-		{
-			log.debug("host = %1", host);
-		}
 	}
-	emit this->endInsertItems();
+	emit this->endSetUnknownHosts();
 }
 
 QStringList ContactList::unknownHosts()
@@ -107,10 +111,10 @@ QStringList ContactList::unknownHosts()
 
 void ContactList::onResetContacts()
 {
-	emit this->beginRemoveItems(0, m_contacts.size());
+	emit this->beginSetContacts(m_contacts.size(), 0);
+	emit this->endSetContacts();
 	m_contacts.clear();
-	buildSortedList();
-	emit this->endRemoveItems();
+	rebuildItems();
 }
 
 void ContactList::setHostOnline(Host host)

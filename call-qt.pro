@@ -25,6 +25,7 @@ SOURCES += \
     src/id.cpp \
 	src/main.cpp \
     src/maingui.cpp \
+    src/moviedelegate.cpp \
     src/networkutil.cpp \
     src/pingclient.cpp \
     src/serverrequest.cpp \
@@ -51,6 +52,7 @@ HEADERS  += \
     src/dnscache.h \
     src/id.h \
 	src/maingui.h \
+    src/moviedelegate.h \
     src/networkutil.h \
     src/pingclient.h \
     src/serverrequest.h \
@@ -89,7 +91,7 @@ win32 {
 }
 
 # The application version                                                          ## VERSION
-VERSION = 0.823                                                                      ## VERSION
+VERSION = 0.868                                                                      ## VERSION
 # Define the preprocessor macro to get the application version in our application. ## VERSION
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"                                           ## VERSION
-DEFINES += APP_BUILD=\\\"823\\\"                                             ## VERSION
+DEFINES += APP_BUILD=\\\"868\\\"                                             ## VERSION

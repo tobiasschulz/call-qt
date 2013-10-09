@@ -68,7 +68,8 @@ void ContactScanner::scanNow()
 		if (!m_connections.contains(host)) {
 			m_connections[host] = new PingClient(host, this);
 		}
-		emit m_connections[host]->ping();
+//		emit m_connections[host]->ping();
+		QTimer::singleShot(100, m_connections[host], SLOT(ping()));
 		log.debug("pingclient: %1 (immediately)", Log::print(m_connections[host]));
 	}
 

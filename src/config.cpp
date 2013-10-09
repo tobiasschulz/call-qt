@@ -277,6 +277,17 @@ QIcon Config::icon(QString iconname, QString ext)
 	return QIcon("img/" + iconname + "." + ext);
 }
 
+QMovie* Config::movie(QString moviename, QString ext)
+{
+	static QHash<QString, QMovie*> cache;
+	if (!cache.contains(moviename)) {
+		QMovie* movie = new QMovie("img/" + moviename + "." + ext);
+		movie->start();
+		cache[moviename] = movie;
+	}
+	return cache[moviename];
+}
+
 QAudioFormat Config::defaultAudioFormat()
 {
 	return chooseAudioFormat(44100, 16, 1);

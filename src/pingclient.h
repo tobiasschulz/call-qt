@@ -19,8 +19,11 @@ signals:
 
 public slots:
 	void ping();
+
+private slots:
 	void onConnected();
 	void onError(QString error);
+	void removeIcon();
 
 private:
 	Host m_host;

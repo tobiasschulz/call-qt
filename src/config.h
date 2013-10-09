@@ -14,6 +14,7 @@
 #include <QList>
 #include <QStringList>
 #include <QIcon>
+#include <QMovie>
 #include <QAudioFormat>
 #include <QAudioDeviceInfo>
 #include <QMutex>
@@ -33,7 +34,8 @@ public:
 	// general
 	long uid();
 	long uptime();
-	QIcon icon(QString iconname, QString ext = "png");
+	QIcon icon(QString name, QString ext = "png");
+	QMovie* movie(QString name, QString ext = "gif");
 	QString version();
 	QString build();
 

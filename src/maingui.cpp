@@ -11,6 +11,7 @@
 #include "config.h"
 #include "contactlist.h"
 #include "audioinfo.h"
+#include "moviedelegate.h"
 
 Main* Main::m_instance;
 
@@ -34,7 +35,8 @@ Main::Main(QWidget* parent)
 	// contacts
 	m_contactmodel = new ContactModel(this);
 	ui->contactlist->setModel(m_contactmodel);
-	QObject::connect(ui->contactlist, &QListView::clicked, this, &Main::onContactSelected);
+	ui->contactlist->setItemDelegate(new MovieDelegate(*ui->contactlist, 0));
+	QObject::connect(ui->contactlist, &QTableView::clicked, this, &Main::onContactSelected);
 	QObject::connect(this, &Main::shown, m_contactmodel, &ContactModel::onResetContacts);
 
 	// terminal

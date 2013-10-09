@@ -38,10 +38,14 @@ void PingClient::ping()
 
 void PingClient::onConnected()
 {
-	ContactList::instance()->removeHostState(m_host, ContactList::CONNECTING);
+	QTimer::singleShot(1500, this, SLOT(removeIcon()));
 }
 void PingClient::onError(QString error)
 {
-	ContactList::instance()->removeHostState(m_host, ContactList::CONNECTING);
+	QTimer::singleShot(500, this, SLOT(removeIcon()));
 }
 
+void PingClient::removeIcon()
+{
+	ContactList::instance()->removeHostState(m_host, ContactList::CONNECTING);
+}
