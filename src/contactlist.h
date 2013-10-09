@@ -35,6 +35,7 @@ public:
 	HostStateSet hostState(QString hostname);
 
 signals:
+	void resetContacts();
 	void hostOnline(Host host);
 	void hostOffline(Host host);
 

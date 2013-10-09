@@ -115,6 +115,7 @@ void ContactList::onResetContacts()
 	emit this->endSetContacts();
 	m_contacts.clear();
 	rebuildItems();
+	emit resetContacts();
 }
 
 void ContactList::setHostOnline(Host host)
