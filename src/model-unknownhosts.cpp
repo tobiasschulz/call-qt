@@ -9,10 +9,10 @@ using namespace Model;
 UnknownHosts::UnknownHosts(Abstract* parentmodel, QObject* parent)
 		: Abstract(parentmodel, parent)
 {
-	ContactList* m_contactlist = ContactList::instance();
-	QObject::connect(m_contactlist, &ContactList::beginSetUnknownHosts, this, &UnknownHosts::beginSetItems);
-	QObject::connect(m_contactlist, &ContactList::endSetUnknownHosts, this, &UnknownHosts::endSetItems);
-	QObject::connect(m_contactlist, &ContactList::unknownHostStateChanged, this, &UnknownHosts::onStateChanged);
+	List::UnknownHosts* m_contactlist = ContactList::unknownhosts();
+	QObject::connect(m_contactlist, &List::UnknownHosts::beginListReset, this, &UnknownHosts::beginSetItems);
+	QObject::connect(m_contactlist, &List::UnknownHosts::endListReset, this, &UnknownHosts::endSetItems);
+	QObject::connect(m_contactlist, &List::UnknownHosts::itemChanged, this, &UnknownHosts::onStateChanged);
 }
 
 QString UnknownHosts::id() const
@@ -22,22 +22,20 @@ QString UnknownHosts::id() const
 
 int UnknownHosts::size() const
 {
-	return ContactList::instance()->unknownHosts().size();
+	return ContactList::unknownhosts()->size();
 }
 
 QVariant UnknownHosts::data(const QModelIndex& index, int role) const
 {
-	QStringList unknownhosts = ContactList::instance()->unknownHosts();
-
-	if (index.isValid() && index.row() < unknownhosts.size()) {
-		QString hostname = unknownhosts.at(index.row());
+	if (index.isValid() && index.row() < ContactList::unknownhosts()->size()) {
+		QString hostname = ContactList::unknownhosts()->get(index.row());
 
 		if (role == Qt::DisplayRole) {
 			QVariant value = hostname;
 			return value;
 		} else if (role == Qt::DecorationRole) {
-			ContactList::HostStateSet states = ContactList::instance()->hostState(hostname);
-			if (states.contains(ContactList::CONNECTING) || states.contains(ContactList::DNS_LOOKUP)) {
+			List::Hosts::HostStateSet states = ContactList::hosts()->hostState(hostname);
+			if (states.contains(List::Hosts::CONNECTING) || states.contains(List::Hosts::DNS_LOOKUP)) {
 				return qVariantFromValue(Config::instance()->movie("reload", "gif"));
 				//return Config::instance()->icon("reload", "gif");
 			} else {

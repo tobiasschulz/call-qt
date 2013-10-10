@@ -25,10 +25,10 @@ void PingClient::ping()
 		m_connection = 0;
 	}
 
-	ContactList::instance()->addHostState(m_host, ContactList::CONNECTING);
+	ContactList::hosts()->addHostState(m_host, List::Hosts::CONNECTING);
 	m_connection = new Connection(Connection::STATUS, this);
 	m_connection->setVerbose(ID::NONE);
-	ContactList::instance()->addSignals(m_connection);
+	ContactList::addSignals(m_connection);
 	QObject::connect(m_connection.data(), &Connection::connected, m_connection.data(), &Connection::disconnect);
 	QObject::connect(m_connection.data(), &Connection::connected, this, &PingClient::onConnected);
 	QObject::connect(m_connection.data(), &Connection::connectFailed, this, &PingClient::onError);
@@ -47,5 +47,5 @@ void PingClient::onError(QString error)
 
 void PingClient::removeIcon()
 {
-	ContactList::instance()->removeHostState(m_host, ContactList::CONNECTING);
+	ContactList::hosts()->removeHostState(m_host, List::Hosts::CONNECTING);
 }

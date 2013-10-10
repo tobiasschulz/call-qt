@@ -151,7 +151,7 @@ void Connection::onSocketConnected()
 		QString user = m_headers.value("user", Contact::INVALID_USER);
 		QString computername = m_headers.value("computername", "");
 		m_contact = Contact(user, computername, m_host);
-		m_contact = ContactList::instance()->reachableContact(m_contact);
+		m_contact = ContactList::contacts()->reachableContact(m_contact);
 		emit contactFound(m_contact);
 
 		m_state = CONNECTED;
@@ -182,6 +182,7 @@ void Connection::onSocketDisconnected()
 
 void Connection::onSocketError(QAbstractSocket::SocketError err)
 {
+	Q_UNUSED(err);
 	QString errString;
 	if (m_socket) {
 		errString = m_socket->errorString();

@@ -45,7 +45,7 @@ QString ContactScanner::id() const
 
 void ContactScanner::start()
 {
-	QObject::connect(ContactList::instance(), &ContactList::hostOnline, this, &ContactScanner::increasePriority);
+	QObject::connect(ContactList::hosts(), &List::Hosts::hostOnline, this, &ContactScanner::increasePriority);
 
 	QTimer *timer = new QTimer();
 	QObject::connect(timer, SIGNAL(timeout()), this, SLOT(scanNow()));

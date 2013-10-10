@@ -23,6 +23,10 @@ SOURCES += \
     src/contactscanner.cpp \
     src/dnscache.cpp \
     src/id.cpp \
+    src/list-abstract.cpp \
+    src/list-contacts.cpp \
+    src/list-hosts.cpp \
+    src/list-unknownhosts.cpp \
 	src/main.cpp \
     src/maingui.cpp \
 	src/model-abstract.cpp \
@@ -54,6 +58,10 @@ HEADERS  += \
     src/contactscanner.h \
     src/dnscache.h \
     src/id.h \
+    src/list-abstract.h \
+    src/list-contacts.h \
+    src/list-hosts.h \
+    src/list-unknownhosts.h \
 	src/maingui.h \
 	src/model-abstract.h \
 	src/model-contacts.h \
@@ -97,7 +105,7 @@ win32 {
 }
 
 # The application version                                                          ## VERSION
-VERSION = 0.897                                                                      ## VERSION
+VERSION = 0.925                                                                      ## VERSION
 # Define the preprocessor macro to get the application version in our application. ## VERSION
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"                                           ## VERSION
-DEFINES += APP_BUILD=\\\"897\\\"                                             ## VERSION
+DEFINES += APP_BUILD=\\\"925\\\"                                             ## VERSION
