@@ -1,32 +1,32 @@
 #include "contactlist.h"
 
-List::Contacts* ContactList::contacts()
+std::function<List::Contacts*(void)> ContactList = List::contacts;
+std::function<List::Hosts*(void)> HostStates = List::hoststates;
+std::function<List::UnknownHosts*(void)> UnknownHostList = List::unknownhosts;
+
+List::Contacts* List::contacts()
 {
 	static QMutex lock;
 	QMutexLocker locker(&lock);
 	return &List::Contacts::instance();
 }
 
-List::Hosts* ContactList::hosts()
+List::Hosts* List::hoststates()
 {
 	static QMutex lock;
 	QMutexLocker locker(&lock);
 	return &List::Hosts::instance();
 }
 
-List::UnknownHosts* ContactList::unknownhosts()
+List::UnknownHosts* List::unknownhosts()
 {
 	static QMutex lock;
 	QMutexLocker locker(&lock);
 	return &List::UnknownHosts::instance();
 }
 
-QString ContactList::id() const
+void List::addSignals(Connection* connection)
 {
-	return "ContactList";
-}
-
-void ContactList::addSignals(Connection* connection) {
 	contacts()->addSignals(connection);
-	hosts()->addSignals(connection);
+	hoststates()->addSignals(connection);
 }

@@ -9,10 +9,10 @@ using namespace Model;
 UnknownHosts::UnknownHosts(Abstract* parentmodel, QObject* parent)
 		: Abstract(parentmodel, parent)
 {
-	List::UnknownHosts* m_contactlist = ContactList::unknownhosts();
-	QObject::connect(m_contactlist, &List::UnknownHosts::beginListReset, this, &UnknownHosts::beginSetItems);
-	QObject::connect(m_contactlist, &List::UnknownHosts::endListReset, this, &UnknownHosts::endSetItems);
-	QObject::connect(m_contactlist, &List::UnknownHosts::itemChanged, this, &UnknownHosts::onStateChanged);
+	List::UnknownHosts* unknownhosts = UnknownHostList();
+	QObject::connect(unknownhosts, &List::UnknownHosts::beginListReset, this, &UnknownHosts::beginSetItems);
+	QObject::connect(unknownhosts, &List::UnknownHosts::endListReset, this, &UnknownHosts::endSetItems);
+	QObject::connect(unknownhosts, &List::UnknownHosts::itemChanged, this, &UnknownHosts::onStateChanged);
 }
 
 QString UnknownHosts::id() const
@@ -22,19 +22,19 @@ QString UnknownHosts::id() const
 
 int UnknownHosts::size() const
 {
-	return ContactList::unknownhosts()->size();
+	return UnknownHostList()->size();
 }
 
 QVariant UnknownHosts::data(const QModelIndex& index, int role) const
 {
-	if (index.isValid() && index.row() < ContactList::unknownhosts()->size()) {
-		QString hostname = ContactList::unknownhosts()->get(index.row());
+	if (index.isValid() && index.row() < UnknownHostList()->size()) {
+		QString hostname = UnknownHostList()->get(index.row());
 
 		if (role == Qt::DisplayRole) {
 			QVariant value = hostname;
 			return value;
 		} else if (role == Qt::DecorationRole) {
-			List::Hosts::HostStateSet states = ContactList::hosts()->hostState(hostname);
+			List::Hosts::HostStateSet states = HostStates()->hostState(hostname);
 			if (states.contains(List::Hosts::CONNECTING) || states.contains(List::Hosts::DNS_LOOKUP)) {
 				return qVariantFromValue(Config::instance()->movie("reload", "gif"));
 				//return Config::instance()->icon("reload", "gif");

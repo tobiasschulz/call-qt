@@ -62,7 +62,7 @@ void ChatClient::connect()
 void ChatClient::setConnection(Connection* connection)
 {
 	m_connection = connection;
-	ContactList::addSignals(m_connection);
+	List::addSignals(m_connection);
 	QObject::connect(m_connection.data(), &Connection::connected, this, &ChatClient::onConnected);
 	QObject::connect(m_connection.data(), &Connection::connected, this, &ChatClient::flush);
 	QObject::connect(m_connection.data(), &Connection::readyRead, this, &ChatClient::onReceiveMessages);

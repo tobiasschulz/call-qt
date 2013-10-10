@@ -37,7 +37,7 @@ Main::Main(QWidget* parent)
 	ui->contactlist->setModel(m_contactmodel);
 	ui->contactlist->setItemDelegate(new MovieDelegate(*ui->contactlist, 0));
 	QObject::connect(ui->contactlist, &QTableView::clicked, this, &Main::onContactSelected);
-	QObject::connect(this, &Main::shown, ContactList::contacts(), &List::Contacts::onResetContacts);
+	QObject::connect(this, &Main::shown, ContactList(), &List::Contacts::onResetContacts);
 	ui->contactlist->verticalHeader()->setDefaultSectionSize(fontMetrics().lineSpacing() + 5);
 
 	// terminal
@@ -60,8 +60,7 @@ Main::Main(QWidget* parent)
 	QObject::connect(ui->actionAudioDevices, &QAction::triggered, this, &Main::onMenuAudioDevices);
 
 	// menu
-	QObject::connect(ui->actionReloadContacts, &QAction::triggered, ContactList::contacts(),
-			&List::Contacts::onResetContacts);
+	QObject::connect(ui->actionReloadContacts, &QAction::triggered, ContactList(), &List::Contacts::onResetContacts);
 	QObject::connect(ui->actionAbout, &QAction::triggered, this, &Main::onMenuAbout);
 	QObject::connect(ui->actionAboutQt, &QAction::triggered, this, &Main::onMenuAboutQt);
 

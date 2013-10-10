@@ -2,6 +2,7 @@
 #define CONTACTLIST_H
 
 #include <QObject>
+#include <functional>
 
 #include "id.h"
 #include "connection.h"
@@ -10,19 +11,19 @@
 #include "list-hosts.h"
 #include "list-unknownhosts.h"
 
-class ContactList: public QObject, public ID
+namespace List
 {
-Q_OBJECT
-public:
-	static List::Contacts* contacts();
-	static List::Hosts* hosts();
-	static List::UnknownHosts* unknownhosts();
-	QString id() const;
+	List::Contacts* contacts();
+	List::Hosts* hoststates();
+	List::UnknownHosts* unknownhosts();
+	void addSignals(Connection* connection);
+}
 
-	static void addSignals(Connection* connection);
-
-private:
-	explicit ContactList(QObject* parent = 0);
-};
+extern std::function<List::Contacts*(void)> ContactList;
+extern std::function<List::Hosts*(void)> HostStates;
+extern std::function<List::UnknownHosts*(void)> UnknownHostList;
+//constexpr auto ContactList = List::contacts;
+//constexpr auto HostStates = List::hoststates;
+//constexpr auto UnknownHostList = List::unknownhosts;
 
 #endif // CONTACTLIST_H

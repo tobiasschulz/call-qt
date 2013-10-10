@@ -157,7 +157,7 @@ void Call::close()
 
 void Call::prepareConnection()
 {
-	ContactList::addSignals(m_connection);
+	List::addSignals(m_connection);
 	QObject::connect(m_connection.data(), &Connection::connected, this, &Call::onConnected);
 	QObject::connect(m_connection.data(), &Connection::disconnected, this, &Call::close);
 	QObject::connect(m_connection.data(), &Connection::socketError, this, &Call::onSocketError);

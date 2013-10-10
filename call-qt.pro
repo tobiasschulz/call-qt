@@ -5,6 +5,7 @@
 #-------------------------------------------------
 
 QT       += core gui widgets multimedia network
+CONFIG   += c++11
 
 TARGET = call-qt
 TEMPLATE = app
@@ -105,7 +106,7 @@ win32 {
 }
 
 # The application version                                                          ## VERSION
-VERSION = 0.925                                                                      ## VERSION
+VERSION = 0.941                                                                      ## VERSION
 # Define the preprocessor macro to get the application version in our application. ## VERSION
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"                                           ## VERSION
-DEFINES += APP_BUILD=\\\"925\\\"                                             ## VERSION
+DEFINES += APP_BUILD=\\\"941\\\"                                             ## VERSION

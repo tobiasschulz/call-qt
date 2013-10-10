@@ -47,8 +47,8 @@ ChatTab::ChatTab(const Contact& contact)
 	QTimer::singleShot(0, &m_chatclient, SLOT(connect()));
 
 	// contact-related signals
-	QObject::connect(ContactList::hosts(), &List::Hosts::hostOnline, this, &ChatTab::onHostOnline);
-	QObject::connect(ContactList::hosts(), &List::Hosts::hostOffline, this, &ChatTab::onHostOffline);
+	QObject::connect(HostStates(), &List::Hosts::hostOnline, this, &ChatTab::onHostOnline);
+	QObject::connect(HostStates(), &List::Hosts::hostOffline, this, &ChatTab::onHostOffline);
 
 	// call-related signals
 	QObject::connect(ui->callbutton_start, &QPushButton::clicked, this, &ChatTab::startCall);
@@ -122,7 +122,7 @@ QString ChatTab::tabname() const
 }
 QIcon ChatTab::tabicon() const
 {
-	return ContactList::hosts()->isHostOnline(m_contact.host()) ?
+	return HostStates()->isHostOnline(m_contact.host()) ?
 			Config::instance()->icon("user-available") : Config::instance()->icon("user-offline");
 }
 QString ChatTab::id() const

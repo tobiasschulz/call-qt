@@ -42,7 +42,7 @@ void ServerRequest::start()
 {
 	log.debug("start()");
 	m_connection = new Connection(Connection::SERVER, this);
-	QObject::connect(m_connection.data(), &Connection::contactFound, ContactList::contacts(), &List::Contacts::add);
+	QObject::connect(m_connection.data(), &Connection::contactFound, ContactList(), &List::Contacts::add);
 	QObject::connect(m_connection.data(), &Connection::disconnected, m_thread.data(), &Thread::quit);
 	QObject::connect(m_thread.data(), &Thread::finished, m_connection.data(), &Connection::disconnect);
 	QObject::connect(m_connection.data(), &Connection::connected, this, &ServerRequest::onConnected);

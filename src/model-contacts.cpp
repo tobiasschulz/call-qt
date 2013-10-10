@@ -11,7 +11,7 @@ using namespace Model;
 Contacts::Contacts(Abstract* parentmodel, QObject* parent)
 		: Abstract(parentmodel, parent)
 {
-	List::Contacts* contactlist = ContactList::contacts();
+	List::Contacts* contactlist = ContactList();
 	QObject::connect(contactlist, &List::Contacts::beginListReset, this, &Contacts::beginSetItems);
 	QObject::connect(contactlist, &List::Contacts::endListReset, this, &Contacts::endSetItems);
 	QObject::connect(contactlist, &List::Contacts::itemChanged, this, &Contacts::onStateChanged);
@@ -31,19 +31,19 @@ QString Contacts::id() const
 
 int Contacts::size() const
 {
-	return ContactList::contacts()->size();
+	return ContactList()->size();
 }
 
 QVariant Contacts::data(const QModelIndex& index, int role) const
 {
-	if (index.isValid() && index.row() < ContactList::contacts()->size()) {
-		const Contact& contact = ContactList::contacts()->get(index.row());
+	if (index.isValid() && index.row() < ContactList()->size()) {
+		const Contact& contact = ContactList()->get(index.row());
 
 		if (role == Qt::DisplayRole) {
 			QVariant value = contact.toString();
 			return value;
 		} else if (role == Qt::DecorationRole) {
-			List::Hosts::HostStateSet states = ContactList::hosts()->hostState(contact.host());
+			List::Hosts::HostStateSet states = HostStates()->hostState(contact.host());
 			if (states.contains(List::Hosts::CONNECTING) || states.contains(List::Hosts::DNS_LOOKUP)) {
 				return qVariantFromValue(Config::instance()->movie("reload", "gif"));
 			} else if (states.contains(List::Hosts::HOST_ONLINE)) {
@@ -61,8 +61,8 @@ QVariant Contacts::data(const QModelIndex& index, int role) const
 
 const Contact& Contacts::getContact(const QModelIndex& index) const
 {
-	if (index.isValid() && index.row() < ContactList::contacts()->size()) {
-		const Contact& contact = ContactList::contacts()->get(index.row());
+	if (index.isValid() && index.row() < ContactList()->size()) {
+		const Contact& contact = ContactList()->get(index.row());
 		return contact;
 	} else {
 		return Contact::INVALID_CONTACT;
