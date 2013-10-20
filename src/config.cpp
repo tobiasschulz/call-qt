@@ -149,8 +149,8 @@ QStringList Config::hostnames(HostType type)
 		QList<Host> hosts = type == KNOWN_HOST ? m_knownhosts : type == UNKNOWN_HOST ? m_unknownhosts : QList<Host>();
 		foreach (const Host & host, hosts)
 		{
-			if (!hostnames.contains(host.hostname())) {
-				hostnames << host.hostname();
+			if (!hostnames.contains(host.displayname())) {
+				hostnames << host.displayname();
 			}
 		}
 		return hostnames;
@@ -180,7 +180,7 @@ bool Config::isHost(Host host, HostType type)
 	// log.debug("%1", "5");
 	readHostConfig(type);
 	if (type == LOCALHOST) {
-		return m_localhosts.contains(host.hostname());
+		return m_localhosts.contains(host.displayname());
 	} else if (type == KNOWN_HOST) {
 		return m_knownhosts.contains(host);
 	} else if (type == UNKNOWN_HOST) {
@@ -223,8 +223,8 @@ void Config::addHost(Host host, HostType type)
 		// ignore
 	} else if (type == LOCALHOST) {
 		readHostConfig(LOCALHOST);
-		if (!m_localhosts.contains(host.hostname()))
-			m_localhosts << host.hostname();
+		if (!m_localhosts.contains(host.displayname()))
+			m_localhosts << host.displayname();
 		if (!m_localhosts.contains(host.address().toString()))
 			m_localhosts << host.address().toString();
 		m_localhosts.removeAll(Host::INVALID_HOST.hostname());

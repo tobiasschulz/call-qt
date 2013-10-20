@@ -60,14 +60,20 @@ void Hosts::addSignals(Connection* connection)
 
 void Hosts::addHostState(Host host, HostState state)
 {
-	m_hoststate[host] << state;
-	emit hostStateChanged(host);
+	if (!m_hoststate[host].contains(state)) {
+		log.debug("addHostState: %1, %2", Log::print(host), state);
+		m_hoststate[host] << state;
+		emit hostStateChanged(host);
+	}
 }
 
 void Hosts::removeHostState(Host host, HostState state)
 {
-	m_hoststate[host].remove(state);
-	emit hostStateChanged(host);
+	if (m_hoststate[host].contains(state)) {
+		log.debug("removeHostState: %1, %2", Log::print(host), state);
+		m_hoststate[host].remove(state);
+		emit hostStateChanged(host);
+	}
 }
 
 Hosts::HostStateSet Hosts::hostState(Host host)

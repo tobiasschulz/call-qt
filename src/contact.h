@@ -22,7 +22,9 @@ public:
 
 	QHostAddress address() const;
 	QString hostname() const;
+	QString hostname();
 	quint16 port() const;
+	QString displayname() const;
 
 	bool isReachable() const;
 	bool isUnreachable() const;
@@ -46,9 +48,6 @@ public:
 	QString serialize() const;
 	static Host deserialize(QString str);
 
-	void lookupHostname();
-	void lookupAddress();
-
 	static const Host INVALID_HOST;
 	static const QHostAddress INVALID_ADDRESS;
 	static const QString INVALID_HOSTNAME;
@@ -59,10 +58,19 @@ signals:
 public slots:
 
 private:
+	enum FieldState
+	{
+		INITIAL, LOOKED_UP, INVALID, LOOKUP_PENDING
+	};
+
+	void lookupHostname();
+	void lookupHostname(QString* hostname, FieldState* state) const;
+	void lookupAddress();
+
 	QHostAddress m_address;
-	bool m_address_valid;
+	FieldState m_address_state;
 	QString m_hostname;
-	bool m_hostname_valid;
+	FieldState m_hostname_state;
 	quint16 m_port;
 };
 
@@ -83,6 +91,7 @@ public:
 	QHostAddress address() const;
 	QString hostname() const;
 	quint16 port() const;
+	QString displayname() const;
 
 	QString toString() const;
 	QString id() const;

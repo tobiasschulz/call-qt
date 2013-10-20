@@ -39,6 +39,8 @@ Main::Main(QWidget* parent)
 	QObject::connect(ui->contactlist, &QTableView::clicked, this, &Main::onContactSelected);
 	QObject::connect(this, &Main::shown, ContactList(), &List::Contacts::onResetContacts);
 	ui->contactlist->verticalHeader()->setDefaultSectionSize(fontMetrics().lineSpacing() + 5);
+	ui->contactlist->horizontalHeader()->setDefaultSectionSize(fontMetrics().lineSpacing() + 5);
+	ui->contactlist->setSelectionBehavior(QAbstractItemView::SelectRows);
 
 	// terminal
 	m_terminal = new Terminal;

@@ -37,14 +37,18 @@ QString DnsCache::id() const
 	return "DnsCache";
 }
 
-QHostInfo DnsCache::lookup(QString host, LookupMode mode)
+QHostInfo DnsCache::lookup(QString host, LookupMode mode, const Host* relatedHost)
 {
 	if (host.size() > 0) {
 		if (m_hash.contains(host)) {
 			return m_hash[host];
 		} else if (mode == BLOCK_IF_NEEDED) {
 			QMutexLocker locker(&m_mutex);
+			if (relatedHost != 0)
+				HostStates()->addHostState(*relatedHost, List::Hosts::DNS_LOOKUP);
 			QHostInfo info = QHostInfo::fromName(host);
+			if (relatedHost != 0)
+				HostStates()->removeHostState(*relatedHost, List::Hosts::DNS_LOOKUP);
 			QString addressStr = info.addresses().size() > 0 ? info.addresses().first().toString() : "";
 			QString hostname = info.hostName();
 			log.debug("blocking lookup: %1 = %2", addressStr, hostname);
@@ -61,9 +65,9 @@ QHostInfo DnsCache::lookup(QString host, LookupMode mode)
 	}
 }
 
-QString DnsCache::lookup(QString host, HostInfo preferred, LookupMode mode)
+QString DnsCache::lookup(QString host, HostInfo preferred, LookupMode mode, const Host* relatedHost)
 {
-	QHostInfo info = lookup(host, mode);
+	QHostInfo info = lookup(host, mode, relatedHost);
 
 	if (preferred == HOSTNAME) {
 		return info.hostName().size() > 0 ? info.hostName() : host;

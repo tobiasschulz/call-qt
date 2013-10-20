@@ -25,7 +25,7 @@ private:
 private:
 	// member variables
 
-	QAbstractItemView & view_;
+	QAbstractItemView & m_view;
 };
 
 Q_DECLARE_METATYPE(QMovie *)

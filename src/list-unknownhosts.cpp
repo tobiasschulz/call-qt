@@ -58,8 +58,7 @@ void UnknownHosts::rebuildItems()
 	QList<Contact> contacts(Contacts::instance().toList());
 	foreach (const Contact& contact, contacts)
 	{
-		unknownhosts.removeAll(contact.hostname());
-		unknownhosts.removeAll(contact.address().toString());
+		unknownhosts.removeAll(contact.displayname());
 	}
 
 	unknownhosts = DnsCache::instance()->lookup(unknownhosts, DnsCache::HOSTNAME, DnsCache::CACHE_ONLY);
@@ -85,11 +84,12 @@ QList<QString> UnknownHosts::toList() const
 
 void UnknownHosts::onHostStateChanged(Host host)
 {
+	log.debug("onHostStateChanged: %1", Log::print(host));
 	QList<int> changedUnknownHosts;
 	{
 		QMutexLocker locker(&m_lock);
 		for (int i = 0; i < m_unknownhosts.size(); ++i) {
-			if (host.hostname() == m_unknownhosts[i] || host.address().toString() == m_unknownhosts[i]) {
+			if (host.displayname() == m_unknownhosts[i]) {
 				changedUnknownHosts << i;
 			}
 		}

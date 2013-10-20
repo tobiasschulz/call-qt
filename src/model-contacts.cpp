@@ -39,10 +39,10 @@ QVariant Contacts::data(const QModelIndex& index, int role) const
 	if (index.isValid() && index.row() < ContactList()->size()) {
 		const Contact& contact = ContactList()->get(index.row());
 
-		if (role == Qt::DisplayRole) {
+		if (role == Qt::DisplayRole && index.column() == 1) {
 			QVariant value = contact.toString();
 			return value;
-		} else if (role == Qt::DecorationRole) {
+		} else if (role == Qt::DecorationRole && index.column() == 0) {
 			List::Hosts::HostStateSet states = HostStates()->hostState(contact.host());
 			if (states.contains(List::Hosts::CONNECTING) || states.contains(List::Hosts::DNS_LOOKUP)) {
 				return qVariantFromValue(Config::instance()->movie("reload", "gif"));

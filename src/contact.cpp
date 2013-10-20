@@ -17,44 +17,45 @@ const QString Contact::INVALID_USER("nobody");
 const Contact Contact::INVALID_CONTACT;
 
 Host::Host(QHostAddress address, quint16 port, QObject* parent)
-		: QObject(parent), m_address(address), m_address_valid(true), m_hostname(), m_hostname_valid(false),
+		: QObject(parent), m_address(address), m_address_state(INITIAL), m_hostname(), m_hostname_state(LOOKUP_PENDING),
 			m_port(port)
 {
-	lookupHostname();
+	//lookupHostname();
 }
 Host::Host(QString hostname, quint16 port, QObject* parent)
-		: QObject(parent), m_address(), m_address_valid(false), m_hostname(), m_hostname_valid(false), m_port(port)
+		: QObject(parent), m_address(), m_address_state(LOOKUP_PENDING), m_hostname(), m_hostname_state(LOOKUP_PENDING),
+			m_port(port)
 {
 	QHostAddress address(hostname);
 	if (address.protocol() == QAbstractSocket::IPv4Protocol || address.protocol() == QAbstractSocket::IPv6Protocol) {
 		m_address = address;
-		m_address_valid = true;
+		m_address_state = INITIAL;
 		//log.debug("Valid IPv4 address: %1", m_address.toString());
-		lookupHostname();
+		//lookupHostname();
 	} else {
 		m_hostname = hostname;
-		m_hostname_valid = true;
+		m_hostname_state = INITIAL;
 		//log.debug("Got a hostname: %1", hostname);
 		lookupAddress();
 	}
 }
 Host::Host(QHostAddress address, QString hostname, quint16 port, QObject* parent)
-		: QObject(parent), m_address(address), m_address_valid(true), m_hostname(hostname), m_port(port)
+		: QObject(parent), m_address(address), m_address_state(INITIAL), m_hostname(hostname), m_port(port)
 {
-	m_hostname_valid = m_hostname.size() > 0;
+	m_hostname_state = m_hostname.size() > 0 ? INITIAL : INVALID;
 }
 Host::Host(QObject * parent)
-		: QObject(parent), m_address(), m_address_valid(true), m_hostname(), m_hostname_valid(true), m_port(0)
+		: QObject(parent), m_address(), m_address_state(INVALID), m_hostname(), m_hostname_state(INVALID), m_port(0)
 {
 }
 Host::Host(const Host& other)
-		: QObject(other.parent()), m_address(), m_address_valid(), m_hostname(), m_hostname_valid(), m_port(0)
+		: QObject(other.parent()), m_address(), m_address_state(), m_hostname(), m_hostname_state(), m_port(0)
 {
 	m_address = QHostAddress(other.m_address);
 	m_hostname = QString(other.m_hostname);
 	m_port = other.m_port;
-	m_address_valid = other.m_address_valid;
-	m_hostname_valid = other.m_hostname_valid;
+	m_address_state = other.m_address_state;
+	m_hostname_state = other.m_hostname_state;
 }
 
 Host& Host::operator=(const Host& other)
@@ -62,14 +63,13 @@ Host& Host::operator=(const Host& other)
 	m_address = QHostAddress(other.m_address);
 	m_hostname = QString(other.m_hostname);
 	m_port = other.m_port;
-	m_address_valid = other.m_address_valid;
-	m_hostname_valid = other.m_hostname_valid;
+	m_address_state = other.m_address_state;
+	m_hostname_state = other.m_hostname_state;
 	return *this;
 }
 bool Host::operator==(const Host& other) const
 {
-	return (((m_address_valid && m_address == other.m_address) || (m_hostname_valid && m_hostname == other.m_hostname))
-			&& m_port == other.m_port) || (isLoopback() && other.isLoopback());
+	return (displayname() == other.displayname() && m_port == other.m_port) || (isLoopback() && other.isLoopback());
 }
 bool Host::operator!=(const Host& other) const
 {
@@ -80,12 +80,35 @@ QHostAddress Host::address() const
 {
 	return m_address;
 }
+QString Host::displayname() const
+{
+	if (m_address_state == INITIAL) {
+		return m_address.toString();
+	} else if (m_hostname_state == INITIAL) {
+		return m_hostname;
+	} else {
+		return "FUCK";
+	}
+}
 QString Host::hostname() const
 {
-	if (!m_hostname_valid) {
-		return m_address.toString();
+	if (m_hostname_state == LOOKUP_PENDING) {
+		QString hostname;
+		FieldState state;
+		lookupHostname(&hostname, &state);
+		return hostname;
+	} else {
+		return m_hostname;
 	}
-	return m_hostname.isEmpty() ? m_address.toString() : m_hostname;
+}
+QString Host::hostname()
+{
+	if (m_hostname_state == LOOKUP_PENDING) {
+		lookupHostname();
+		return m_hostname;
+	} else {
+		return m_hostname;
+	}
 }
 quint16 Host::port() const
 {
@@ -124,27 +147,29 @@ void Host::lookupAddress()
 	QHostInfo info = DnsCache::instance()->lookup(m_hostname, DnsCache::BLOCK_IF_NEEDED);
 	if (info.addresses().size() != 0) {
 		m_address = info.addresses().first();
-		m_address_valid = true;
+		m_address_state = LOOKED_UP;
 		//log.debug("lookupAddress(%1) = %2", m_hostname, m_address.toString());
 	} else {
 		m_address = INVALID_ADDRESS;
-		m_address_valid = false;
+		m_address_state = INVALID;
 		log.debug("lookupAddress(%1) failed! no address found!", m_hostname);
 	}
 }
 void Host::lookupHostname()
 {
-	HostStates()->addHostState(*this, List::Hosts::DNS_LOOKUP);
-	QHostInfo info = DnsCache::instance()->lookup(m_address.toString(), DnsCache::BLOCK_IF_NEEDED);
-	HostStates()->removeHostState(*this, List::Hosts::DNS_LOOKUP);
+	lookupHostname(&m_hostname, &m_hostname_state);
+}
+void Host::lookupHostname(QString* hostname, FieldState* state) const
+{
+	QHostInfo info = DnsCache::instance()->lookup(m_address.toString(), DnsCache::BLOCK_IF_NEEDED, this);
 
 	if (info.hostName().size() > 0) {
-		m_hostname = info.hostName();
-		m_hostname_valid = true;
-		//log.debug("lookupAddress(%1) = %2", m_address.toString(), m_hostname);
+		*hostname = info.hostName();
+		*state = LOOKED_UP;
+		// log.debug("lookupAddress(%1) = %2", m_address.toString(), m_hostname);
 	} else {
-		m_hostname = INVALID_HOSTNAME;
-		m_hostname_valid = false;
+		*hostname = INVALID_HOSTNAME;
+		*state = INVALID;
 		log.debug("lookupHostname(%1) failed! no hostname found!", m_address.toString());
 	}
 }
@@ -171,10 +196,8 @@ QString Host::print(PrintFormat format) const
 	QString data;
 	if (isLoopback())
 		data = "loopback";
-	else if (m_address.toString().size() > 0)
-		data = m_address.toString() + ":" + QString::number(m_port);
 	else
-		data = m_hostname + ":" + QString::number(m_port);
+		data = displayname() + ":" + QString::number(m_port);
 
 	if (format == PRINT_ONLY_NAME)
 		return "Host";
@@ -264,6 +287,10 @@ QHostAddress Contact::address() const
 QString Contact::hostname() const
 {
 	return m_host.hostname();
+}
+QString Contact::displayname() const
+{
+	return m_host.displayname();
 }
 quint16 Contact::port() const
 {

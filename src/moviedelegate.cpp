@@ -6,22 +6,20 @@
 #include <QMovie>
 
 MovieDelegate::MovieDelegate(QAbstractItemView & view, QObject * parent)
-		: QStyledItemDelegate(parent), view_(view)
+		: QStyledItemDelegate(parent), m_view(view)
 {
 }
 
 void MovieDelegate::paint(QPainter * painter, const QStyleOptionViewItem & option, const QModelIndex & index) const
 {
-	QStyledItemDelegate::paint(painter, option, index);
-
 	const QVariant & data = index.data(Qt::DecorationRole);
-
 	QMovie * movie = qVariantToPointerToQMovie(data);
 
 	if (!movie) {
-		view_.setIndexWidget(index, NULL);
+		QStyledItemDelegate::paint(painter, option, index);
+		m_view.setIndexWidget(index, NULL);
 	} else {
-		QObject * indexWidget = view_.indexWidget(index);
+		QObject * indexWidget = m_view.indexWidget(index);
 		QLabel * movieLabel = qobject_cast<QLabel *>(indexWidget);
 
 		if (movieLabel) {
@@ -37,7 +35,7 @@ void MovieDelegate::paint(QPainter * painter, const QStyleOptionViewItem & optio
 
 			movieLabel->setMovie(movie);
 
-			view_.setIndexWidget(index, movieLabel);
+			m_view.setIndexWidget(index, movieLabel);
 		}
 	}
 }

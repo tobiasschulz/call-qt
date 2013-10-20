@@ -12,6 +12,8 @@
 
 #include "id.h"
 #include "thread.h"
+#include "contact.h"
+#include "contactlist.h"
 
 class DnsCache: public QObject, public ID
 {
@@ -30,8 +32,8 @@ public:
 		HOSTNAME, ADDRESS
 	};
 
-	QHostInfo lookup(QString host, LookupMode mode = BLOCK_IF_NEEDED);
-	QString lookup(QString host, HostInfo preferred, LookupMode mode = BLOCK_IF_NEEDED);
+	QHostInfo lookup(QString host, LookupMode mode = BLOCK_IF_NEEDED, const Host* relatedHost = 0);
+	QString lookup(QString host, HostInfo preferred, LookupMode mode = BLOCK_IF_NEEDED, const Host* relatedHost = 0);
 	QHash<QString, QHostInfo> lookup(QStringList hosts, LookupMode mode = BLOCK_IF_NEEDED);
 	QStringList lookup(QStringList hosts, HostInfo preferred, LookupMode mode = BLOCK_IF_NEEDED);
 	bool isCached(QString host);

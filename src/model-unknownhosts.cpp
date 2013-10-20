@@ -30,10 +30,12 @@ QVariant UnknownHosts::data(const QModelIndex& index, int role) const
 	if (index.isValid() && index.row() < UnknownHostList()->size()) {
 		QString hostname = UnknownHostList()->get(index.row());
 
-		if (role == Qt::DisplayRole) {
+		if (role == Qt::TextColorRole) {
+			return QColor(Qt::darkGray);
+		} else if (role == Qt::DisplayRole && index.column() == 1) {
 			QVariant value = hostname;
 			return value;
-		} else if (role == Qt::DecorationRole) {
+		} else if (role == Qt::DecorationRole && index.column() == 0) {
 			List::Hosts::HostStateSet states = HostStates()->hostState(hostname);
 			if (states.contains(List::Hosts::CONNECTING) || states.contains(List::Hosts::DNS_LOOKUP)) {
 				return qVariantFromValue(Config::instance()->movie("reload", "gif"));
@@ -41,8 +43,6 @@ QVariant UnknownHosts::data(const QModelIndex& index, int role) const
 			} else {
 				return Config::instance()->icon("user-disabled");
 			}
-		} else if (role == Qt::TextColorRole) {
-			return QColor(Qt::darkGray);
 		} else {
 			return QVariant();
 		}

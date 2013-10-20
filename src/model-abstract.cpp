@@ -20,7 +20,7 @@ int Abstract::rowCount(const QModelIndex& parent) const
 
 int Abstract::columnCount(const QModelIndex& parent) const
 {
-	return !parent.isValid() ? 1 : 0;
+	return !parent.isValid() ? 2 : 0;
 }
 
 QModelIndex Abstract::index(int row, int column, const QModelIndex& parent) const
