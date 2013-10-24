@@ -40,7 +40,7 @@
      </property>
     </widget>
    </item>
-   <item row="0" column="2" colspan="2">
+   <item row="0" column="2">
     <spacer name="horizontalSpacer">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
@@ -52,6 +52,13 @@
       </size>
      </property>
     </spacer>
+   </item>
+   <item row="0" column="3">
+    <widget class="QCheckBox" name="actionShowStats">
+     <property name="text">
+      <string>show stats</string>
+     </property>
+    </widget>
    </item>
    <item row="1" column="0" colspan="4">
     <widget class="QScrollArea" name="scrollArea">
@@ -70,7 +77,7 @@
         <x>0</x>
         <y>0</y>
         <width>382</width>
-        <height>224</height>
+        <height>212</height>
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout">
@@ -123,6 +130,7 @@
   <zorder>callbutton_start</zorder>
   <zorder>horizontalSpacer</zorder>
   <zorder>callbutton_stop</zorder>
+  <zorder>actionShowStats</zorder>
  </widget>
  <resources/>
  <connections/>

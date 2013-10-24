@@ -87,8 +87,19 @@ QString Host::displayname() const
 	} else if (m_hostname_state == INITIAL) {
 		return m_hostname;
 	} else {
-		return "FUCK";
+		return "";
 	}
+}
+QStringList Host::displaynames() const
+{
+	QStringList names;
+	if (m_address_state != INVALID && m_address.toString().size() != 0) {
+		names << m_address.toString();
+	}
+	if (m_hostname_state != INVALID && m_hostname.size() != 0) {
+		names << m_hostname;
+	}
+	return names;
 }
 QString Host::hostname() const
 {
@@ -161,24 +172,30 @@ void Host::lookupHostname()
 }
 void Host::lookupHostname(QString* hostname, FieldState* state) const
 {
-	QHostInfo info = DnsCache::instance()->lookup(m_address.toString(), DnsCache::BLOCK_IF_NEEDED, this);
-
-	if (info.hostName().size() > 0) {
-		*hostname = info.hostName();
-		*state = LOOKED_UP;
-		// log.debug("lookupAddress(%1) = %2", m_address.toString(), m_hostname);
-	} else {
+	if (m_address_state == INVALID || m_address.toString().size() == 0) {
 		*hostname = INVALID_HOSTNAME;
 		*state = INVALID;
-		log.debug("lookupHostname(%1) failed! no hostname found!", m_address.toString());
+	} else {
+		QHostInfo info = DnsCache::instance()->lookup(m_address.toString(), DnsCache::CACHE_ONLY, this);
+
+		if (info.hostName().size() > 0) {
+			*hostname = info.hostName();
+			*state = LOOKED_UP;
+			// log.debug("lookupAddress(%1) = %2", m_address.toString(), m_hostname);
+		} else {
+			*hostname = INVALID_HOSTNAME;
+			*state = INVALID;
+			log.debug("lookupHostname(%1) failed! no hostname found!", m_address.toString());
+		}
 	}
 }
 
 QString Host::toString(PortFormat showPort, HostFormat hostFormat) const
 {
-	QString formattedHost = hostFormat == SHOW_HOSTNAME ? hostname() : address().toString();
+	QString formattedHost = hostFormat == SHOW_HOSTNAME ? displayname() : address().toString();
 	if (isLoopback())
-		return hostFormat == SHOW_HOSTNAME ? "loopback device" : "loopback";
+		return (hostFormat == SHOW_HOSTNAME ? "loopback device" : "loopback") + QString(" (") + formattedHost + ":"
+				+ QString::number(m_port) + ")";
 	else if (m_port == Config::instance()->DEFAULT_PORT && showPort == SHOW_PORT_ONLY_UNUSUAL)
 		return formattedHost;
 	else
@@ -301,9 +318,9 @@ QString Contact::toString() const
 {
 	return m_user + "@" + m_host.toString();
 	if (m_host.port() == Config::instance()->DEFAULT_PORT)
-		return m_user + "@" + hostname();
+		return m_user + "@" + displayname();
 	else
-		return m_user + "@" + hostname() + ":" + QString::number(m_host.port());
+		return m_user + "@" + displayname() + ":" + QString::number(m_host.port());
 }
 QString Contact::id() const
 {

@@ -31,12 +31,14 @@ public:
 	static Tabs* tabs();
 
 	void show();
+	void init();
 	void resizeEvent(QResizeEvent* event);
 
 signals:
 	void shown();
 	void volumeChangedInput(qreal volume);
 	void volumeChangedOutput(qreal volume);
+	void showOfflineContacts(bool show);
 
 public slots:
 	void onContactSelected(const QModelIndex & index);
@@ -61,6 +63,7 @@ public slots:
 	void onMenuAudioDevices();
 	void onMenuAbout();
 	void onMenuAboutQt();
+	void onMenuShowOfflineContacts(bool show);
 
 private:
 	explicit Main(QWidget* parent = 0);

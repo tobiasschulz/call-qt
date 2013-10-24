@@ -61,7 +61,7 @@ void Hosts::addSignals(Connection* connection)
 void Hosts::addHostState(Host host, HostState state)
 {
 	if (!m_hoststate[host].contains(state)) {
-		log.debug("addHostState: %1, %2", Log::print(host), state);
+		//log.debug("addHostState: %1, %2", Log::print(host), state);
 		m_hoststate[host] << state;
 		emit hostStateChanged(host);
 	}
@@ -70,7 +70,7 @@ void Hosts::addHostState(Host host, HostState state)
 void Hosts::removeHostState(Host host, HostState state)
 {
 	if (m_hoststate[host].contains(state)) {
-		log.debug("removeHostState: %1, %2", Log::print(host), state);
+		//log.debug("removeHostState: %1, %2", Log::print(host), state);
 		m_hoststate[host].remove(state);
 		emit hostStateChanged(host);
 	}
@@ -86,7 +86,7 @@ Hosts::HostStateSet Hosts::hostState(QString hostname)
 	HostStateSet state;
 	foreach (const Host& host, m_hoststate.keys())
 	{
-		if (hostname == host.hostname() || hostname == host.address().toString()) {
+		if (host.displaynames().contains(hostname)) {
 			state.unite(m_hoststate[host]);
 		}
 	}

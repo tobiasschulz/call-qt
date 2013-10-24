@@ -18,6 +18,11 @@ Main* Main::m_instance;
 Main::Main(QWidget* parent)
 		: QMainWindow(parent), ui(new Ui::Main), m_tabs(0), m_contactmodel(0), m_terminal(0), m_statsVisible(false)
 {
+	m_audiodevices = new AudioDevices;
+}
+
+void Main::init()
+{
 	ui->setupUi(this);
 	m_tabs = new Tabs(ui->tabs);
 	QObject::connect(m_tabs, &Tabs::tabTitleChanged, this, &Main::onTabTitleChanged);
@@ -42,6 +47,8 @@ Main::Main(QWidget* parent)
 	ui->contactlist->horizontalHeader()->setDefaultSectionSize(fontMetrics().lineSpacing() + 5);
 	ui->contactlist->setSelectionBehavior(QAbstractItemView::SelectRows);
 
+	QObject::connect(ui->actionShowOfflineContacts, &QAction::toggled, this, &Main::onMenuShowOfflineContacts);
+
 	// terminal
 	m_terminal = new Terminal;
 	bool showTerminal = settings.value("window/show-terminal", true).toBool();
@@ -51,14 +58,10 @@ Main::Main(QWidget* parent)
 
 	// stats
 	ui->stats->hide();
-	bool showStats = settings.value("window/show-stats", true).toBool();
-	QObject::connect(ui->actionShowStats, &QAction::toggled, this, &Main::onShowStatsToggled);
-	ui->actionShowStats->setChecked(showStats);
 	QObject::connect(ui->volumeInput, &QSlider::valueChanged, this, &Main::onSliderVolumeInput);
 	QObject::connect(ui->volumeOutput, &QSlider::valueChanged, this, &Main::onSliderVolumeOutput);
 
 	// audio devices settings
-	m_audiodevices = new AudioDevices;
 	QObject::connect(ui->actionAudioDevices, &QAction::triggered, this, &Main::onMenuAudioDevices);
 
 	// menu
@@ -75,12 +78,15 @@ Main::Main(QWidget* parent)
 
 Main* Main::instance()
 {
-	static QMutex mutex;
-	if (!m_instance) {
+	bool initializing = !m_instance;
+	if (initializing) {
+		static QMutex mutex;
 		mutex.lock();
-		if (!m_instance)
-			m_instance = new Main;
+		m_instance = new Main;
 		mutex.unlock();
+	}
+	if (initializing) {
+		m_instance->init();
 	}
 	return m_instance;
 }
@@ -155,7 +161,9 @@ void Main::onShowStatsToggled(bool checked)
 void Main::showStats()
 {
 	m_statsVisible = true;
-	ui->stats->setVisible(m_statsVisible && ui->actionShowStats->isChecked());
+	QSettings settings;
+	bool showStats = settings.value("window/show-stats", true).toBool();
+	ui->stats->setVisible(m_statsVisible && showStats);
 }
 
 void Main::hideStats()
@@ -181,7 +189,7 @@ void Main::onStatsDurationInput(int ms)
 void Main::onStatsDurationOutput(int ms)
 {
 	QTime time(ms / 1000 / 60 / 60, (ms / 1000 / 60) % 60, (ms / 1000) % 60, ms % 1000);
-	//	time.addMSecs(ms);
+//	time.addMSecs(ms);
 	log.debug("time: %1, ms=%2", time.toString("HH:mm:ss"), ms);
 	ui->statsDurationOutput->setTime(time);
 }
@@ -256,3 +264,7 @@ void Main::onSliderVolumeOutput(int value)
 	emit volumeChangedOutput((qreal) value / 100);
 }
 
+void Main::onMenuShowOfflineContacts(bool show)
+{
+	emit showOfflineContacts(show);
+}

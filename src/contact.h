@@ -25,6 +25,7 @@ public:
 	QString hostname();
 	quint16 port() const;
 	QString displayname() const;
+	QStringList displaynames() const;
 
 	bool isReachable() const;
 	bool isUnreachable() const;

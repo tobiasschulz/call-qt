@@ -84,7 +84,7 @@ QList<QString> UnknownHosts::toList() const
 
 void UnknownHosts::onHostStateChanged(Host host)
 {
-	log.debug("onHostStateChanged: %1", Log::print(host));
+	//log.debug("onHostStateChanged: %1", Log::print(host));
 	QList<int> changedUnknownHosts;
 	{
 		QMutexLocker locker(&m_lock);

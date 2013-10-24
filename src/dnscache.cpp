@@ -26,6 +26,7 @@ DnsCache* DnsCache::instance()
 DnsCache::DnsCache(QObject* parent)
 		: QObject(parent), m_hash(), m_mutex()
 {
+	QObject::connect(this, &DnsCache::delayedLookup, this, &DnsCache::onDelayedLookup);
 }
 
 DnsCache::~DnsCache()
@@ -58,11 +59,24 @@ QHostInfo DnsCache::lookup(QString host, LookupMode mode, const Host* relatedHos
 			m_hash[host] = info;
 			return m_hash[host];
 		} else {
+			emit delayedLookup(host);
 			return QHostInfo();
 		}
 	} else {
 		return QHostInfo();
 	}
+}
+
+void DnsCache::onDelayedLookup(QString host)
+{
+	QHostInfo info = QHostInfo::fromName(host);
+	QString addressStr = info.addresses().size() > 0 ? info.addresses().first().toString() : "";
+	QString hostname = info.hostName();
+	log.debug("asynchronous lookup: %1 = %2", addressStr, hostname);
+	if (addressStr.size() > 0)
+		m_hash[addressStr] = info;
+	m_hash[hostname] = info;
+	m_hash[host] = info;
 }
 
 QString DnsCache::lookup(QString host, HostInfo preferred, LookupMode mode, const Host* relatedHost)

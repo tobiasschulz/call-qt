@@ -1,18 +1,23 @@
+#include <QAction>
+
 #include "model-unknownhosts.h"
 #include "contactlist.h"
 #include "contactscanner.h"
 #include "config.h"
 #include "moviedelegate.h"
+#include "maingui.h"
 
 using namespace Model;
 
 UnknownHosts::UnknownHosts(Abstract* parentmodel, QObject* parent)
-		: Abstract(parentmodel, parent)
+		: Abstract(parentmodel, parent), showOfflineContacts(true)
 {
 	List::UnknownHosts* unknownhosts = UnknownHostList();
 	QObject::connect(unknownhosts, &List::UnknownHosts::beginListReset, this, &UnknownHosts::beginSetItems);
 	QObject::connect(unknownhosts, &List::UnknownHosts::endListReset, this, &UnknownHosts::endSetItems);
 	QObject::connect(unknownhosts, &List::UnknownHosts::itemChanged, this, &UnknownHosts::onStateChanged);
+
+	QObject::connect(Main::instance(), &Main::showOfflineContacts, this, &UnknownHosts::onShowOfflineContacts);
 }
 
 QString UnknownHosts::id() const
@@ -22,7 +27,16 @@ QString UnknownHosts::id() const
 
 int UnknownHosts::size() const
 {
-	return UnknownHostList()->size();
+	return showOfflineContacts ? UnknownHostList()->size() : 0;
+}
+
+void UnknownHosts::onShowOfflineContacts(bool show)
+{
+	beginSetItems(size(), 0);
+	endSetItems();
+	showOfflineContacts = show;
+	beginSetItems(0, size());
+	endSetItems();
 }
 
 QVariant UnknownHosts::data(const QModelIndex& index, int role) const

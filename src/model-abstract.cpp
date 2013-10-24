@@ -75,7 +75,7 @@ void Abstract::changeItems(int start, int end)
 
 void Abstract::onStateChanged(int i)
 {
-	log.debug("onStateChanged: %1", i);
+	//log.debug("onStateChanged: %1", i);
 	changeItems(i, i);
 }
 

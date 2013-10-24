@@ -1,6 +1,7 @@
 #include "contactmodel.h"
 #include "model-contacts.h"
 #include "model-unknownhosts.h"
+#include "maingui.h"
 
 typedef Model::Abstract AbstractModel;
 

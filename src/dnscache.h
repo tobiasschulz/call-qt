@@ -38,6 +38,12 @@ public:
 	QStringList lookup(QStringList hosts, HostInfo preferred, LookupMode mode = BLOCK_IF_NEEDED);
 	bool isCached(QString host);
 
+signals:
+	void delayedLookup(QString host);
+
+public slots:
+	void onDelayedLookup(QString host);
+
 private:
 	explicit DnsCache(QObject* parent = 0);
 	DnsCache(const DnsCache &); // hide copy constructor

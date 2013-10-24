@@ -1,12 +1,14 @@
 #include <QMutex>
 #include <QMutexLocker>
 #include <QTimer>
+#include <QSettings>
 
 #include "ui_chattab.h"
 #include "chattab.h"
 #include "contactlist.h"
 #include "call.h"
 #include "config.h"
+#include "maingui.h"
 
 const QString ChatTab::BEFORE_MESSAGE = "<div style='font-family: monospace; font-size: 9pt;'>";
 const QString ChatTab::AFTER_MESSAGE = "</div>";
@@ -56,6 +58,12 @@ ChatTab::ChatTab(const Contact& contact)
 	ui->callbutton_stop->hide();
 	QObject::connect(Call::instance(m_contact), &Call::started, this, &ChatTab::onCallStarted);
 	QObject::connect(Call::instance(m_contact), &Call::stopped, this, &ChatTab::onCallStopped);
+
+	// stats-related signals
+	QSettings settings;
+	bool showStats = settings.value("window/show-stats", true).toBool();
+	QObject::connect(ui->actionShowStats, &QCheckBox::toggled, Main::instance(), &Main::onShowStatsToggled);
+	ui->actionShowStats->setChecked(showStats);
 }
 
 ChatTab::~ChatTab()

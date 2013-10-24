@@ -51,8 +51,8 @@ QString color(const QString& text, const QColor& color)
 
 void Terminal::newLogMessage(ID::Verbosity type, QString thread, QString message)
 {
-	if (messages.size() > 5000) {
-		messages = messages.mid(2500);
+	if (messages.size() > 25000) {
+		messages = messages.mid(20000);
 		reprintLogMessages();
 	}
 	Message msg(type, thread, message);
