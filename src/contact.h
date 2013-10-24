@@ -94,6 +94,7 @@ public:
 	quint16 port() const;
 	QString displayname() const;
 
+	void invalidate();
 	QString toString() const;
 	QString id() const;
 	QString print(PrintFormat format = PRINT_NAME_AND_DATA) const;

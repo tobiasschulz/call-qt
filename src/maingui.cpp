@@ -2,6 +2,7 @@
 #include <QMessageBox>
 #include <QVariant>
 #include <QSettings>
+#include <QInputDialog>
 
 #include <cmath>
 
@@ -49,6 +50,7 @@ void Main::init()
 
 	QObject::connect(ui->actionShowOfflineContacts, &QAction::toggled, this, &Main::onMenuShowOfflineContacts);
 	QObject::connect(ui->actionShowConnections, &QAction::toggled, this, &Main::onMenuShowConnections);
+	QObject::connect(ui->actionAddContact, &QAction::triggered, this, &Main::onMenuAddContact);
 
 	// terminal
 	m_terminal = new Terminal;
@@ -273,4 +275,30 @@ void Main::onMenuShowOfflineContacts(bool show)
 void Main::onMenuShowConnections(bool show)
 {
 	emit showConnections(show);
+}
+
+void Main::onMenuAddContact()
+{
+	bool ok;
+	QString text = QInputDialog::getText(this, tr("Add Contact"), tr("Host name or IP address:"), QLineEdit::Normal,
+			"", &ok);
+	if (ok && !text.isEmpty()) {
+		QString hostname;
+		quint16 port = Config::instance()->DEFAULT_PORT;
+		QStringList splitted = text.split(':');
+		if (splitted.size() == 2) {
+			hostname = splitted[0];
+			bool ok;
+			port = splitted[1].toUInt(&ok);
+			if (!ok) {
+				port = Config::instance()->DEFAULT_PORT;
+			}
+		} else if (splitted.size() == 1) {
+			hostname = splitted[0];
+		}
+		if (hostname.size() > 0) {
+			Host host(hostname, port);
+			Config::instance()->addHost(host, Config::KNOWN_HOST);
+		}
+	}
 }

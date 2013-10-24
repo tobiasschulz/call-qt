@@ -86,6 +86,7 @@ void ServerRequest::onChatConnection()
 void ServerRequest::onCallConnection()
 {
 	log.debug("onCallConnection()");
+	emit addContactTab(m_connection->contact());
 	//openChatTab();
 
 	Call* call = Call::instance(m_connection->contact());

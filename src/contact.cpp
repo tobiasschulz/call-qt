@@ -5,6 +5,7 @@
 #include "contact.h"
 #include "contactlist.h"
 #include "networkutil.h"
+#include "systemutil.h"
 #include "dnscache.h"
 #include "config.h"
 
@@ -256,6 +257,9 @@ Contact::Contact(QString user, QString computername, Host host, QObject* parent)
 	if (user.size() == 0) {
 		m_user = INVALID_USER;
 	}
+	if (host.isLoopback() && user.toLower() != SystemUtil::instance()->getUserName().toLower()) {
+		invalidate();
+	}
 }
 Contact::Contact(QObject * parent)
 		: QObject(parent), m_user(INVALID_USER), m_computername(), m_host()
@@ -267,6 +271,12 @@ Contact::Contact(const Contact& other)
 	m_user = other.m_user;
 	m_computername = other.m_computername;
 	m_host = other.m_host;
+}
+void Contact::invalidate()
+{
+	m_user = INVALID_USER;
+	m_computername = "";
+	m_host = Host::INVALID_HOST;
 }
 
 Contact& Contact::operator=(const Contact& other)

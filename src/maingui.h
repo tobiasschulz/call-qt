@@ -66,6 +66,7 @@ public slots:
 	void onMenuAboutQt();
 	void onMenuShowOfflineContacts(bool show);
 	void onMenuShowConnections(bool show);
+	void onMenuAddContact();
 
 private:
 	explicit Main(QWidget* parent = 0);
