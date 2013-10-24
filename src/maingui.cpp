@@ -48,6 +48,7 @@ void Main::init()
 	ui->contactlist->setSelectionBehavior(QAbstractItemView::SelectRows);
 
 	QObject::connect(ui->actionShowOfflineContacts, &QAction::toggled, this, &Main::onMenuShowOfflineContacts);
+	QObject::connect(ui->actionShowConnections, &QAction::toggled, this, &Main::onMenuShowConnections);
 
 	// terminal
 	m_terminal = new Terminal;
@@ -267,4 +268,9 @@ void Main::onSliderVolumeOutput(int value)
 void Main::onMenuShowOfflineContacts(bool show)
 {
 	emit showOfflineContacts(show);
+}
+
+void Main::onMenuShowConnections(bool show)
+{
+	emit showConnections(show);
 }

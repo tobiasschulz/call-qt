@@ -51,7 +51,8 @@ QVariant UnknownHosts::data(const QModelIndex& index, int role) const
 			return value;
 		} else if (role == Qt::DecorationRole && index.column() == 0) {
 			List::Hosts::HostStateSet states = HostStates()->hostState(hostname);
-			if (states.contains(List::Hosts::CONNECTING) || states.contains(List::Hosts::DNS_LOOKUP)) {
+			if (showConnections
+					&& (states.contains(List::Hosts::CONNECTING) || states.contains(List::Hosts::DNS_LOOKUP))) {
 				return qVariantFromValue(Config::instance()->movie("reload", "gif"));
 				//return Config::instance()->icon("reload", "gif");
 			} else {

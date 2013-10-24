@@ -1,10 +1,12 @@
 #include "model-abstract.h"
+#include "maingui.h"
 
 using namespace Model;
 
 Abstract::Abstract(Abstract* parentmodel, QObject* parent)
-		: QAbstractItemModel(parent), parentmodel(parentmodel)
+		: QAbstractItemModel(parent), parentmodel(parentmodel), showConnections(true)
 {
+	QObject::connect(Main::instance(), &Main::showConnections, this, &Abstract::onShowConnections);
 }
 
 int Abstract::offset(Abstract* submodel) const
@@ -99,3 +101,9 @@ void Abstract::endSetItems()
 		endInsertItems();
 	}
 }
+
+void Abstract::onShowConnections(bool show)
+{
+	showConnections = show;
+}
+

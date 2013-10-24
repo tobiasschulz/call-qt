@@ -44,7 +44,7 @@ QVariant Contacts::data(const QModelIndex& index, int role) const
 			return value;
 		} else if (role == Qt::DecorationRole && index.column() == 0) {
 			List::Hosts::HostStateSet states = HostStates()->hostState(contact.host());
-			if (states.contains(List::Hosts::CONNECTING) || states.contains(List::Hosts::DNS_LOOKUP)) {
+			if (showConnections && (states.contains(List::Hosts::CONNECTING) || states.contains(List::Hosts::DNS_LOOKUP))) {
 				return qVariantFromValue(Config::instance()->movie("reload", "gif"));
 			} else if (states.contains(List::Hosts::HOST_ONLINE)) {
 				return Config::instance()->icon("user-available");

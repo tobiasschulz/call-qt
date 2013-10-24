@@ -39,6 +39,7 @@ signals:
 	void volumeChangedInput(qreal volume);
 	void volumeChangedOutput(qreal volume);
 	void showOfflineContacts(bool show);
+	void showConnections(bool show);
 
 public slots:
 	void onContactSelected(const QModelIndex & index);
@@ -64,6 +65,7 @@ public slots:
 	void onMenuAbout();
 	void onMenuAboutQt();
 	void onMenuShowOfflineContacts(bool show);
+	void onMenuShowConnections(bool show);
 
 private:
 	explicit Main(QWidget* parent = 0);

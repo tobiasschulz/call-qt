@@ -31,6 +31,8 @@ namespace Model
 		void endSetItems();
 		void onStateChanged(int i);
 
+		void onShowConnections(bool show);
+
 	private:
 		void beginInsertItems(int start, int end);
 		void endInsertItems();
@@ -40,6 +42,7 @@ namespace Model
 
 	protected:
 		QPointer<Abstract> parentmodel;
+		bool showConnections;
 	};
 }
 
