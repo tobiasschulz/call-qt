@@ -13,10 +13,11 @@
 #include "tabs.h"
 #include "terminal.h"
 #include "audiodevices.h"
+#include "settings-contactlist.h"
 
 namespace Ui
 {
-class Main;
+	class Main;
 }
 
 class Main: public QMainWindow, public ID
@@ -34,12 +35,12 @@ public:
 	void init();
 	void resizeEvent(QResizeEvent* event);
 
+	Settings* settingsContactList();
+
 signals:
 	void shown();
 	void volumeChangedInput(qreal volume);
 	void volumeChangedOutput(qreal volume);
-	void showOfflineContacts(bool show);
-	void showConnections(bool show);
 
 public slots:
 	void onContactSelected(const QModelIndex & index);
@@ -62,10 +63,9 @@ public slots:
 
 	void onMenuShowTerminal();
 	void onMenuAudioDevices();
+	void onMenuSettingsContactList();
 	void onMenuAbout();
 	void onMenuAboutQt();
-	void onMenuShowOfflineContacts(bool show);
-	void onMenuShowConnections(bool show);
 	void onMenuAddContact();
 
 private:
@@ -74,13 +74,14 @@ private:
 	Main& operator=(const Main &); // hide assign op
 	// we leave just the declarations, so the compiler will warn us
 	// if we try to use those two functions by accident
-	static Main* m_instance;
+	static QPointer<Main> m_instance;
 
 	Ui::Main* ui;
-	Tabs* m_tabs;
-	ContactModel* m_contactmodel;
-	Terminal* m_terminal;
-	AudioDevices* m_audiodevices;
+	QPointer<Tabs> m_tabs;
+	QPointer<ContactModel> m_contactmodel;
+	QPointer<Terminal> m_terminal;
+	QPointer<AudioDevices> m_audiodevices;
+	QPointer<SettingsContactList> m_settings_contactlist;
 	bool m_statsVisible;
 };
 

@@ -14,19 +14,20 @@
 #include "audioinfo.h"
 #include "moviedelegate.h"
 
-Main* Main::m_instance;
+QPointer<Main> Main::m_instance;
 
 Main::Main(QWidget* parent)
 		: QMainWindow(parent), ui(new Ui::Main), m_tabs(0), m_contactmodel(0), m_terminal(0), m_statsVisible(false)
 {
 	m_audiodevices = new AudioDevices;
+	m_settings_contactlist = new SettingsContactList;
 }
 
 void Main::init()
 {
 	ui->setupUi(this);
 	m_tabs = new Tabs(ui->tabs);
-	QObject::connect(m_tabs, &Tabs::tabTitleChanged, this, &Main::onTabTitleChanged);
+	QObject::connect(m_tabs.data(), &Tabs::tabTitleChanged, this, &Main::onTabTitleChanged);
 	onTabTitleChanged(QApplication::applicationName());
 
 	// settings
@@ -48,8 +49,6 @@ void Main::init()
 	ui->contactlist->horizontalHeader()->setDefaultSectionSize(fontMetrics().lineSpacing() + 5);
 	ui->contactlist->setSelectionBehavior(QAbstractItemView::SelectRows);
 
-	QObject::connect(ui->actionShowOfflineContacts, &QAction::toggled, this, &Main::onMenuShowOfflineContacts);
-	QObject::connect(ui->actionShowConnections, &QAction::toggled, this, &Main::onMenuShowConnections);
 	QObject::connect(ui->actionAddContact, &QAction::triggered, this, &Main::onMenuAddContact);
 
 	// terminal
@@ -66,6 +65,7 @@ void Main::init()
 
 	// audio devices settings
 	QObject::connect(ui->actionAudioDevices, &QAction::triggered, this, &Main::onMenuAudioDevices);
+	QObject::connect(ui->actionSettingsContactList, &QAction::triggered, this, &Main::onMenuSettingsContactList);
 
 	// menu
 	QObject::connect(ui->actionReloadContacts, &QAction::triggered, ContactList(), &List::Contacts::onResetContacts);
@@ -152,6 +152,11 @@ void Main::onMenuShowTerminal()
 void Main::onMenuAudioDevices()
 {
 	m_tabs->openTab(m_audiodevices);
+}
+
+void Main::onMenuSettingsContactList()
+{
+	m_tabs->openTab(m_settings_contactlist);
 }
 
 void Main::onShowStatsToggled(bool checked)
@@ -267,21 +272,11 @@ void Main::onSliderVolumeOutput(int value)
 	emit volumeChangedOutput((qreal) value / 100);
 }
 
-void Main::onMenuShowOfflineContacts(bool show)
-{
-	emit showOfflineContacts(show);
-}
-
-void Main::onMenuShowConnections(bool show)
-{
-	emit showConnections(show);
-}
-
 void Main::onMenuAddContact()
 {
 	bool ok;
-	QString text = QInputDialog::getText(this, tr("Add Contact"), tr("Host name or IP address:"), QLineEdit::Normal,
-			"", &ok);
+	QString text = QInputDialog::getText(this, tr("Add Contact"), tr("Host name or IP address:"), QLineEdit::Normal, "",
+			&ok);
 	if (ok && !text.isEmpty()) {
 		QString hostname;
 		quint16 port = Config::instance()->DEFAULT_PORT;
@@ -301,4 +296,9 @@ void Main::onMenuAddContact()
 			Config::instance()->addHost(host, Config::KNOWN_HOST);
 		}
 	}
+}
+
+Settings* Main::settingsContactList()
+{
+	return m_settings_contactlist->settings();
 }

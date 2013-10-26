@@ -14,7 +14,11 @@ const QString Host::INVALID_HOSTNAME;
 const quint16 Host::INVALID_PORT = 0;
 const Host Host::INVALID_HOST;
 
-const QString Contact::INVALID_USER("nobody");
+const QString User::INVALID_USERNAME;
+const QString User::INVALID_COMPUTERNAME;
+const User User::INVALID_USER;
+QHash<User, QList<Host>> User::m_hosts;
+
 const Contact Contact::INVALID_CONTACT;
 
 Host::Host(QHostAddress address, quint16 port, QObject* parent)
@@ -140,19 +144,13 @@ bool Host::isLoopback() const
 }
 bool Host::isDynamicIP() const
 {
-	return !isLocalIP() && !isLanIP();
+	return scope() == WAN;
 }
-bool Host::isWanIP() const
+Host::HostScope Host::scope() const
 {
-	return !isLocalIP() && !isLanIP();
-}
-bool Host::isLanIP() const
-{
-	return m_address.toString().startsWith("10.") || m_address.toString().startsWith("192.168.");
-}
-bool Host::isLocalIP() const
-{
-	return m_address.toString().startsWith("127.");
+	return m_address.toString().startsWith("127.") ? LOCAL :
+			(m_address.toString().startsWith("10.") || m_address.toString().startsWith("192.168.")) ? LAN : WAN;
+
 }
 void Host::lookupAddress()
 {
@@ -251,57 +249,153 @@ Host Host::deserialize(QString _str)
 	return Host::INVALID_HOST;
 }
 
-Contact::Contact(QString user, QString computername, Host host, QObject* parent)
-		: QObject(parent), m_user(user), m_computername(computername), m_host(host)
+User::User(QString username, QString computername, QObject* parent)
+		: QObject(parent), m_username(username), m_computername(computername)
 {
-	if (user.size() == 0) {
-		m_user = INVALID_USER;
+	if (username.size() == 0) {
+		m_username = INVALID_USERNAME;
 	}
-	if (host.isLoopback() && user.toLower() != SystemUtil::instance()->getUserName().toLower()) {
+}
+User::User(QObject * parent)
+		: QObject(parent), m_username(INVALID_USERNAME), m_computername()
+{
+}
+User::User(const User& other)
+		: QObject(other.parent())
+{
+	m_username = other.m_username;
+	m_computername = other.m_computername;
+}
+
+User& User::operator=(const User& other)
+{
+	m_username = QString(other.m_username);
+	m_computername = QString(other.m_computername);
+	return *this;
+}
+bool User::operator==(const User& other) const
+{
+	return m_username == other.m_username && m_computername == other.m_computername;
+}
+bool User::operator!=(const User& other) const
+{
+	return !(*this == other);
+}
+
+QString User::username() const
+{
+	return m_username;
+}
+QString User::computername() const
+{
+	return m_computername;
+}
+
+QList<Host> User::hosts() const
+{
+	return m_hosts[*this];
+}
+void User::addHost(const Host& host) const
+{
+	QList<Host> hosts = m_hosts[*this];
+	if (!hosts.contains(host)) {
+		hosts << host;
+		qSort(hosts.begin(), hosts.end(), compareHosts);
+		m_hosts[*this] = hosts;
+	}
+}
+
+QString User::toString() const
+{
+	return m_username + "@" + m_computername;
+}
+QString User::id() const
+{
+	return "User<" + m_username + "@" + m_computername + ">";
+}
+QString User::print(PrintFormat format) const
+{
+	QString data(m_username + "@" + m_computername);
+	if (format == PRINT_ONLY_NAME)
+		return "User";
+	else if (format == PRINT_ONLY_DATA)
+		return data;
+	else
+		return "User " + data;
+}
+QString User::serialize() const
+{
+	return "User<" + m_username + "@" + m_computername + ">";
+}
+User User::deserialize(QString _str)
+{
+	StaticID id("User::fromId");
+	if (_str.startsWith("User<") && _str.endsWith(">")) {
+		QString str = _str.mid(5);
+		str = str.left(str.size() - 1);
+		QStringList parts = str.split(QRegExp("[@=]"));
+		if (parts.size() == 2) {
+			User obj = User(parts[0], parts[1]);
+			id.logger().debug("deserialization successful: %1 = %2", _str, Log::print(obj));
+			return obj;
+		}
+	}
+	id.logger().debug("deserialization failed: %1", _str);
+	return User::INVALID_USER;
+}
+
+Contact::Contact(User user, Host host, QObject* parent)
+		: QObject(parent), m_user(user), m_host(host)
+{
+	if (host.isLoopback() && user.username().toLower() != SystemUtil::instance()->getUserName().toLower()) {
 		invalidate();
+	} else {
+		user.addHost(host);
 	}
 }
 Contact::Contact(QObject * parent)
-		: QObject(parent), m_user(INVALID_USER), m_computername(), m_host()
+		: QObject(parent), m_user(User::INVALID_USER), m_host()
 {
 }
 Contact::Contact(const Contact& other)
 		: QObject(other.parent())
 { //, m_user(other.m_user), m_host(other.m_host), m_port(other.m_port) {
 	m_user = other.m_user;
-	m_computername = other.m_computername;
 	m_host = other.m_host;
-}
-void Contact::invalidate()
-{
-	m_user = INVALID_USER;
-	m_computername = "";
-	m_host = Host::INVALID_HOST;
 }
 
 Contact& Contact::operator=(const Contact& other)
 {
-	m_user = QString(other.m_user);
-	m_computername = QString(other.m_computername);
+	m_user = User(other.m_user);
 	m_host = Host(other.m_host);
 	return *this;
 }
 bool Contact::operator==(const Contact& other) const
 {
-	return m_user == other.m_user && m_computername == other.m_computername && m_host == other.m_host;
+	return m_user == other.m_user && m_host == other.m_host;
 }
 bool Contact::operator!=(const Contact& other) const
 {
 	return !(*this == other);
 }
 
-QString Contact::user() const
+void Contact::invalidate()
+{
+	m_user = User::INVALID_USER;
+	m_host = Host::INVALID_HOST;
+}
+
+User Contact::user() const
 {
 	return m_user;
 }
+QString Contact::username() const
+{
+	return m_user.username();
+}
 QString Contact::computername() const
 {
-	return m_computername;
+	return m_user.computername();
 }
 Host Contact::host() const
 {
@@ -326,22 +420,22 @@ quint16 Contact::port() const
 
 QString Contact::toString() const
 {
-	return m_user + "@" + m_host.toString();
+	return m_user.print(ID::PRINT_ONLY_DATA) + "=" + m_host.toString();
 	if (m_host.port() == Config::instance()->DEFAULT_PORT)
-		return m_user + "@" + displayname();
+		return m_user.print(ID::PRINT_ONLY_DATA) + "=" + displayname();
 	else
-		return m_user + "@" + displayname() + ":" + QString::number(m_host.port());
+		return m_user.print(ID::PRINT_ONLY_DATA) + "=" + displayname() + ":" + QString::number(m_host.port());
 }
 QString Contact::id() const
 {
 	if (m_host.isLoopback())
-		return "Contact<" + m_user + "@loopback>";
+		return "Contact<" + m_user.print(ID::PRINT_ONLY_DATA) + "=loopback>";
 	else
-		return "Contact<" + m_user + "@" + m_computername + "=" + m_host.print(ID::PRINT_ONLY_DATA) + ">";
+		return "Contact<" + m_user.print(ID::PRINT_ONLY_DATA) + "=" + m_host.print(ID::PRINT_ONLY_DATA) + ">";
 }
 QString Contact::print(PrintFormat format) const
 {
-	QString data(m_user + "@" + m_host.print(ID::PRINT_ONLY_DATA));
+	QString data(m_user.print(ID::PRINT_ONLY_DATA) + "=" + m_host.print(ID::PRINT_ONLY_DATA));
 	if (format == PRINT_ONLY_NAME)
 		return "Contact";
 	else if (format == PRINT_ONLY_DATA)
@@ -351,7 +445,7 @@ QString Contact::print(PrintFormat format) const
 }
 QString Contact::serialize() const
 {
-	return "Contact<" + m_user + "@" + m_computername + "=" + m_host.id() + ">";
+	return "Contact<" + m_user.print(ID::PRINT_ONLY_DATA) + "=" + m_host.id() + ">";
 }
 Contact Contact::deserialize(QString _str)
 {
@@ -359,16 +453,40 @@ Contact Contact::deserialize(QString _str)
 	if (_str.startsWith("Contact<") && _str.endsWith(">")) {
 		QString str = _str.mid(8);
 		str = str.left(str.size() - 1);
-		QStringList parts = str.split(QRegExp("[@=]"));
-		if (parts.size() == 3) {
-			Host host = Host::deserialize(parts[2]);
-			Contact obj = Contact(parts[0], parts[1], host);
+		QStringList parts = str.split(QRegExp("[=]"));
+		if (parts.size() == 2) {
+			Host host = Host::deserialize(parts[1]);
+			User user = User::deserialize(parts[0]);
+			Contact obj = Contact(user, host);
 			id.logger().debug("deserialization successful: %1 = %2", _str, Log::print(obj));
 			return obj;
 		}
 	}
 	id.logger().debug("deserialization failed: %1", _str);
 	return Contact::INVALID_CONTACT;
+}
+
+bool Host::operator>(const Host& other) const
+{
+	return *this < other;
+}
+bool Host::operator<(const Host& other) const
+{
+	if (scope() == other.scope()) {
+		return id() < other.id();
+	} else {
+		return scope() < other.scope();
+	}
+}
+
+bool compareHosts(const Host& left, const Host& right)
+{
+	return left < right;
+}
+
+bool compareUsers(const User& left, const User& right)
+{
+	return left.id() < right.id();
 }
 
 bool compareContacts(const Contact& left, const Contact& right)
@@ -416,21 +534,41 @@ QDataStream & operator>>(QDataStream & in, Host & myObj)
 	return in;
 }
 
+QDataStream& operator<<(QDataStream& out, const User& myObj)
+{
+	out << QString("User") << myObj.username() << myObj.computername();
+	return out;
+}
+QDataStream & operator>>(QDataStream & in, User & myObj)
+{
+	QString username;
+	QString computername;
+	QString type;
+	in >> type;
+	if (type == "User") {
+		in >> username >> computername;
+		myObj = User(username, computername);
+	} else {
+		qDebug() << "Error in deserialization of type User: invalid type '" + type + "'!";
+		myObj = User::INVALID_USER;
+	}
+	return in;
+}
+
 QDataStream& operator<<(QDataStream& out, const Contact& myObj)
 {
-	out << QString("Contact") << myObj.user() << myObj.computername() << myObj.host();
+	out << QString("Contact") << myObj.user() << myObj.host();
 	return out;
 }
 QDataStream & operator>>(QDataStream & in, Contact & myObj)
 {
-	QString user;
-	QString computername;
+	User user;
 	Host host;
 	QString type;
 	in >> type;
 	if (type == "Contact") {
-		in >> user >> computername >> host;
-		myObj = Contact(user, computername, host);
+		in >> user >> host;
+		myObj = Contact(user, host);
 	} else {
 		qDebug() << "Error in deserialization of type Contact: invalid type '" + type + "'!";
 		myObj = Contact::INVALID_CONTACT;
@@ -441,6 +579,11 @@ QDataStream & operator>>(QDataStream & in, Contact & myObj)
 void fromId(QString _str, Host& obj)
 {
 	obj = Host::deserialize(_str);
+}
+
+void fromId(QString _str, User& obj)
+{
+	obj = User::deserialize(_str);
 }
 
 void fromId(QString _str, Contact& obj)

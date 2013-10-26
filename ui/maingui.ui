@@ -631,8 +631,6 @@
     </property>
     <addaction name="actionAddContact"/>
     <addaction name="actionReloadContacts"/>
-    <addaction name="actionShowOfflineContacts"/>
-    <addaction name="actionShowConnections"/>
    </widget>
    <widget class="QMenu" name="menuOptions">
     <property name="title">
@@ -640,6 +638,7 @@
     </property>
     <addaction name="actionShowTerminal"/>
     <addaction name="actionAudioDevices"/>
+    <addaction name="actionSettingsContactList"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -689,26 +688,9 @@
     <string>About Qt</string>
    </property>
   </action>
-  <action name="actionShowOfflineContacts">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="checked">
-    <bool>true</bool>
-   </property>
+  <action name="actionSettingsContactList">
    <property name="text">
-    <string>Show offline contacts</string>
-   </property>
-  </action>
-  <action name="actionShowConnections">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="checked">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Show connections</string>
+    <string>Contact List</string>
    </property>
   </action>
  </widget>

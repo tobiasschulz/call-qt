@@ -92,3 +92,15 @@ Hosts::HostStateSet Hosts::hostState(QString hostname)
 	}
 	return state;
 }
+
+Hosts::HostStateSet Hosts::hostState(QList<Host> hosts)
+{
+	HostStateSet state;
+	foreach (const Host& host, hosts)
+	{
+		if (m_hoststate.contains(host)) {
+			state.unite(m_hoststate[host]);
+		}
+	}
+	return state;
+}

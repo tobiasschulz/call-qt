@@ -28,14 +28,18 @@ SOURCES += \
     src/list-contacts.cpp \
     src/list-hosts.cpp \
     src/list-unknownhosts.cpp \
+    src/list-users.cpp \
 	src/main.cpp \
     src/maingui.cpp \
 	src/model-abstract.cpp \
 	src/model-contacts.cpp \
 	src/model-unknownhosts.cpp \
+	src/model-users.cpp \
     src/moviedelegate.cpp \
     src/networkutil.cpp \
     src/pingclient.cpp \
+    src/settings.cpp \
+    src/settings-contactlist.cpp \
     src/serverrequest.cpp \
     src/server.cpp \
     src/systemutil.cpp \
@@ -63,13 +67,17 @@ HEADERS  += \
     src/list-contacts.h \
     src/list-hosts.h \
     src/list-unknownhosts.h \
+    src/list-users.h \
 	src/maingui.h \
 	src/model-abstract.h \
 	src/model-contacts.h \
 	src/model-unknownhosts.h \
+	src/model-users.h \
     src/moviedelegate.h \
     src/networkutil.h \
     src/pingclient.h \
+    src/settings.h \
+    src/settings-contactlist.h \
     src/serverrequest.h \
     src/server.h \
     src/systemutil.h \
@@ -82,7 +90,8 @@ FORMS    += \
     ui/maingui.ui \
     ui/terminal.ui \
     ui/chattab.ui \
-    ui/audiodevices.ui
+    ui/audiodevices.ui \
+    ui/settings-contactlist.ui
 
 RC_ICONS = img/icon.ico
 
@@ -106,7 +115,7 @@ win32 {
 }
 
 # The application version                                                          ## VERSION
-VERSION = 0.1021                                                                      ## VERSION
+VERSION = 0.1080                                                                      ## VERSION
 # Define the preprocessor macro to get the application version in our application. ## VERSION
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"                                           ## VERSION
-DEFINES += APP_BUILD=\\\"1021\\\"                                             ## VERSION
+DEFINES += APP_BUILD=\\\"1080\\\"                                             ## VERSION

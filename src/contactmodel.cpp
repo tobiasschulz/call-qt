@@ -1,4 +1,5 @@
 #include "contactmodel.h"
+#include "model-users.h"
 #include "model-contacts.h"
 #include "model-unknownhosts.h"
 #include "maingui.h"
@@ -8,6 +9,7 @@ typedef Model::Abstract AbstractModel;
 ContactModel::ContactModel(QObject* parent)
 		: AbstractModel(0, parent), models()
 {
+	models.append(new Model::Users(this, this));
 	models.append(new Model::Contacts(this, this));
 	models.append(new Model::UnknownHosts(this, this));
 }
@@ -55,7 +57,7 @@ QVariant ContactModel::data(const QModelIndex& _index, int role) const
 	return QVariant();
 }
 
-const Contact& ContactModel::getContact(const QModelIndex& _index) const
+Contact ContactModel::getContact(const QModelIndex& _index) const
 {
 	QModelIndex index(_index);
 	foreach (AbstractModel* model, models)
@@ -67,6 +69,21 @@ const Contact& ContactModel::getContact(const QModelIndex& _index) const
 		}
 	}
 	return Contact::INVALID_CONTACT;
+
+}
+
+User ContactModel::getUser(const QModelIndex& _index) const
+{
+	QModelIndex index(_index);
+	foreach (AbstractModel* model, models)
+	{
+		if (index.row() < model->size()) {
+			return model->getUser(index);
+		} else {
+			index = createIndex(index.row() - model->size(), index.column());
+		}
+	}
+	return User::INVALID_USER;
 
 }
 

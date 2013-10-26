@@ -4,9 +4,10 @@
 using namespace Model;
 
 Abstract::Abstract(Abstract* parentmodel, QObject* parent)
-		: QAbstractItemModel(parent), parentmodel(parentmodel), showConnections(true)
+		: QAbstractItemModel(parent), m_parentmodel(parentmodel), m_showConnections(true), m_visible(true)
 {
-	QObject::connect(Main::instance(), &Main::showConnections, this, &Abstract::onShowConnections);
+	QObject::connect(Main::instance()->settingsContactList()->listen("show-connections"),
+			&OptionCatcher::booleanOptionChanged, this, &Abstract::setConnectionsVisible);
 }
 
 int Abstract::offset(Abstract* submodel) const
@@ -17,7 +18,7 @@ int Abstract::offset(Abstract* submodel) const
 
 int Abstract::rowCount(const QModelIndex& parent) const
 {
-	return !parent.isValid() ? size() : 0;
+	return !parent.isValid() && visible() ? size() : 0;
 }
 
 int Abstract::columnCount(const QModelIndex& parent) const
@@ -67,9 +68,9 @@ void Abstract::endRemoveItems()
 
 void Abstract::changeItems(int start, int end)
 {
-	if (parentmodel) {
-		int offset = parentmodel->offset(this);
-		parentmodel->changeItems(offset + start, offset + end);
+	if (m_parentmodel) {
+		int offset = m_parentmodel->offset(this);
+		m_parentmodel->changeItems(offset + start, offset + end);
 	} else {
 		emit dataChanged(index(start, 0), index(end, columnCount(QModelIndex())));
 	}
@@ -83,9 +84,9 @@ void Abstract::onStateChanged(int i)
 
 void Abstract::beginSetItems(int oldcount, int newcount)
 {
-	if (parentmodel) {
-		int parentsize = parentmodel->size();
-		parentmodel->beginSetItems(parentsize, parentsize - oldcount + newcount);
+	if (m_parentmodel) {
+		int parentsize = m_parentmodel->size();
+		m_parentmodel->beginSetItems(parentsize, parentsize - oldcount + newcount);
 	} else {
 		beginRemoveItems(0, oldcount);
 		endRemoveItems();
@@ -95,15 +96,29 @@ void Abstract::beginSetItems(int oldcount, int newcount)
 
 void Abstract::endSetItems()
 {
-	if (parentmodel) {
-		parentmodel->endSetItems();
+	if (m_parentmodel) {
+		m_parentmodel->endSetItems();
 	} else {
 		endInsertItems();
 	}
 }
 
-void Abstract::onShowConnections(bool show)
+void Abstract::setConnectionsVisible(bool show)
 {
-	showConnections = show;
+	m_showConnections = show;
+}
+
+bool Abstract::visible() const
+{
+	return m_visible;
+}
+
+void Abstract::setVisible(bool state)
+{
+	beginSetItems(size(), 0);
+	endSetItems();
+	m_visible = state;
+	beginSetItems(0, size());
+	endSetItems();
 }
 

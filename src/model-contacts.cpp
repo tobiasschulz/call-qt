@@ -5,6 +5,7 @@
 #include "contactscanner.h"
 #include "config.h"
 #include "moviedelegate.h"
+#include "maingui.h"
 
 using namespace Model;
 
@@ -22,6 +23,9 @@ Contacts::Contacts(Abstract* parentmodel, QObject* parent)
 	scanner->moveToThread(thread);
 	QObject::connect(contactlist, &List::Contacts::resetContacts, scanner, &ContactScanner::scanSoon);
 	QTimer::singleShot(0, scanner, SLOT(start()));
+
+	QObject::connect(Main::instance()->settingsContactList()->listen("show-hosts"),
+			&OptionCatcher::booleanOptionChanged, this, &Abstract::setVisible);
 }
 
 QString Contacts::id() const
@@ -31,7 +35,7 @@ QString Contacts::id() const
 
 int Contacts::size() const
 {
-	return ContactList()->size();
+	return visible() ? ContactList()->size() : 0;
 }
 
 QVariant Contacts::data(const QModelIndex& index, int role) const
@@ -44,7 +48,8 @@ QVariant Contacts::data(const QModelIndex& index, int role) const
 			return value;
 		} else if (role == Qt::DecorationRole && index.column() == 0) {
 			List::Hosts::HostStateSet states = HostStates()->hostState(contact.host());
-			if (showConnections && (states.contains(List::Hosts::CONNECTING) || states.contains(List::Hosts::DNS_LOOKUP))) {
+			if (m_showConnections
+					&& (states.contains(List::Hosts::CONNECTING) || states.contains(List::Hosts::DNS_LOOKUP))) {
 				return qVariantFromValue(Config::instance()->movie("reload", "gif"));
 			} else if (states.contains(List::Hosts::HOST_ONLINE)) {
 				return Config::instance()->icon("user-available");
@@ -59,7 +64,7 @@ QVariant Contacts::data(const QModelIndex& index, int role) const
 	}
 }
 
-const Contact& Contacts::getContact(const QModelIndex& index) const
+Contact Contacts::getContact(const QModelIndex& index) const
 {
 	if (index.isValid() && index.row() < ContactList()->size()) {
 		const Contact& contact = ContactList()->get(index.row());
@@ -67,4 +72,9 @@ const Contact& Contacts::getContact(const QModelIndex& index) const
 	} else {
 		return Contact::INVALID_CONTACT;
 	}
+}
+
+User Contacts::getUser(const QModelIndex& index) const
+{
+	return getContact(index).user();
 }

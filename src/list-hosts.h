@@ -36,6 +36,7 @@ namespace List
 		bool isHostOnline(Host host);
 		HostStateSet hostState(Host host);
 		HostStateSet hostState(QString hostname);
+		HostStateSet hostState(QList<Host> hosts);
 
 	signals:
 		void hostOnline(Host host);

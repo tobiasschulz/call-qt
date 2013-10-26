@@ -10,14 +10,15 @@
 using namespace Model;
 
 UnknownHosts::UnknownHosts(Abstract* parentmodel, QObject* parent)
-		: Abstract(parentmodel, parent), showOfflineContacts(true)
+		: Abstract(parentmodel, parent)
 {
 	List::UnknownHosts* unknownhosts = UnknownHostList();
 	QObject::connect(unknownhosts, &List::UnknownHosts::beginListReset, this, &UnknownHosts::beginSetItems);
 	QObject::connect(unknownhosts, &List::UnknownHosts::endListReset, this, &UnknownHosts::endSetItems);
 	QObject::connect(unknownhosts, &List::UnknownHosts::itemChanged, this, &UnknownHosts::onStateChanged);
 
-	QObject::connect(Main::instance(), &Main::showOfflineContacts, this, &UnknownHosts::onShowOfflineContacts);
+	QObject::connect(Main::instance()->settingsContactList()->listen("show-offline-hosts"),
+			&OptionCatcher::booleanOptionChanged, this, &Abstract::setVisible);
 }
 
 QString UnknownHosts::id() const
@@ -27,16 +28,7 @@ QString UnknownHosts::id() const
 
 int UnknownHosts::size() const
 {
-	return showOfflineContacts ? UnknownHostList()->size() : 0;
-}
-
-void UnknownHosts::onShowOfflineContacts(bool show)
-{
-	beginSetItems(size(), 0);
-	endSetItems();
-	showOfflineContacts = show;
-	beginSetItems(0, size());
-	endSetItems();
+	return visible() ? UnknownHostList()->size() : 0;
 }
 
 QVariant UnknownHosts::data(const QModelIndex& index, int role) const
@@ -51,7 +43,7 @@ QVariant UnknownHosts::data(const QModelIndex& index, int role) const
 			return value;
 		} else if (role == Qt::DecorationRole && index.column() == 0) {
 			List::Hosts::HostStateSet states = HostStates()->hostState(hostname);
-			if (showConnections
+			if (m_showConnections
 					&& (states.contains(List::Hosts::CONNECTING) || states.contains(List::Hosts::DNS_LOOKUP))) {
 				return qVariantFromValue(Config::instance()->movie("reload", "gif"));
 				//return Config::instance()->icon("reload", "gif");
@@ -66,9 +58,15 @@ QVariant UnknownHosts::data(const QModelIndex& index, int role) const
 	}
 }
 
-const Contact& UnknownHosts::getContact(const QModelIndex& index) const
+Contact UnknownHosts::getContact(const QModelIndex& index) const
 {
 	Q_UNUSED(index);
 	return Contact::INVALID_CONTACT;
+}
+
+User UnknownHosts::getUser(const QModelIndex& index) const
+{
+	Q_UNUSED(index);
+	return User::INVALID_USER;
 }
 

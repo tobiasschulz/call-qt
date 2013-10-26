@@ -18,7 +18,8 @@ namespace Model
 
 		int size() const;
 		QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const;
-		const Contact& getContact(const QModelIndex& index) const;
+		Contact getContact(const QModelIndex& index) const;
+		User getUser(const QModelIndex& index) const;
 	};
 }
 

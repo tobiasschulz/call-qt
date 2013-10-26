@@ -148,9 +148,10 @@ void Connection::onSocketConnected()
 	m_host = Host(host, port);
 
 	if (m_headers.contains("user")) {
-		QString user = m_headers.value("user", Contact::INVALID_USER);
-		QString computername = m_headers.value("computername", "");
-		m_contact = Contact(user, computername, m_host);
+		QString username = m_headers.value("user", User::INVALID_USERNAME);
+		QString computername = m_headers.value("computername", User::INVALID_COMPUTERNAME);
+		User user(username,computername);
+		m_contact = Contact(user, m_host);
 		if (m_contact != Contact::INVALID_CONTACT) {
 			m_contact = ContactList()->reachableContact(m_contact);
 			emit contactFound(m_contact);

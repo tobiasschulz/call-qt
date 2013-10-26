@@ -12,5 +12,4 @@ using namespace List;
 Abstract::Abstract(QObject* parent)
 		: QObject(parent), ID()
 {
-
 }
