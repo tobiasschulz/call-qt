@@ -141,6 +141,7 @@ public:
 	QString hostname() const;
 	quint16 port() const;
 	QString displayname() const;
+	Contact reachableContact() const;
 
 	void invalidate();
 	QString toString() const;

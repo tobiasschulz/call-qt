@@ -53,7 +53,7 @@ QList<Contact> Contacts::toList() const
 	return m_contacts;
 }
 
-const Contact& Contacts::reachableContact(const Contact& unreachable) const
+const Contact& Contacts::___reachableContact(const Contact& unreachable) const
 {
 	if (unreachable.host().isUnreachable() && !unreachable.host().isLoopback()) {
 		foreach (const Contact& contact, m_contacts)

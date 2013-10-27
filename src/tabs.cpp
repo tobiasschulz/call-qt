@@ -116,6 +116,7 @@ void Tabs::openContactTab(Contact contact)
 	if (contact != Contact::INVALID_CONTACT) {
 		ChatTab* chattab = ChatTab::instance(contact);
 		log.debug("open contact tab: %1 (tab: %2)", contact.id(), chattab->id());
+		chattab->setContact(contact);
 		openTab(chattab);
 	}
 }

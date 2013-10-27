@@ -11,7 +11,7 @@
 
 namespace Ui
 {
-class ChatTab;
+	class ChatTab;
 }
 
 class ChatTab: public Tab
@@ -19,6 +19,7 @@ class ChatTab: public Tab
 Q_OBJECT
 
 public:
+	static ChatTab* instance(const User& user);
 	static ChatTab* instance(const Contact& contact);
 	~ChatTab();
 
@@ -28,26 +29,37 @@ public:
 	QString print(PrintFormat format = PRINT_NAME_AND_DATA) const;
 
 	Contact contact() const;
+	User user() const;
 
 public slots:
+	void onReceivedMessage(QString message);
+	void setContact(Contact contact);
+
+private slots:
+	void addContact(Contact contact);
+	void fillContactCombobox();
+	void onComboboxContactChanged(int index);
 	void printChatMessage(QString message);
 	void onSendMessage();
 	void onSendMessageFailed(QString message);
-	void onReceivedMessage(QString message);
-	void onHostOnline(Host host);
-	void onHostOffline(Host host);
+	void onHostStateChanged(Host host);
 	void startCall();
 	void stopCall();
 	void onCallStarted();
 	void onCallStopped();
 
 private:
-	explicit ChatTab(const Contact& contact);
-	static QHash<Contact, ChatTab*> m_instances;
+	explicit ChatTab(const User& user);
+	static QHash<User, ChatTab*> m_instances;
+
+	bool contactComboboxOutdated();
+	void setComboboxContact();
+	void updateButtonStates();
 
 	Ui::ChatTab *ui;
+	User m_user;
 	Contact m_contact;
-	ChatClient m_chatclient;
+	QHash<Contact, ChatClient*> m_chatclient;
 	Thread m_thread;
 
 	static const QString BEFORE_MESSAGE;

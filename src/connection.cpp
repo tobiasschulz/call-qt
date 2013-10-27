@@ -153,7 +153,7 @@ void Connection::onSocketConnected()
 		User user(username,computername);
 		m_contact = Contact(user, m_host);
 		if (m_contact != Contact::INVALID_CONTACT) {
-			m_contact = ContactList()->reachableContact(m_contact);
+			m_contact = m_contact.reachableContact();
 			emit contactFound(m_contact);
 		}
 

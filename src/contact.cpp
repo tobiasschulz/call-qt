@@ -193,8 +193,11 @@ QString Host::toString(PortFormat showPort, HostFormat hostFormat) const
 {
 	QString formattedHost = hostFormat == SHOW_HOSTNAME ? displayname() : address().toString();
 	if (isLoopback())
-		return (hostFormat == SHOW_HOSTNAME ? "loopback device" : "loopback") + QString(" (") + formattedHost + ":"
-				+ QString::number(m_port) + ")";
+		return (hostFormat == SHOW_HOSTNAME ? "loopback device" : "loopback");
+	// + QString(" (") + formattedHost + ":"	+ QString::number(m_port) + ")";
+	else if (isUnreachable())
+		return formattedHost + ":incoming";
+	// + QString(" (") + formattedHost + ":"	+ QString::number(m_port) + ")";
 	else if (m_port == Config::instance()->DEFAULT_PORT && showPort == SHOW_PORT_ONLY_UNUSUAL)
 		return formattedHost;
 	else
@@ -204,6 +207,8 @@ QString Host::id() const
 {
 	if (isLoopback())
 		return "Host<loopback>";
+	else if (isUnreachable())
+		return "Host<" + address().toString() + ":incoming>";
 	else
 		return "Host<" + address().toString() + ":" + QString::number(m_port) + ">";
 }
@@ -212,6 +217,8 @@ QString Host::print(PrintFormat format) const
 	QString data;
 	if (isLoopback())
 		data = "loopback";
+	else if (isUnreachable())
+		data = displayname() + ":incoming";
 	else
 		data = displayname() + ":" + QString::number(m_port);
 
@@ -291,17 +298,31 @@ QString User::computername() const
 	return m_computername;
 }
 
+QList<Contact> User::contacts() const
+{
+	QList<Contact> contacts;
+	foreach (const Host& host, m_hosts[*this])
+	{
+		Contact c(*this, host);
+		if (c != Contact::INVALID_CONTACT) {
+			contacts << c;
+		}
+	}
+	return contacts;
+}
 QList<Host> User::hosts() const
 {
 	return m_hosts[*this];
 }
 void User::addHost(const Host& host) const
 {
-	QList<Host> hosts = m_hosts[*this];
-	if (!hosts.contains(host)) {
-		hosts << host;
-		qSort(hosts.begin(), hosts.end(), compareHosts);
-		m_hosts[*this] = hosts;
+	if (host != Host::INVALID_HOST) {
+		QList<Host> hosts = m_hosts[*this];
+		if (!hosts.contains(host)) {
+			hosts << host;
+			qSort(hosts.begin(), hosts.end(), compareHosts);
+			m_hosts[*this] = hosts;
+		}
 	}
 }
 
@@ -416,6 +437,25 @@ QString Contact::displayname() const
 quint16 Contact::port() const
 {
 	return m_host.port();
+}
+
+Contact Contact::reachableContact() const
+{
+	if (host().isUnreachable() && !host().isLoopback()) {
+		foreach (const Contact& contact, user().contacts())
+		{
+			if (contact.host().address() == host().address() && contact.host().isReachable()) {
+				return contact;
+			}
+		}
+		foreach (const Contact& contact, user().contacts())
+		{
+			if (contact.host().isReachable()) {
+				return contact;
+			}
+		}
+	}
+	return *this;
 }
 
 QString Contact::toString() const
