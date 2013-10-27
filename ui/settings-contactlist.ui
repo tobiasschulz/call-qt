@@ -26,10 +26,10 @@
       <bool>true</bool>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="0" column="0">
-       <widget class="QRadioButton" name="radioUserList">
+      <item row="1" column="0">
+       <widget class="QRadioButton" name="radioUserCompnameList">
         <property name="text">
-         <string>[User]</string>
+         <string>[User]@[Computername]</string>
         </property>
         <property name="checked">
          <bool>true</bool>
@@ -39,10 +39,20 @@
         </attribute>
        </widget>
       </item>
-      <item row="1" column="0">
+      <item row="2" column="0">
        <widget class="QRadioButton" name="radioHostList">
         <property name="text">
          <string>[User]@[IP Address]</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">buttonGroup</string>
+        </attribute>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QRadioButton" name="radioUserList">
+        <property name="text">
+         <string>[User]</string>
         </property>
         <attribute name="buttonGroup">
          <string notr="true">buttonGroup</string>

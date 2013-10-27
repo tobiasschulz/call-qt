@@ -24,8 +24,7 @@ Contacts::Contacts(Abstract* parentmodel, QObject* parent)
 	QObject::connect(contactlist, &List::Contacts::resetContacts, scanner, &ContactScanner::scanSoon);
 	QTimer::singleShot(0, scanner, SLOT(start()));
 
-	QObject::connect(Main::instance()->settingsContactList()->listen("show-hosts"),
-			&OptionCatcher::booleanOptionChanged, this, &Abstract::setVisible);
+	Main::instance()->settingsContactList()->listen("show-hosts")->connect(this, SLOT(setVisible(bool)))->pushValue();
 }
 
 QString Contacts::id() const

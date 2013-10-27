@@ -6,50 +6,69 @@
  */
 
 #include <QSettings>
+#include <QMutexLocker>
 
 #include "settings.h"
 
-Option::Option(QAbstractButton* button, QString name, QVariant defaultValue)
+ButtonListener::ButtonListener(QAbstractButton* button, QString name, QObject* parent)
+		: QObject(parent), m_name(name)
+{
+	QObject::connect(button, SIGNAL(toggled(bool)), this, SLOT(onOptionChanged(bool)));
+}
+QString ButtonListener::id() const
+{
+	return "ButtonOption<" + m_name + ">";
+}
+void ButtonListener::onOptionChanged(bool value)
+{
+	emit optionChanged(m_name, value);
+}
+
+ButtonOption::ButtonOption(QAbstractButton* button, QString name, QVariant defaultValue)
 		: QObject(), m_button(button), m_name(name), m_defaultValue(defaultValue)
 {
 }
-Option::Option(const Option& other)
+ButtonOption::ButtonOption(const ButtonOption& other)
 		: QObject(), m_button(other.m_button), m_name(other.m_name), m_defaultValue(other.m_defaultValue)
 {
 }
-Option& Option::operator=(const Option& other)
+ButtonOption& ButtonOption::operator=(const ButtonOption& other)
 {
 	m_button = other.m_button;
 	m_name = other.m_name;
 	m_defaultValue = other.m_defaultValue;
 	return *this;
 }
-bool Option::operator==(const Option& other) const
+QString ButtonOption::id() const
+{
+	return "ButtonOption<" + m_name + ">";
+}
+
+bool ButtonOption::operator==(const ButtonOption& other) const
 {
 	return m_button == other.m_button, m_name == other.m_name && m_defaultValue == other.m_defaultValue;
 }
-bool Option::operator!=(const Option& other) const
+bool ButtonOption::operator!=(const ButtonOption& other) const
 {
 	return !(*this == other);
 }
 
-QAbstractButton* Option::button() const
+QAbstractButton* ButtonOption::button() const
 {
 	return m_button;
 }
-QString Option::name() const
+QString ButtonOption::name() const
 {
 	return m_name;
 }
-QVariant Option::defaultValue() const
+QVariant ButtonOption::defaultValue() const
 {
 	return m_defaultValue;
 }
 
 Settings::Settings(QString group)
-		: QObject(), m_options(), m_mapper(new QSignalMapper(this)), m_group(group)
+		: QObject(), m_buttonoptions(), m_group(group), m_settingslock()
 {
-	QObject::connect(m_mapper, SIGNAL(mapped(int)), this, SLOT(onOptionChanged(int)));
 }
 
 QString Settings::id() const
@@ -57,34 +76,39 @@ QString Settings::id() const
 	return m_group.size() > 0 ? "Settings<" + m_group + ">" : "Settings";
 }
 
-void Settings::addOption(Option option)
+QList<ButtonOption> Settings::options() const
 {
-	m_options << option;
-	QObject::connect(option.button(), SIGNAL(clicked()), m_mapper, SLOT(map()));
-	m_mapper->setMapping((QObject*) option.button(), m_options.indexOf(option));
+	return m_buttonoptions;
 }
 
-Settings& operator<<(Settings& settings, const Option& option)
+void Settings::addOption(ButtonOption option)
+{
+	m_buttonoptions << option;
+	ButtonListener* listener = new ButtonListener(option.button(), option.name(), this);
+	QObject::connect(listener, SIGNAL(optionChanged(QString, bool)), this, SLOT(onBooleanOptionChanged(QString, bool)));
+}
+
+Settings& operator<<(Settings& settings, const ButtonOption& option)
 {
 	settings.addOption(option);
 	return settings;
 }
 
-void Settings::onOptionChanged(int index)
+void Settings::onBooleanOptionChanged(QString name, bool value)
 {
-	Option& option = m_options[index];
-	log.debug("booleanOptionChanged: name=%1, value=%2", option.name(), QString::number(option.button()->isChecked()));
-	emit booleanOptionChanged(option.name(), option.button()->isChecked());
+	emit booleanOptionChanged(name, value);
 	saveSettings();
 }
 
 void Settings::loadSettings()
 {
+	QMutexLocker locker(&m_settingslock);
 	QSettings settings;
 	if (m_group.size() > 0)
 		settings.beginGroup(m_group);
-	foreach (const Option& option, m_options)
+	foreach (const ButtonOption& option, m_buttonoptions)
 	{
+		log.debug("loadSettings: %1 = %2", option.name(), settings.value(option.name()).toString());
 		option.button()->setChecked(settings.value(option.name(), option.defaultValue()).toBool());
 	}
 	if (m_group.size() > 0)
@@ -93,20 +117,37 @@ void Settings::loadSettings()
 
 void Settings::saveSettings()
 {
-	QSettings settings;
-	if (m_group.size() > 0)
-		settings.beginGroup(m_group);
-	foreach (const Option& option, m_options)
-	{
-		settings.setValue(option.name(), option.button()->isChecked());
+	if (m_settingslock.tryLock()) {
+		QSettings settings;
+		if (m_group.size() > 0)
+			settings.beginGroup(m_group);
+		foreach (const ButtonOption& option, m_buttonoptions)
+		{
+			settings.setValue(option.name(), option.button()->isChecked());
+			log.debug("saveSettings: %1 = %2", option.name(), QVariant(option.button()->isChecked()).toString());
+		}
+		if (m_group.size() > 0)
+			settings.endGroup();
+		m_settingslock.unlock();
 	}
-	if (m_group.size() > 0)
-		settings.endGroup();
 }
 
 OptionCatcher* Settings::listen(QString name)
 {
-	return new OptionCatcher(this, name);
+	Settings* tmp = this;
+	return new OptionCatcher(tmp, name);
+}
+
+void Settings::pushValue(QString name)
+{
+	foreach (const ButtonOption& option, m_buttonoptions)
+	{
+		if (option.name() == name) {
+			bool value = option.button()->isChecked();
+			log.debug("pushValue: %1 = %2", name, value);
+			emit booleanOptionChanged(name, value);
+		}
+	}
 }
 
 OptionCatcher::OptionCatcher(Settings* settings, QString name)
@@ -124,5 +165,17 @@ void OptionCatcher::onBooleanOptionChanged(QString name, bool value)
 	if (name == m_name) {
 		emit booleanOptionChanged(value);
 	}
+}
+
+OptionCatcher* OptionCatcher::connect(const QObject* obj, const char* method)
+{
+	QObject::connect(this, SIGNAL(booleanOptionChanged(bool)), obj, method);
+	return this;
+}
+
+OptionCatcher* OptionCatcher::pushValue()
+{
+	m_settings->pushValue(m_name);
+	return this;
 }
 

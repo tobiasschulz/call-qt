@@ -9,7 +9,8 @@ typedef Model::Abstract AbstractModel;
 ContactModel::ContactModel(QObject* parent)
 		: AbstractModel(0, parent), models()
 {
-	models.append(new Model::Users(this, this));
+	models.append(new Model::UsersWithComputername(this, this));
+	models.append(new Model::UsersWithoutComputername(this, this));
 	models.append(new Model::Contacts(this, this));
 	models.append(new Model::UnknownHosts(this, this));
 }

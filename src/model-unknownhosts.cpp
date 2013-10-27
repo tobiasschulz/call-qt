@@ -17,8 +17,7 @@ UnknownHosts::UnknownHosts(Abstract* parentmodel, QObject* parent)
 	QObject::connect(unknownhosts, &List::UnknownHosts::endListReset, this, &UnknownHosts::endSetItems);
 	QObject::connect(unknownhosts, &List::UnknownHosts::itemChanged, this, &UnknownHosts::onStateChanged);
 
-	QObject::connect(Main::instance()->settingsContactList()->listen("show-offline-hosts"),
-			&OptionCatcher::booleanOptionChanged, this, &Abstract::setVisible);
+	Main::instance()->settingsContactList()->listen("show-offline-hosts")->connect(this, SLOT(setVisible(bool)))->pushValue();
 }
 
 QString UnknownHosts::id() const

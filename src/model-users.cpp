@@ -16,9 +16,6 @@ Users::Users(Abstract* parentmodel, QObject* parent)
 	QObject::connect(userlist, &List::Users::beginListReset, this, &Users::beginSetItems);
 	QObject::connect(userlist, &List::Users::endListReset, this, &Users::endSetItems);
 	QObject::connect(userlist, &List::Users::itemChanged, this, &Users::onStateChanged);
-
-	QObject::connect(Main::instance()->settingsContactList()->listen("show-users"),
-			&OptionCatcher::booleanOptionChanged, this, &Abstract::setVisible);
 }
 
 QString Users::id() const
@@ -37,8 +34,7 @@ QVariant Users::data(const QModelIndex& index, int role) const
 		const User& user = UserList()->get(index.row());
 
 		if (role == Qt::DisplayRole && index.column() == 1) {
-			QVariant value = user.toString();
-			return value;
+			return formatUser(user);
 		} else if (role == Qt::DecorationRole && index.column() == 0) {
 			List::Hosts::HostStateSet states = HostStates()->hostState(user.hosts());
 			if (m_showConnections
@@ -73,3 +69,24 @@ User Users::getUser(const QModelIndex& index) const
 	}
 }
 
+UsersWithComputername::UsersWithComputername(Abstract* parentmodel, QObject* parent)
+		: Users(parentmodel, parent)
+{
+	Main::instance()->settingsContactList()->listen("show-users-computernames")->connect(this, SLOT(setVisible(bool)))->pushValue();
+}
+
+QString UsersWithComputername::formatUser(const User& user) const
+{
+	return user.toString();
+}
+
+UsersWithoutComputername::UsersWithoutComputername(Abstract* parentmodel, QObject* parent)
+		: Users(parentmodel, parent)
+{
+	Main::instance()->settingsContactList()->listen("show-users")->connect(this, SLOT(setVisible(bool)))->pushValue();
+}
+
+QString UsersWithoutComputername::formatUser(const User& user) const
+{
+	return user.username();
+}

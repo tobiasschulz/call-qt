@@ -6,8 +6,8 @@ using namespace Model;
 Abstract::Abstract(Abstract* parentmodel, QObject* parent)
 		: QAbstractItemModel(parent), m_parentmodel(parentmodel), m_showConnections(true), m_visible(true)
 {
-	QObject::connect(Main::instance()->settingsContactList()->listen("show-connections"),
-			&OptionCatcher::booleanOptionChanged, this, &Abstract::setConnectionsVisible);
+	Main::instance()->settingsContactList()->listen("show-connections")->connect(this,
+	SLOT(setConnectionsVisible(bool)))->pushValue();
 }
 
 int Abstract::offset(Abstract* submodel) const

@@ -13,22 +13,42 @@
 #include <QAbstractButton>
 #include <QPointer>
 #include <QSignalMapper>
+#include <QMutex>
 
 #include "id.h"
 
-class Option;
+class ButtonOption;
 class Settings;
 class OptionCatcher;
+class ToggleStateListener;
 
-class Option: public QObject
+class ButtonListener: public QObject, public ID
 {
 Q_OBJECT
 public:
-	explicit Option(QAbstractButton* button, QString name, QVariant defaultValue);
-	Option(const Option& other);
-	Option& operator=(const Option& other);
-	bool operator==(const Option& other) const;
-	bool operator!=(const Option& other) const;
+	explicit ButtonListener(QAbstractButton* button, QString name, QObject* parent = 0);
+	QString id() const;
+
+signals:
+	void optionChanged(QString name, bool value);
+
+private slots:
+	void onOptionChanged(bool value);
+
+private:
+	QString m_name;
+};
+
+class ButtonOption: public QObject, public ID
+{
+Q_OBJECT
+public:
+	explicit ButtonOption(QAbstractButton* button, QString name, QVariant defaultValue);
+	ButtonOption(const ButtonOption& other);
+	ButtonOption& operator=(const ButtonOption& other);
+	QString id() const;
+	bool operator==(const ButtonOption& other) const;
+	bool operator!=(const ButtonOption& other) const;
 
 	QAbstractButton* button() const;
 	QString name() const;
@@ -47,10 +67,12 @@ public:
 	explicit Settings(QString group = QString());
 	QString id() const;
 
-	void addOption(Option option);
+	QList<ButtonOption> options() const;
+	void addOption(ButtonOption option);
 	void loadSettings();
 	void saveSettings();
 	OptionCatcher* listen(QString name);
+	void pushValue(QString name);
 
 signals:
 	void booleanOptionChanged(QString name, bool value);
@@ -58,12 +80,12 @@ signals:
 public slots:
 
 private slots:
-	void onOptionChanged(int);
+	void onBooleanOptionChanged(QString name, bool value);
 
 private:
-	QList<Option> m_options;
-	QPointer<QSignalMapper> m_mapper;
+	QList<ButtonOption> m_buttonoptions;
 	QString m_group;
+	QMutex m_settingslock;
 };
 
 class OptionCatcher: public QObject, public ID
@@ -72,6 +94,10 @@ Q_OBJECT
 public:
 	explicit OptionCatcher(Settings* settings, QString name);
 	QString id() const;
+
+	void setOption(ButtonOption* option);
+	OptionCatcher* connect(const QObject* obj, const char* method);
+	OptionCatcher* pushValue();
 
 signals:
 	void booleanOptionChanged(bool value);
@@ -84,6 +110,6 @@ private:
 	QString m_name;
 };
 
-Settings& operator<<(Settings& settings, const Option& option);
+Settings& operator<<(Settings& settings, const ButtonOption& option);
 
 #endif /* SETTINGS_H */

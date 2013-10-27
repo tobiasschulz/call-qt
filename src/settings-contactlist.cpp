@@ -6,16 +6,17 @@
 #include "config.h"
 
 SettingsContactList::SettingsContactList()
-		: Tab("Contact List", Config::instance()->icon("microphone")), ui(new Ui::SettingsContactList),
+		: Tab("Contact List", Config::instance()->icon("contact")), ui(new Ui::SettingsContactList),
 			m_settings("contactlist")
 {
 	ui->setupUi(this);
 	QObject::connect(this, SIGNAL(focus()), this, SLOT(setFocus()));
 
-	m_settings << Option(ui->checkShowOfflineHosts, "show-offline-hosts", false);
-	m_settings << Option(ui->checkShowConnections, "show-connections", true);
-	m_settings << Option(ui->radioHostList, "show-hosts", false);
-	m_settings << Option(ui->radioUserList, "show-users", true);
+	m_settings << ButtonOption(ui->checkShowOfflineHosts, "show-offline-hosts", false);
+	m_settings << ButtonOption(ui->checkShowConnections, "show-connections", true);
+	m_settings << ButtonOption(ui->radioHostList, "show-hosts", false);
+	m_settings << ButtonOption(ui->radioUserCompnameList, "show-users-computernames", true);
+	m_settings << ButtonOption(ui->radioUserList, "show-users", false);
 	m_settings.loadSettings();
 }
 
