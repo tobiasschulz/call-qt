@@ -23,9 +23,9 @@ QString Users::id() const
 	return "Model::Users";
 }
 
-int Users::size() const
+int Users::internalSize() const
 {
-	return visible() ? UserList()->size() : 0;
+	return UserList()->size();
 }
 
 QVariant Users::data(const QModelIndex& index, int role) const

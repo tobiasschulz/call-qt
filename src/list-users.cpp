@@ -21,7 +21,7 @@ Users::Users(QObject *parent)
 		: Abstract(parent), m_users()
 {
 	QObject::connect(&Hosts::instance(), &Hosts::hostStateChanged, this, &Users::onHostStateChanged);
-	QObject::connect(&Contacts::instance(), &Contacts::resetContacts, this, &Users::rebuildItems);
+	QObject::connect(&Contacts::instance(), &Contacts::resetContacts, this, &Users::onResetContacts);
 }
 
 Users& Users::instance()
@@ -82,6 +82,14 @@ void Users::rebuildItems()
 		m_users = users;
 	}
 	emit endListReset();
+}
+
+void Users::onResetContacts()
+{
+	emit this->beginListReset(m_users.size(), 0);
+	emit this->endListReset();
+	m_users.clear();
+	rebuildItems();
 }
 
 void Users::addSignals(Connection* connection)

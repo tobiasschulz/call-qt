@@ -32,9 +32,9 @@ QString Contacts::id() const
 	return "Model::Contacts";
 }
 
-int Contacts::size() const
+int Contacts::internalSize() const
 {
-	return visible() ? ContactList()->size() : 0;
+	return ContactList()->size();
 }
 
 QVariant Contacts::data(const QModelIndex& index, int role) const

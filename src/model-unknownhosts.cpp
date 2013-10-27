@@ -25,9 +25,9 @@ QString UnknownHosts::id() const
 	return "Model::UnknownHosts";
 }
 
-int UnknownHosts::size() const
+int UnknownHosts::internalSize() const
 {
-	return visible() ? UnknownHostList()->size() : 0;
+	return UnknownHostList()->size();
 }
 
 QVariant UnknownHosts::data(const QModelIndex& index, int role) const

@@ -16,7 +16,7 @@ namespace Model
 		explicit Contacts(Abstract* parentmodel, QObject* parent = 0);
 		QString id() const;
 
-		int size() const;
+		int internalSize() const;
 		QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const;
 		Contact getContact(const QModelIndex& index) const;
 		User getUser(const QModelIndex& index) const;

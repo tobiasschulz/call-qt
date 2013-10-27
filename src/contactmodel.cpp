@@ -20,11 +20,12 @@ QString ContactModel::id() const
 	return "ContactModel";
 }
 
-int ContactModel::size() const
+int ContactModel::internalSize() const
 {
 	int size = 0;
 	foreach (AbstractModel* model, models)
 	{
+		//log.debug("size: += %1", QString::number(model->size()));
 		size += model->size();
 	}
 	return size;

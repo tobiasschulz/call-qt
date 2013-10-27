@@ -16,11 +16,12 @@ namespace Model
 		explicit Abstract(Abstract* parentmodel, QObject* parent = 0);
 
 		virtual QString id() const = 0;
-		virtual int size() const = 0;
+		virtual int internalSize() const = 0;
 		virtual int offset(Abstract* submodel) const;
 		virtual Contact getContact(const QModelIndex& index) const = 0;
 		virtual User getUser(const QModelIndex& index) const = 0;
 
+		int size() const;
 		int rowCount(const QModelIndex& parent = QModelIndex()) const;
 		int columnCount(const QModelIndex& parent = QModelIndex()) const;
 		QModelIndex index(int row, int column, const QModelIndex& parent = QModelIndex()) const;
@@ -47,6 +48,13 @@ namespace Model
 		QPointer<Abstract> m_parentmodel;
 		bool m_showConnections;
 		bool m_visible;
+
+	private:
+		enum RowOperationState
+		{
+			REMOVING, INSERTING, NONE
+		};
+		RowOperationState m_rowOperationState;
 	};
 }
 

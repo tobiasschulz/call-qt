@@ -37,11 +37,11 @@ namespace List
 		void add(User user);
 		void addContact(Contact contact);
 		void onHostStateChanged(Host host);
+		void onResetContacts();
+		void rebuildItems();
 
 	private:
 		explicit Users(QObject* parent = 0);
-
-		void rebuildItems();
 
 		QList<User> m_users;
 		static QMutex m_lock;
