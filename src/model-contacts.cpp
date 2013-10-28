@@ -43,7 +43,7 @@ QVariant Contacts::data(const QModelIndex& index, int role) const
 		const Contact& contact = ContactList()->get(index.row());
 
 		if (role == Qt::DisplayRole && index.column() == 1) {
-			QVariant value = contact.toString();
+			QVariant value = contact.user().username() + "@" + contact.address().toString();
 			return value;
 		} else if (role == Qt::DecorationRole && index.column() == 0) {
 			List::Hosts::HostStateSet states = HostStates()->hostState(contact.host());

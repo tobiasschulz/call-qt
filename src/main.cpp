@@ -35,6 +35,8 @@ int main(int argv, char** args)
 
 	qRegisterMetaType<Host>("Host");
 	qRegisterMetaTypeStreamOperators<Host>("Host");
+	qRegisterMetaType<User>("User");
+	qRegisterMetaTypeStreamOperators<User>("User");
 	qRegisterMetaType<Contact>("Contact");
 	qRegisterMetaTypeStreamOperators<Contact>("Contact");
 	qRegisterMetaType<ID::Verbosity>("ID::Verbosity");

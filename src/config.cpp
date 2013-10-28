@@ -17,8 +17,8 @@
 Config* Config::m_instance(0);
 
 Config::Config(QObject *parent)
-		: QObject(parent), DEFAULT_PORT(4000), SOCKET_READ_TIMEOUT(7000), SOCKET_CONNECT_TIMEOUT(2000),
-			CONTACT_SCAN_INTERVAL(60000), DEFAULT_CONTACT_HOSTS(), m_localhosts(), m_knownhosts(), m_unknownhosts(),
+		: QObject(parent), DEFAULT_PORT(4000), SOCKET_READ_TIMEOUT(8000), SOCKET_CONNECT_TIMEOUT(4000),
+			CONTACT_SCAN_INTERVAL(90000), DEFAULT_CONTACT_HOSTS(), m_localhosts(), m_knownhosts(), m_unknownhosts(),
 			m_hosts_initialized(), m_hosts_lock(), m_uid(0), m_uptime(QDateTime::currentMSecsSinceEpoch()),
 			m_audioinputdevice(), m_audiooutputdevice()
 {

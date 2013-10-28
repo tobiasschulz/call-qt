@@ -39,17 +39,21 @@ void Users::add(User user)
 {
 	if (user != User::INVALID_USER && !m_users.contains(user)) {
 		log.debug("add: %1", user.id());
-		m_users << user;
+				m_users << user;
 		rebuildItems();
 	}
 }
 
 void Users::addContact(Contact contact)
 {
+	log.debug("add: %1", contact.id());
 	if (contact != Contact::INVALID_CONTACT && !m_users.contains(contact.user())) {
-		log.debug("add: %1", contact.id());
 		m_users << contact.user();
 		rebuildItems();
+	}
+	foreach (const User& user, m_users)
+	{
+		log.debug("add: users: - %1", user.toString());
 	}
 }
 
@@ -95,6 +99,7 @@ void Users::onResetContacts()
 void Users::addSignals(Connection* connection)
 {
 	QObject::connect(connection, &Connection::contactFound, this, &Users::addContact);
+	QObject::connect(connection, &Connection::userFound, this, &Users::add);
 }
 
 void Users::onHostStateChanged(Host host)

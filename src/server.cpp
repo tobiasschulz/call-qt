@@ -17,7 +17,9 @@ void Server::start()
 
 void Server::incomingConnection(qintptr socketDescriptor)
 {
-	Thread* thread = new Thread("ServerReq");
+	static int i = 0;
+	++i;
+	Thread* thread = new Thread("ServerReq#" + QString::number(i));
 	thread->start();
 	ServerRequest* request = new ServerRequest(socketDescriptor, thread);
 	request->moveToThread(thread);

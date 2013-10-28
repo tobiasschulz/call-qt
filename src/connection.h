@@ -43,6 +43,7 @@ public:
 
 signals:
 	void contactFound(Contact);
+	void userFound(User);
 	void hostOnline(Host);
 	void hostOffline(Host);
 	void readyRead();

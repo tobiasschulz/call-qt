@@ -74,7 +74,8 @@ Host& Host::operator=(const Host& other)
 }
 bool Host::operator==(const Host& other) const
 {
-	return (displayname() == other.displayname() && m_port == other.m_port) || (isLoopback() && other.isLoopback());
+	return (displayname() == other.displayname() && m_port == other.m_port) || (isLoopback() && other.isLoopback())
+			|| (displayname() == other.displayname() && isUnreachable() == other.isUnreachable());
 }
 bool Host::operator!=(const Host& other) const
 {
@@ -132,7 +133,7 @@ quint16 Host::port() const
 }
 bool Host::isReachable() const
 {
-	return m_port < 10000;
+	return m_port < 32768;
 }
 bool Host::isUnreachable() const
 {
@@ -140,7 +141,8 @@ bool Host::isUnreachable() const
 }
 bool Host::isLoopback() const
 {
-	return !isReachable() && Config::instance()->isHostname(m_address.toString(), Config::LOCALHOST);
+	return false;
+	//return !isReachable() && Config::instance()->isHostname(m_address.toString(), Config::LOCALHOST);
 }
 bool Host::isDynamicIP() const
 {
@@ -193,8 +195,8 @@ QString Host::toString(PortFormat showPort, HostFormat hostFormat) const
 {
 	QString formattedHost = hostFormat == SHOW_HOSTNAME ? displayname() : address().toString();
 	if (isLoopback())
-		return (hostFormat == SHOW_HOSTNAME ? "loopback device" : "loopback");
-	// + QString(" (") + formattedHost + ":"	+ QString::number(m_port) + ")";
+		return (hostFormat == SHOW_HOSTNAME ? "loopback device" : "loopback") + QString(" (") + formattedHost + ":"
+				+ QString::number(m_port) + ")";
 	else if (isUnreachable())
 		return formattedHost + ":incoming";
 	// + QString(" (") + formattedHost + ":"	+ QString::number(m_port) + ")";
