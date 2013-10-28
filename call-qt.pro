@@ -23,6 +23,7 @@ SOURCES += \
     src/contactmodel.cpp \
     src/contactscanner.cpp \
     src/dnscache.cpp \
+    src/flexitableview.cpp \
     src/id.cpp \
     src/list-abstract.cpp \
     src/list-contacts.cpp \
@@ -62,6 +63,7 @@ HEADERS  += \
     src/contactmodel.h \
     src/contactscanner.h \
     src/dnscache.h \
+    src/flexitableview.h \
     src/id.h \
     src/list-abstract.h \
     src/list-contacts.h \
@@ -115,7 +117,7 @@ win32 {
 }
 
 # The application version                                                          ## VERSION
-VERSION = 0.1202                                                                      ## VERSION
+VERSION = 0.1254                                                                      ## VERSION
 # Define the preprocessor macro to get the application version in our application. ## VERSION
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"                                           ## VERSION
-DEFINES += APP_BUILD=\\\"1202\\\"                                             ## VERSION
+DEFINES += APP_BUILD=\\\"1254\\\"                                             ## VERSION

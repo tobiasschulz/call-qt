@@ -40,6 +40,14 @@ void MovieDelegate::paint(QPainter * painter, const QStyleOptionViewItem & optio
 	}
 }
 
+QSize MovieDelegate::sizeHint(const QStyleOptionViewItem & option, const QModelIndex & index) const
+{
+	QSize s = QStyledItemDelegate::sizeHint(option, index);
+	if (s.width() > 50)
+		s.setWidth(50);
+	return s;
+}
+
 //---------------------------------------------------------
 // Private member functions
 //---------------------------------------------------------

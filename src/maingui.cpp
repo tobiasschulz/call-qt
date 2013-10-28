@@ -3,6 +3,7 @@
 #include <QVariant>
 #include <QSettings>
 #include <QInputDialog>
+#include <QHeaderView>
 
 #include <cmath>
 
@@ -23,6 +24,15 @@ Main::Main(QWidget* parent)
 	m_settings_contactlist = new SettingsContactList;
 }
 
+QList<int> modifySizes(int diff, QList<int> sizes)
+{
+	if (sizes.size() > 0)
+		sizes[0] -= diff;
+	if (sizes.size() > 1)
+		sizes[1] += diff;
+	return sizes;
+}
+
 void Main::init()
 {
 	ui->setupUi(this);
@@ -40,6 +50,9 @@ void Main::init()
 	qApp->desktop()->availableGeometry()));
 
 	// contacts
+	ui->splitter->setStretchFactor(0, 0);
+	ui->splitter->setStretchFactor(1, 100);
+	log.debug("minimumSizeHint: %1", QString::number(ui->contactlist->sizeHint().width()));
 	m_contactmodel = new ContactModel(this);
 	ui->contactlist->setModel(m_contactmodel);
 	ui->contactlist->setItemDelegate(new MovieDelegate(*ui->contactlist, 0));
@@ -48,6 +61,7 @@ void Main::init()
 	ui->contactlist->verticalHeader()->setDefaultSectionSize(fontMetrics().lineSpacing() + 5);
 	ui->contactlist->horizontalHeader()->setDefaultSectionSize(fontMetrics().lineSpacing() + 5);
 	ui->contactlist->setSelectionBehavior(QAbstractItemView::SelectRows);
+	ui->contactlist->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
 
 	QObject::connect(ui->actionAddContact, &QAction::triggered, this, &Main::onMenuAddContact);
 
