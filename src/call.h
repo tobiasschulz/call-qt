@@ -10,9 +10,11 @@
 #include <QAudioOutput>
 #include <QPointer>
 
+#include "id.h"
 #include "contact.h"
 #include "connection.h"
 #include "audioinfo.h"
+#include "thread.h"
 
 class Call: public QObject, public ID
 {
@@ -20,6 +22,7 @@ Q_OBJECT
 
 public:
 	static Call* instance(const Contact& contact);
+	virtual ~Call();
 	QString id() const;
 	QString print(PrintFormat format = PRINT_NAME_AND_DATA) const;
 
@@ -61,6 +64,7 @@ public slots:
 private:
 	explicit Call(const Contact& contact, QObject* parent = 0);
 	static QHash<Contact, Call*> m_instances;
+	static QHash<Contact, Thread*> m_threads;
 
 	void prepareConnection();
 	void open(Connection* host);

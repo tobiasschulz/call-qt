@@ -68,6 +68,19 @@ ID::ID()
 		: log(this), m_verbose(ALL)
 {
 }
+ID::~ID()
+{
+	foreach (QConnection* connection, m_connections)
+	{
+		QObject::disconnect(*connection);
+		free(connection);
+	}
+}
+ID& operator<<(ID& obj, ID::QConnection connection)
+{
+	obj.m_connections << new ID::QConnection(connection);
+	return obj;
+}
 QString ID::id() const
 {
 	return "This should be implemented!";

@@ -29,7 +29,6 @@ namespace List
 		QString id() const;
 
 		const Contact& get(int index) const;
-		const Contact& ___reachableContact(const Contact& contact) const;
 		int size() const;
 		void addSignals(Connection* connection);
 		QList<Contact> toList() const;

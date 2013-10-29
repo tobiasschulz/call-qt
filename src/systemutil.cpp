@@ -53,6 +53,11 @@ QString SystemUtil::getUserName()
 	}
 }
 
+QString SystemUtil::getComputerName()
+{
+	return QHostInfo::localHostName();
+}
+
 void SystemUtil::messageOutput(QtMsgType type, const QMessageLogContext &context, const QString& msg)
 {
 	Q_UNUSED(context);

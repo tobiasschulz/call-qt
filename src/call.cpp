@@ -11,11 +11,10 @@
 #include "config.h"
 
 QHash<Contact, Call*> Call::m_instances;
+QHash<Contact, Thread*> Call::m_threads;
 
 Call* Call::instance(const Contact& contact)
 {
-	// ein call wird zwei verschiedenen thread szugewiesen und von der normalen und der looopback connection
-	// verwendet und dnan wohl auch nach open() direkt geclose()ed
 	static QMutex mutex;
 	QMutexLocker locker(&mutex);
 	if (!m_instances.contains(contact)) {
@@ -24,6 +23,7 @@ Call* Call::instance(const Contact& contact)
 		Thread* thread = new Thread(QString("Call<%1>").arg(++num));
 		thread->start();
 		m_instances[contact]->moveToThread(thread);
+		m_threads[contact] = thread;
 	}
 	return m_instances[contact];
 }
@@ -32,25 +32,29 @@ Call::Call(const Contact& contact, QObject* parent)
 		: QObject(parent), m_host(contact.host()), m_contact(contact), m_connection(0), m_inputaudio(0),
 			m_outputaudio(0), m_inputinfo(0), m_outputinfo(0), m_state(CLOSED), m_openlock(), m_closelock()
 {
-	if (!m_host.isLoopback()) {
-		// for normal connections
-		QObject::connect(this, &Call::started, Main::instance(), &Main::showStats);
-		QObject::connect(this, &Call::stopped, Main::instance(), &Main::hideStats);
-		QObject::connect(this, &Call::statsContact, Main::instance(), &Main::onStatsContact);
-		QObject::connect(this, &Call::statsDurationInput, Main::instance(), &Main::onStatsDurationInput);
-		QObject::connect(this, &Call::statsDurationOutput, Main::instance(), &Main::onStatsDurationOutput);
-		QObject::connect(this, &Call::statsLatencyInput, Main::instance(), &Main::onStatsLatencyInput);
-		QObject::connect(this, &Call::statsLatencyOutput, Main::instance(), &Main::onStatsLatencyOutput);
-		QObject::connect(this, &Call::statsFormatInput, Main::instance(), &Main::onStatsFormatInput);
-		QObject::connect(this, &Call::statsFormatOutput, Main::instance(), &Main::onStatsFormatOutput);
-		QObject::connect(Main::instance(), &Main::volumeChangedInput, this, &Call::onVolumeChangedInput);
-		QObject::connect(Main::instance(), &Main::volumeChangedOutput, this, &Call::onVolumeChangedOutput);
+	if (m_contact.isMe() && m_host.isUnreachable()) {
+		// for loopback connections
+		*this << QObject::connect(Main::instance(), &Main::volumeChangedOutput, this, &Call::onVolumeChangedInput)
+				<< QObject::connect(Main::instance(), &Main::volumeChangedInput, this, &Call::onVolumeChangedOutput);
 
 	} else {
-		// for loopback connections
-		QObject::connect(Main::instance(), &Main::volumeChangedOutput, this, &Call::onVolumeChangedInput);
-		QObject::connect(Main::instance(), &Main::volumeChangedInput, this, &Call::onVolumeChangedOutput);
+		// for normal connections
+		*this << QObject::connect(this, &Call::started, Main::instance(), &Main::showStats)
+				<< QObject::connect(this, &Call::stopped, Main::instance(), &Main::hideStats)
+				<< QObject::connect(this, &Call::statsContact, Main::instance(), &Main::onStatsContact)
+				<< QObject::connect(this, &Call::statsDurationInput, Main::instance(), &Main::onStatsDurationInput)
+				<< QObject::connect(this, &Call::statsDurationOutput, Main::instance(), &Main::onStatsDurationOutput)
+				<< QObject::connect(this, &Call::statsLatencyInput, Main::instance(), &Main::onStatsLatencyInput)
+				<< QObject::connect(this, &Call::statsLatencyOutput, Main::instance(), &Main::onStatsLatencyOutput)
+				<< QObject::connect(this, &Call::statsFormatInput, Main::instance(), &Main::onStatsFormatInput)
+				<< QObject::connect(this, &Call::statsFormatOutput, Main::instance(), &Main::onStatsFormatOutput)
+				<< QObject::connect(Main::instance(), &Main::volumeChangedInput, this, &Call::onVolumeChangedInput)
+				<< QObject::connect(Main::instance(), &Main::volumeChangedOutput, this, &Call::onVolumeChangedOutput);
 	}
+}
+
+Call::~Call()
+{
 }
 
 QString Call::id() const
@@ -198,7 +202,10 @@ void Call::onConnected()
 	QObject::connect(m_inputaudio, SIGNAL(stateChanged(QAudio::State)), SLOT(handleInputStateChanged(QAudio::State)));
 	QObject::connect(m_outputaudio, SIGNAL(stateChanged(QAudio::State)), SLOT(handleOutputStateChanged(QAudio::State)));
 
-	if (!m_host.isLoopback()) {
+	if (m_contact.isMe() && m_host.isUnreachable()) {
+		// loopback connection
+	} else {
+		// normal connection
 		QSettings settings;
 		bool showStats = settings.value("window/show-stats", true).toBool();
 		if (showStats) {
@@ -226,11 +233,13 @@ void Call::startSpeaker()
 
 void Call::onVolumeChangedInput(qreal volume)
 {
-	m_inputinfo->setVolume(volume);
+	if (m_inputinfo)
+		m_inputinfo->setVolume(volume);
 }
 void Call::onVolumeChangedOutput(qreal volume)
 {
-	m_outputinfo->setVolume(volume);
+	if (m_outputinfo)
+		m_outputinfo->setVolume(volume);
 }
 
 void Call::notifiedInput()

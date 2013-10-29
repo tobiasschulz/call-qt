@@ -21,60 +21,68 @@ QHash<User, QList<Host>> User::m_hosts;
 
 const Contact Contact::INVALID_CONTACT;
 
-Host::Host(QHostAddress address, quint16 port, QObject* parent)
-		: QObject(parent), m_address(address), m_address_state(INITIAL), m_hostname(), m_hostname_state(LOOKUP_PENDING),
-			m_port(port)
+bool isAddressValid(QHostAddress address)
 {
-	//lookupHostname();
+	return address.protocol() == QAbstractSocket::IPv4Protocol || address.protocol() == QAbstractSocket::IPv6Protocol;
+}
+
+QHostAddress lookupAddress(DnsCache::LookupMode mode, QString hostname, QHostAddress defaultAddress)
+{
+	QHostInfo info = DnsCache::instance()->lookup(hostname, mode);
+	if (info.addresses().size() > 0) {
+		return info.addresses().first();
+	}
+	return defaultAddress;
+}
+
+Host::Host(QHostAddress address, quint16 port, QObject* parent)
+		: QObject(parent), m_address(address), m_hostname(INVALID_HOSTNAME), m_port(port)
+{
+	m_address_state = isAddressValid(address) ? VALID : INVALID;
+	m_reachability = updateReachability();
 }
 Host::Host(QString hostname, quint16 port, QObject* parent)
-		: QObject(parent), m_address(), m_address_state(LOOKUP_PENDING), m_hostname(), m_hostname_state(LOOKUP_PENDING),
-			m_port(port)
+		: QObject(parent), m_port(port)
 {
 	QHostAddress address(hostname);
-	if (address.protocol() == QAbstractSocket::IPv4Protocol || address.protocol() == QAbstractSocket::IPv6Protocol) {
+	if (isAddressValid(address)) {
 		m_address = address;
-		m_address_state = INITIAL;
-		//log.debug("Valid IPv4 address: %1", m_address.toString());
-		//lookupHostname();
+		m_address_state = VALID;
+		m_hostname = INVALID_HOSTNAME;
 	} else {
+		m_address = lookupAddress(DnsCache::CACHE_LOOKUP, hostname, INVALID_ADDRESS);
+		m_address_state = LOOKUP_PENDING;
 		m_hostname = hostname;
-		m_hostname_state = INITIAL;
-		//log.debug("Got a hostname: %1", hostname);
-		lookupAddress();
 	}
-}
-Host::Host(QHostAddress address, QString hostname, quint16 port, QObject* parent)
-		: QObject(parent), m_address(address), m_address_state(INITIAL), m_hostname(hostname), m_port(port)
-{
-	m_hostname_state = m_hostname.size() > 0 ? INITIAL : INVALID;
+	m_reachability = updateReachability();
 }
 Host::Host(QObject * parent)
-		: QObject(parent), m_address(), m_address_state(INVALID), m_hostname(), m_hostname_state(INVALID), m_port(0)
+		: QObject(parent), m_address(INVALID_ADDRESS), m_address_state(INVALID), m_hostname(INVALID_HOSTNAME), m_port(0)
 {
+	m_reachability = updateReachability();
 }
 Host::Host(const Host& other)
-		: QObject(other.parent()), m_address(), m_address_state(), m_hostname(), m_hostname_state(), m_port(0)
+		: QObject(other.parent())
 {
 	m_address = QHostAddress(other.m_address);
+	m_address_state = other.m_address_state;
 	m_hostname = QString(other.m_hostname);
 	m_port = other.m_port;
-	m_address_state = other.m_address_state;
-	m_hostname_state = other.m_hostname_state;
+	m_reachability = other.m_reachability;
 }
 
 Host& Host::operator=(const Host& other)
 {
 	m_address = QHostAddress(other.m_address);
+	m_address_state = other.m_address_state;
 	m_hostname = QString(other.m_hostname);
 	m_port = other.m_port;
-	m_address_state = other.m_address_state;
-	m_hostname_state = other.m_hostname_state;
+	m_reachability = other.m_reachability;
 	return *this;
 }
 bool Host::operator==(const Host& other) const
 {
-	return (displayname() == other.displayname() && m_port == other.m_port) || (isLoopback() && other.isLoopback())
+	return (displayname() == other.displayname() && m_port == other.m_port)
 			|| (displayname() == other.displayname() && isUnreachable() == other.isUnreachable());
 }
 bool Host::operator!=(const Host& other) const
@@ -84,142 +92,103 @@ bool Host::operator!=(const Host& other) const
 
 QHostAddress Host::address() const
 {
-	return m_address;
+	if (m_address_state == LOOKUP_PENDING) {
+		return lookupAddress(DnsCache::BLOCKING_LOOKUP, m_hostname, m_address);
+	} else {
+		return m_address;
+	}
+}
+QHostAddress Host::address()
+{
+	if (m_address_state == LOOKUP_PENDING) {
+		return m_address = lookupAddress(DnsCache::BLOCKING_LOOKUP, m_hostname, m_address);
+	} else {
+		return m_address;
+	}
 }
 QString Host::displayname() const
 {
-	if (m_address_state == INITIAL) {
+	switch (m_address_state) {
+	case VALID:
 		return m_address.toString();
-	} else if (m_hostname_state == INITIAL) {
+	case LOOKUP_PENDING:
 		return m_hostname;
-	} else {
+	default:
 		return "";
 	}
 }
 QStringList Host::displaynames() const
 {
 	QStringList names;
-	if (m_address_state != INVALID && m_address.toString().size() != 0) {
+	if (m_address_state == VALID) {
 		names << m_address.toString();
 	}
-	if (m_hostname_state != INVALID && m_hostname.size() != 0) {
+	if (!m_hostname.isEmpty()) {
 		names << m_hostname;
 	}
 	return names;
-}
-QString Host::hostname() const
-{
-	if (m_hostname_state == LOOKUP_PENDING) {
-		QString hostname;
-		FieldState state;
-		lookupHostname(&hostname, &state);
-		return hostname;
-	} else {
-		return m_hostname;
-	}
-}
-QString Host::hostname()
-{
-	if (m_hostname_state == LOOKUP_PENDING) {
-		lookupHostname();
-		return m_hostname;
-	} else {
-		return m_hostname;
-	}
 }
 quint16 Host::port() const
 {
 	return m_port;
 }
+
+Host::HostReachability Host::reachability() const
+{
+	return m_reachability;
+}
 bool Host::isReachable() const
 {
-	return m_port < 32768;
+	return m_reachability == REACHABLE;
 }
 bool Host::isUnreachable() const
 {
-	return !isReachable();
+	return m_reachability == UNREACHABLE;
 }
-bool Host::isLoopback() const
+
+Host::HostReachability Host::updateReachability()
 {
-	return false;
-	//return !isReachable() && Config::instance()->isHostname(m_address.toString(), Config::LOCALHOST);
+	{
+		static bool fuck = true;
+		if (fuck == true) {
+			fuck = false;
+			if (!isReachable() && Config::instance()->isHost(*this, Config::LOCALHOST))
+				log.debug("isUnreachable()=%1, isHost(*this,LOCALHOST)=%2", QString::number(!isReachable()),
+						QString::number(Config::instance()->isHost(*this, Config::LOCALHOST)));
+			fuck = true;
+		}
+	}
+
+	if (m_port < 32768) {
+		return REACHABLE;
+	} else {
+		return UNREACHABLE;
+	}
+}
+
+Host::HostScope Host::scope() const
+{
+	QString address_str = address().toString();
+	return address_str.startsWith("127.") ? LOCAL_SCOPE :
+			(address_str.startsWith("10.") || address_str.startsWith("192.168.")) ? LAN_SCOPE : WAN_SCOPE;
 }
 bool Host::isDynamicIP() const
 {
-	return scope() == WAN;
-}
-Host::HostScope Host::scope() const
-{
-	return m_address.toString().startsWith("127.") ? LOCAL :
-			(m_address.toString().startsWith("10.") || m_address.toString().startsWith("192.168.")) ? LAN : WAN;
-
-}
-void Host::lookupAddress()
-{
-	QHostInfo info = DnsCache::instance()->lookup(m_hostname, DnsCache::BLOCK_IF_NEEDED);
-	if (info.addresses().size() != 0) {
-		m_address = info.addresses().first();
-		m_address_state = LOOKED_UP;
-		//log.debug("lookupAddress(%1) = %2", m_hostname, m_address.toString());
-	} else {
-		m_address = INVALID_ADDRESS;
-		m_address_state = INVALID;
-		log.debug("lookupAddress(%1) failed! no address found!", m_hostname);
-	}
-}
-void Host::lookupHostname()
-{
-	lookupHostname(&m_hostname, &m_hostname_state);
-}
-void Host::lookupHostname(QString* hostname, FieldState* state) const
-{
-	if (m_address_state == INVALID || m_address.toString().size() == 0) {
-		*hostname = INVALID_HOSTNAME;
-		*state = INVALID;
-	} else {
-		QHostInfo info = DnsCache::instance()->lookup(m_address.toString(), DnsCache::CACHE_ONLY, this);
-
-		if (info.hostName().size() > 0) {
-			*hostname = info.hostName();
-			*state = LOOKED_UP;
-			// log.debug("lookupAddress(%1) = %2", m_address.toString(), m_hostname);
-		} else {
-			*hostname = INVALID_HOSTNAME;
-			*state = INVALID;
-			log.debug("lookupHostname(%1) failed! no hostname found!", m_address.toString());
-		}
-	}
+	return scope() == WAN_SCOPE;
 }
 
-QString Host::toString(PortFormat showPort, HostFormat hostFormat) const
+QString Host::toString() const
 {
-	QString formattedHost = hostFormat == SHOW_HOSTNAME ? displayname() : address().toString();
-	if (isLoopback())
-		return (hostFormat == SHOW_HOSTNAME ? "loopback device" : "loopback") + QString(" (") + formattedHost + ":"
-				+ QString::number(m_port) + ")";
-	else if (isUnreachable())
-		return formattedHost + ":incoming";
-	// + QString(" (") + formattedHost + ":"	+ QString::number(m_port) + ")";
-	else if (m_port == Config::instance()->DEFAULT_PORT && showPort == SHOW_PORT_ONLY_UNUSUAL)
-		return formattedHost;
-	else
-		return formattedHost + ":" + QString::number(m_port);
+	return print(PRINT_ONLY_DATA);
 }
 QString Host::id() const
 {
-	if (isLoopback())
-		return "Host<loopback>";
-	else if (isUnreachable())
-		return "Host<" + address().toString() + ":incoming>";
-	else
-		return "Host<" + address().toString() + ":" + QString::number(m_port) + ">";
+	return "Host<" + print(PRINT_ONLY_DATA) + ">";
 }
 QString Host::print(PrintFormat format) const
 {
 	QString data;
-	if (isLoopback())
-		data = "loopback";
-	else if (isUnreachable())
+	if (isUnreachable())
 		data = displayname() + ":incoming";
 	else
 		data = displayname() + ":" + QString::number(m_port);
@@ -233,7 +202,7 @@ QString Host::print(PrintFormat format) const
 }
 QString Host::serialize() const
 {
-	return "Host<" + m_hostname + "~" + address().toString() + ":" + QString::number(m_port) + ">";
+	return "Host<" + address().toString() + ":" + QString::number(m_port) + ">";
 }
 Host Host::deserialize(QString _str)
 {
@@ -249,9 +218,15 @@ Host Host::deserialize(QString _str)
 			return obj;
 		}
 		if (parts.size() == 3) {
-			Host obj = Host(QHostAddress(parts[1]), parts[0], parts[2].toInt());
-			id.logger().debug("deserialization successful: %1 = %2", _str, Log::print(obj));
-			return obj;
+			if (parts[0].isEmpty()) {
+				Host obj = Host(QHostAddress(parts[1]), parts[2].toInt());
+				id.logger().debug("deserialization successful: %1 = %2", _str, Log::print(obj));
+				return obj;
+			} else {
+				Host obj = Host(parts[0], parts[2].toInt());
+				id.logger().debug("deserialization successful: %1 = %2", _str, Log::print(obj));
+				return obj;
+			}
 		}
 	}
 	id.logger().debug("deserialization failed: %1", _str);
@@ -370,11 +345,7 @@ User User::deserialize(QString _str)
 Contact::Contact(User user, Host host, QObject* parent)
 		: QObject(parent), m_user(user), m_host(host)
 {
-	if (host.isLoopback() && user.username().toLower() != SystemUtil::instance()->getUserName().toLower()) {
-		invalidate();
-	} else {
-		user.addHost(host);
-	}
+	user.addHost(host);
 }
 Contact::Contact(QObject * parent)
 		: QObject(parent), m_user(User::INVALID_USER), m_host()
@@ -428,10 +399,6 @@ QHostAddress Contact::address() const
 {
 	return m_host.address();
 }
-QString Contact::hostname() const
-{
-	return m_host.hostname();
-}
 QString Contact::displayname() const
 {
 	return m_host.displayname();
@@ -443,7 +410,7 @@ quint16 Contact::port() const
 
 Contact Contact::reachableContact() const
 {
-	if (host().isUnreachable() && !host().isLoopback()) {
+	if (host().isUnreachable()) {
 		foreach (const Contact& contact, user().contacts())
 		{
 			if (contact.host().address() == host().address() && contact.host().isReachable()) {
@@ -460,6 +427,12 @@ Contact Contact::reachableContact() const
 	return *this;
 }
 
+bool Contact::isMe() const
+{
+	return username() == SystemUtil::instance()->getUserName()
+			&& computername() == SystemUtil::instance()->getComputerName();
+}
+
 QString Contact::toString() const
 {
 	return m_user.print(ID::PRINT_ONLY_DATA) + "=" + m_host.toString();
@@ -470,10 +443,7 @@ QString Contact::toString() const
 }
 QString Contact::id() const
 {
-	if (m_host.isLoopback())
-		return "Contact<" + m_user.print(ID::PRINT_ONLY_DATA) + "=loopback>";
-	else
-		return "Contact<" + m_user.print(ID::PRINT_ONLY_DATA) + "=" + m_host.print(ID::PRINT_ONLY_DATA) + ">";
+	return "Contact<" + m_user.print(ID::PRINT_ONLY_DATA) + "=" + m_host.print(ID::PRINT_ONLY_DATA) + ">";
 }
 QString Contact::print(PrintFormat format) const
 {
@@ -551,24 +521,18 @@ bool compareHostnamesAndAddresses(const QString& left, const QString& right)
 
 QDataStream& operator<<(QDataStream& out, const Host& myObj)
 {
-	out << QString("Host") << myObj.address() << myObj.hostname() << quint32(myObj.port());
+	out << QString("Host") << myObj.address() << quint32(myObj.port());
 	return out;
 }
 QDataStream & operator>>(QDataStream & in, Host & myObj)
 {
 	QHostAddress address;
-	QString hostname;
 	quint32 port;
 	QString type;
 	in >> type;
 	if (type == "Host") {
-		in >> address >> hostname >> port;
-		if (!hostname.isEmpty()) {
-			QHostAddress currentAddress = NetworkUtil::instance()->parseHostname(hostname);
-			myObj = Host(currentAddress, port);
-		} else {
-			myObj = Host(address, port);
-		}
+		in >> address >> port;
+		myObj = Host(address, port);
 	} else {
 		qDebug() << "Error in deserialization of type Host: invalid type '" + type + "'!";
 		myObj = Host::INVALID_HOST;

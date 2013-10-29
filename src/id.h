@@ -103,9 +103,7 @@ class ID
 {
 public:
 	ID();
-	virtual ~ID()
-	{
-	}
+	virtual ~ID();
 
 	enum Verbosity
 	{
@@ -126,10 +124,16 @@ public:
 	virtual Verbosity verbose() const;
 	virtual bool isVerbose(Verbosity verbose) const;
 
+	typedef QMetaObject::Connection QConnection;
+	friend ID& operator<<(ID& out, ID::QConnection connection);
+
 protected:
 	Log log;
 	Verbosity m_verbose;
+	QList<QMetaObject::Connection*> m_connections;
 };
+
+ID& operator<<(ID& obj, ID::QConnection connection);
 
 class StaticID: public ID
 {

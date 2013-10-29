@@ -22,11 +22,11 @@ bool Connection::operator!=(const Connection& other) const
 }
 QString Connection::id() const
 {
-	return "Connection<" + m_host.toString(Host::SHOW_PORT_ALWAYS, Host::SHOW_ADDRESS) + ">";
+	return "Connection<" + print(PRINT_ONLY_DATA) + ">";
 }
 QString Connection::print(PrintFormat format) const
 {
-	QString data(m_host.toString(Host::SHOW_PORT_ALWAYS, Host::SHOW_ADDRESS));
+	QString data(m_host.print(PRINT_ONLY_DATA));
 	if (format == PRINT_ONLY_NAME)
 		return "Connection";
 	else if (format == PRINT_ONLY_DATA)
@@ -153,7 +153,7 @@ void Connection::onSocketConnected()
 		User user(username, computername);
 		m_contact = Contact(user, m_host);
 		if (m_contact != Contact::INVALID_CONTACT) {
-			m_contact = m_contact.reachableContact();
+			//	m_contact = m_contact.reachableContact();
 			emit contactFound(m_contact);
 			emit userFound(user);
 		}

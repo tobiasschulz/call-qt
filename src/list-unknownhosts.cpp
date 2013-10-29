@@ -61,7 +61,6 @@ void UnknownHosts::rebuildItems()
 		unknownhosts.removeAll(contact.displayname());
 	}
 
-	unknownhosts = DnsCache::instance()->lookup(unknownhosts, DnsCache::HOSTNAME, DnsCache::CACHE_ONLY);
 	qSort(unknownhosts.begin(), unknownhosts.end(), compareHostnamesAndAddresses);
 
 	foreach (QString host, unknownhosts)

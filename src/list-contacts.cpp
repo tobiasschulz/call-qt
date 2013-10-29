@@ -6,6 +6,8 @@
  */
 
 #include <QSettings>
+#include <QMutableListIterator>
+#include <QListIterator>
 
 #include "list-contacts.h"
 #include "list-hosts.h"
@@ -33,11 +35,46 @@ QString Contacts::id() const
 	return "List::Contacts";
 }
 
+void removeContacts(QList<Contact>& list, const User& user, const QString& displayname,
+		Host::HostReachability reachability)
+{
+	QMutableListIterator<Contact> i(list);
+	while (i.hasNext()) {
+		Contact& other = i.next();
+		if (other.user() == user && other.displayname() == displayname && other.host().reachability() == reachability) {
+			i.remove();
+		}
+	}
+}
+
+bool containsContacts(const QList<Contact>& list, const User& user, const QString& displayname,
+		Host::HostReachability reachability)
+{
+	QListIterator<Contact> i(list);
+	while (i.hasNext()) {
+		const Contact& other = i.next();
+		if (other.user() == user && other.displayname() == displayname && other.host().reachability() == reachability) {
+			return true;
+		}
+	}
+	return false;
+}
+
 void Contacts::add(Contact contact)
 {
 	if (contact != Contact::INVALID_CONTACT && !m_contacts.contains(contact)) {
 		log.debug("add: %1", contact.id());
-		m_contacts << contact;
+
+		// reachable contact
+		if (contact.host().isReachable()) {
+			removeContacts(m_contacts, contact.user(), contact.displayname(), Host::UNREACHABLE);
+			m_contacts << contact;
+		}
+		// unreachable contact
+		else if (!containsContacts(m_contacts, contact.user(), contact.displayname(), Host::REACHABLE)) {
+			m_contacts << contact;
+		}
+
 		rebuildItems();
 	}
 }
@@ -51,20 +88,6 @@ const Contact& Contacts::get(int index) const
 QList<Contact> Contacts::toList() const
 {
 	return m_contacts;
-}
-
-const Contact& Contacts::___reachableContact(const Contact& unreachable) const
-{
-	if (unreachable.host().isUnreachable() && !unreachable.host().isLoopback()) {
-		foreach (const Contact& contact, m_contacts)
-		{
-			if (contact.user() == unreachable.user() && contact.host().address() == unreachable.host().address()
-					&& contact.host().isReachable()) {
-				return contact;
-			}
-		}
-	}
-	return unreachable;
 }
 
 int Contacts::size() const

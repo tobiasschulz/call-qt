@@ -13,7 +13,6 @@
 #include "id.h"
 #include "thread.h"
 #include "contact.h"
-#include "contactlist.h"
 
 class DnsCache: public QObject, public ID
 {
@@ -25,17 +24,11 @@ public:
 
 	enum LookupMode
 	{
-		CACHE_ONLY, BLOCK_IF_NEEDED
-	};
-	enum HostInfo
-	{
-		HOSTNAME, ADDRESS
+		CACHE_LOOKUP, BLOCKING_LOOKUP
 	};
 
-	QHostInfo lookup(QString host, LookupMode mode = BLOCK_IF_NEEDED, const Host* relatedHost = 0);
-	QString lookup(QString host, HostInfo preferred, LookupMode mode = BLOCK_IF_NEEDED, const Host* relatedHost = 0);
-	QHash<QString, QHostInfo> lookup(QStringList hosts, LookupMode mode = BLOCK_IF_NEEDED);
-	QStringList lookup(QStringList hosts, HostInfo preferred, LookupMode mode = BLOCK_IF_NEEDED);
+	QHostInfo lookup(QString host, LookupMode mode = BLOCKING_LOOKUP);
+	QHash<QString, QHostInfo> lookup(QStringList hosts, LookupMode mode = BLOCKING_LOOKUP);
 	bool isCached(QString host);
 
 signals:
@@ -53,6 +46,7 @@ private:
 	static DnsCache* m_instance;
 
 	QHash<QString, QHostInfo> m_hash;
+	QSet<QString> m_pendingLookups;
 	QMutex m_mutex;
 };
 

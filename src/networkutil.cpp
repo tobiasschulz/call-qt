@@ -78,7 +78,7 @@ void NetworkUtil::writeHeaders(QTcpSocket* socket, Connection::Type type, const 
 	logger->debug("start writing headers");
 	writeLine(socket, "User: ", SystemUtil::instance()->getUserName());
 	writeLine(socket, "UID: ", QVariant::fromValue(Config::instance()->uid()));
-	writeLine(socket, "Computername: ", QHostInfo::localHostName());
+	writeLine(socket, "Computername: ", SystemUtil::instance()->getComputerName());
 	writeLine(socket, "Uptime: ", QVariant::fromValue(Config::instance()->uptime()));
 
 	if (type == Connection::STATUS)

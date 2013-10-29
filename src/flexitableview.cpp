@@ -11,6 +11,6 @@ FlexiTableView::~FlexiTableView()
 QSize FlexiTableView::sizeHint() const
 {
 	QSize size = QTableView::sizeHint();
-	size.setWidth(150);
+	size.setWidth(175);
 	return size;
 }

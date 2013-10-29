@@ -22,6 +22,7 @@ public:
 	static SystemUtil* instance();
 
 	QString getUserName();
+	QString getComputerName();
 	void messageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg);
 	void messageOutput(ID::Verbosity type, const QString &msg);
 

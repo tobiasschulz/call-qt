@@ -153,8 +153,18 @@ void ChatTab::fillContactCombobox()
 		list->clear();
 		foreach (const Contact& contact, m_user.contacts())
 		{
-			QIcon icon = iconHostOnlineOffline(contact);
-			list->addItem(icon, contact.host().toString(), QVariant::fromValue(contact));
+			if (contact.host().isReachable()) {
+				list->addItem(iconHostOnlineOffline(contact), contact.host().toString(), QVariant::fromValue(contact));
+			}
+		}
+		if (list->count() == 0) {
+			foreach (const Contact& contact, m_user.contacts())
+			{
+				if (contact.host().isUnreachable()) {
+					list->addItem(iconHostOnlineOffline(contact), contact.host().toString(),
+							QVariant::fromValue(contact));
+				}
+			}
 		}
 		list->setUpdatesEnabled(true);
 	}

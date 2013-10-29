@@ -18,9 +18,8 @@ Config* Config::m_instance(0);
 
 Config::Config(QObject *parent)
 		: QObject(parent), DEFAULT_PORT(4000), SOCKET_READ_TIMEOUT(8000), SOCKET_CONNECT_TIMEOUT(4000),
-			CONTACT_SCAN_INTERVAL(90000), DEFAULT_CONTACT_HOSTS(), m_localhosts(), m_knownhosts(), m_unknownhosts(),
-			m_hosts_initialized(), m_hosts_lock(), m_uid(0), m_uptime(QDateTime::currentMSecsSinceEpoch()),
-			m_audioinputdevice(), m_audiooutputdevice()
+			CONTACT_SCAN_INTERVAL(90000), DEFAULT_CONTACT_HOSTS(), m_hosts(), m_hosts_initialized(), m_uid(0),
+			m_uptime(QDateTime::currentMSecsSinceEpoch()), m_audioinputdevice(), m_audiooutputdevice()
 {
 	m_audioinputformat = defaultAudioFormat();
 
@@ -87,40 +86,31 @@ QList<Host> Config::defaultHosts()
 
 void Config::readHostConfig(HostType type)
 {
-	// log.debug("%1", "1");
-	if (m_hosts_lock[type] == 0)
-		m_hosts_lock[type] = new QMutex;
-	QMutexLocker locker(m_hosts_lock[type]);
 	if (!m_hosts_initialized[type]) {
 		m_hosts_initialized[type] = true;
+
 		QSettings settings;
 
 		// local
 		if (type == LOCALHOST) {
-			m_localhosts = settings.value("contacts/localhosts", QStringList()).toStringList();
+			m_hosts[LOCALHOST] = deserializeList<Host>(
+					settings.value("contacts/localhosts", QStringList()).toStringList());
+			m_hosts[LOCALHOST].removeAll(Host::INVALID_HOST);
 		}
 
-		// unknown
-		if (type == UNKNOWN_HOST) {
-			m_unknownhosts << Config::instance()->defaultHosts();
-		}
-
-		// known
+		// known and unknown
 		if (type == KNOWN_HOST || type == UNKNOWN_HOST) {
-			m_knownhosts = deserializeList<Host>(settings.value("contacts/known-hosts", QStringList()).toStringList());
-			m_knownhosts.removeAll(Host::INVALID_HOST);
-			foreach (const Host& host, m_knownhosts)
+			m_hosts[UNKNOWN_HOST] << Config::instance()->defaultHosts();
+			m_hosts[KNOWN_HOST] = deserializeList<Host>(
+					settings.value("contacts/known-hosts", QStringList()).toStringList());
+			m_hosts[KNOWN_HOST].removeAll(Host::INVALID_HOST);
+			foreach (const Host& host, m_hosts[KNOWN_HOST])
 			{
 				log.debug("known host: %1", Log::print(host));
-				if (host.isUnreachable()) {
-					m_knownhosts.removeAll(host);
+				if (host.isUnreachable() || host.isDynamicIP()) {
+					m_hosts[KNOWN_HOST].removeAll(host);
 				}
-				if (host.isDynamicIP()) {
-					m_knownhosts.removeAll(host);
-				}
-				if (m_unknownhosts.contains(host)) {
-					m_unknownhosts.removeAll(host);
-				}
+				m_hosts[UNKNOWN_HOST].removeAll(host);
 			}
 		}
 	}
@@ -132,86 +122,37 @@ void Config::writeHostConfig()
 	QMutexLocker locker(&lock);
 
 	QSettings settings;
-	settings.setValue("contacts/localhosts", m_localhosts);
+	settings.setValue("contacts/localhosts", serializeList(m_hosts[LOCALHOST]));
 
-	m_knownhosts.removeAll(Host::INVALID_HOST);
-	settings.setValue("contacts/known-hosts", serializeList(m_knownhosts));
+	m_hosts[KNOWN_HOST].removeAll(Host::INVALID_HOST);
+	settings.setValue("contacts/known-hosts", serializeList(m_hosts[KNOWN_HOST]));
 }
 
 QStringList Config::hostnames(HostType type)
 {
 	// log.debug("%1", "3");
 	readHostConfig(type);
-	if (type == LOCALHOST) {
-		return m_localhosts;
-	} else {
-		QStringList hostnames;
-		QList<Host> hosts = type == KNOWN_HOST ? m_knownhosts : type == UNKNOWN_HOST ? m_unknownhosts : QList<Host>();
-		foreach (const Host & host, hosts)
-		{
-			if (!hostnames.contains(host.displayname())) {
-				hostnames << host.displayname();
-			}
+
+	QStringList hostnames;
+	foreach (const Host & host, m_hosts[type])
+	{
+		if (!hostnames.contains(host.displayname())) {
+			hostnames << host.displayname();
 		}
-		return hostnames;
 	}
+	return hostnames;
 }
 QList<Host> Config::hosts(HostType type)
 {
 	// log.debug("%1", "4");
 	readHostConfig(type);
-	if (type == LOCALHOST) {
-		QList<Host> localhosts;
-		foreach (const QString & hostname, m_localhosts)
-		{
-			localhosts << Host(hostname, DEFAULT_PORT);
-		}
-		return localhosts;
-	} else if (type == KNOWN_HOST) {
-		return m_knownhosts;
-	} else if (type == UNKNOWN_HOST) {
-		return m_unknownhosts;
-	} else {
-		return QList<Host>();
-	}
+	return m_hosts[type];
 }
 bool Config::isHost(Host host, HostType type)
 {
 	// log.debug("%1", "5");
 	readHostConfig(type);
-	if (type == LOCALHOST) {
-		return m_localhosts.contains(host.displayname());
-	} else if (type == KNOWN_HOST) {
-		return m_knownhosts.contains(host);
-	} else if (type == UNKNOWN_HOST) {
-		return m_unknownhosts.contains(host);
-	} else {
-		return false;
-	}
-}
-bool contains(QList<Host> hosts, QString hostname)
-{
-	foreach (const Host & host, hosts)
-	{
-		if (host.hostname() == hostname || host.address().toString() == hostname) {
-			return true;
-		}
-	}
-	return false;
-}
-bool Config::isHostname(QString hostname, HostType type)
-{
-	// log.debug("%1", "6");
-	readHostConfig(type);
-	if (type == LOCALHOST) {
-		return m_localhosts.contains(hostname);
-	} else if (type == KNOWN_HOST) {
-		return contains(m_knownhosts, hostname);
-	} else if (type == UNKNOWN_HOST) {
-		return contains(m_unknownhosts, hostname);
-	} else {
-		return false;
-	}
+	return m_hosts[type].contains(host);
 }
 void Config::addHost(Host host, HostType type)
 {
@@ -223,26 +164,24 @@ void Config::addHost(Host host, HostType type)
 		// ignore
 	} else if (type == LOCALHOST) {
 		readHostConfig(LOCALHOST);
-		if (!m_localhosts.contains(host.displayname()))
-			m_localhosts << host.displayname();
-		if (!m_localhosts.contains(host.address().toString()))
-			m_localhosts << host.address().toString();
-		m_localhosts.removeAll(Host::INVALID_HOST.hostname());
-		writeHostConfig();
+		if (!m_hosts[LOCALHOST].contains(host)) {
+			m_hosts[LOCALHOST] << host;
+			writeHostConfig();
+		}
 	} else if (type == KNOWN_HOST) {
 		readHostConfig(KNOWN_HOST);
 		readHostConfig(UNKNOWN_HOST);
-		m_unknownhosts.removeAll(host);
-		if (!m_knownhosts.contains(host) && host.isReachable()) {
-			m_knownhosts.prepend(host);
+		m_hosts[UNKNOWN_HOST].removeAll(host);
+		if (!m_hosts[KNOWN_HOST].contains(host) && host.isReachable()) {
+			m_hosts[KNOWN_HOST].prepend(host);
 			writeHostConfig();
 		}
 	} else if (type == UNKNOWN_HOST) {
 		readHostConfig(KNOWN_HOST);
 		readHostConfig(UNKNOWN_HOST);
-		m_knownhosts.removeAll(host);
-		if (!m_unknownhosts.contains(host) && host.isReachable()) {
-			m_unknownhosts.prepend(host);
+		m_hosts[KNOWN_HOST].removeAll(host);
+		if (!m_hosts[UNKNOWN_HOST].contains(host) && host.isReachable()) {
+			m_hosts[UNKNOWN_HOST].prepend(host);
 			writeHostConfig();
 		}
 	}

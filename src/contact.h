@@ -19,47 +19,44 @@ Q_OBJECT
 public:
 	explicit Host(QHostAddress address, quint16 port, QObject* parent = 0);
 	explicit Host(QString hostname, quint16 port, QObject* parent = 0);
-	explicit Host(QHostAddress address, QString hostname, quint16 port, QObject* parent = 0);
 	explicit Host(QObject* parent = 0);
 	Host(const Host& other);
 	Host& operator=(const Host& other);
-	bool operator==(const Host& other) const;
+	virtual bool operator==(const Host& other) const;
 	bool operator!=(const Host& other) const;
 	bool operator>(const Host& other) const;
 	bool operator<(const Host& other) const;
 
+	QHostAddress address();
 	QHostAddress address() const;
-	QString hostname() const;
-	QString hostname();
 	quint16 port() const;
 	QString displayname() const;
 	QStringList displaynames() const;
 
+	enum HostReachability
+	{
+		REACHABLE, UNREACHABLE
+	};
+
+	HostReachability reachability() const;
 	bool isReachable() const;
 	bool isUnreachable() const;
-	bool isLoopback() const;
-	bool isDynamicIP() const;
 
 	enum HostScope
 	{
-		LOCAL, LAN, WAN
+		LOCAL_SCOPE, LAN_SCOPE, WAN_SCOPE
 	};
 	HostScope scope() const;
+	bool isDynamicIP() const;
 
-	enum PortFormat
-	{
-		SHOW_PORT_ALWAYS, SHOW_PORT_ONLY_UNUSUAL
-	};
-	enum HostFormat
-	{
-		SHOW_ADDRESS, SHOW_HOSTNAME
-	};
-
-	QString toString(PortFormat showPort = SHOW_PORT_ONLY_UNUSUAL, HostFormat hostFormat = SHOW_HOSTNAME) const;
+	QString toString() const;
 	QString id() const;
 	QString print(PrintFormat format = PRINT_NAME_AND_DATA) const;
 	QString serialize() const;
 	static Host deserialize(QString str);
+
+	static Host matchReachable(QHostAddress address);
+	static Host matchUnreachable(QHostAddress address);
 
 	static const Host INVALID_HOST;
 	static const QHostAddress INVALID_ADDRESS;
@@ -71,20 +68,19 @@ signals:
 public slots:
 
 private:
+
 	enum FieldState
 	{
-		INITIAL, LOOKED_UP, INVALID, LOOKUP_PENDING
+		VALID, INVALID, LOOKUP_PENDING
 	};
 
-	void lookupHostname();
-	void lookupHostname(QString* hostname, FieldState* state) const;
-	void lookupAddress();
+	HostReachability updateReachability();
 
 	QHostAddress m_address;
 	FieldState m_address_state;
 	QString m_hostname;
-	FieldState m_hostname_state;
 	quint16 m_port;
+	HostReachability m_reachability;
 };
 
 class User: public QObject, public ID
@@ -138,10 +134,10 @@ public:
 	QString computername() const;
 	Host host() const;
 	QHostAddress address() const;
-	QString hostname() const;
 	quint16 port() const;
 	QString displayname() const;
 	Contact reachableContact() const;
+	bool isMe() const;
 
 	void invalidate();
 	QString toString() const;

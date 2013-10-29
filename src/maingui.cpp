@@ -196,9 +196,9 @@ void Main::hideStats()
 
 void Main::onStatsContact(Contact contact)
 {
-	ui->address->setText(contact.address().toString());
-	ui->hostname->setText(contact.hostname());
+	ui->username->setText(contact.username());
 	ui->computername->setText(contact.computername());
+	ui->address->setText(contact.address().toString());
 	ui->port->setText(QString::number(contact.port()));
 }
 void Main::onStatsDurationInput(int ms)

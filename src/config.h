@@ -80,11 +80,8 @@ private:
 	void writeHostConfig();
 
 	// host-related
-	QStringList m_localhosts;
-	QList<Host> m_knownhosts;
-	QList<Host> m_unknownhosts;
+	QHash<HostType, QList<Host>> m_hosts;
 	QHash<HostType, bool> m_hosts_initialized;
-	QHash<HostType, QMutex*> m_hosts_lock;
 
 	// system-related
 	long m_uid;
