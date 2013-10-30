@@ -26,6 +26,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #endif
+#include <signal.h>
 
 const Log NetworkUtil::log(new StaticID("NetworkUtil"));
 NetworkUtil* NetworkUtil::m_instance;
@@ -33,6 +34,20 @@ NetworkUtil* NetworkUtil::m_instance;
 NetworkUtil::NetworkUtil(QObject *parent)
 		: QObject(parent)
 {
+#if !defined(Q_OS_WIN)
+	// install signal handler
+	{
+		struct sigaction act;
+		int r;
+		memset(&act, 0, sizeof(act));
+		act.sa_handler = SIG_IGN;
+		act.sa_flags = SA_RESTART;
+		r = sigaction(SIGPIPE, &act, NULL);
+		if (r) {
+			log.error("sigaction failed with return value = %1", QString::number(r));
+		}
+	}
+#endif
 }
 
 NetworkUtil* NetworkUtil::instance()
