@@ -102,15 +102,15 @@ void Abstract::onStateChanged(int i)
 
 void Abstract::beginSetItems(int oldcount, int newcount)
 {
+	// in child model
 	if (m_parentmodel) {
-		// in child model
 		int parentsize = m_parentmodel->size();
-		log.debug("beginSetItems (child): parentsize=%1 => %1 - %2 + %3 = %4", QString::number(parentsize),
-				QString::number(oldcount), QString::number(newcount),
-				QString::number(parentsize - oldcount + newcount));
+		// log.debug("beginSetItems (child): parentsize=%1 => %1 - %2 + %3 = %4", QString::number(parentsize),
+		// QString::number(oldcount), QString::number(newcount), QString::number(parentsize - oldcount + newcount));
 		m_parentmodel->beginSetItems(parentsize, parentsize - oldcount + newcount);
-	} else {
-		// in parent model
+	}
+	// in parent model
+	else {
 		if (oldcount >= 1) {
 			beginRemoveItems(0, oldcount);
 			endRemoveItems();
@@ -119,7 +119,7 @@ void Abstract::beginSetItems(int oldcount, int newcount)
 			beginInsertItems(0, newcount);
 			m_rowOperationState = INSERTING;
 		}
-		log.debug("beginSetItems (parent): %1 => %2", QString::number(oldcount), QString::number(newcount));
+		// log.debug("beginSetItems (parent): %1 => %2", QString::number(oldcount), QString::number(newcount));
 	}
 }
 

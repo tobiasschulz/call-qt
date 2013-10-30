@@ -12,6 +12,7 @@
 const QHostAddress Host::INVALID_ADDRESS;
 const QString Host::INVALID_HOSTNAME;
 const quint16 Host::INVALID_PORT = 0;
+const quint16 Host::LOWEST_UNREACHABLE_PORT = 32768;
 const Host Host::INVALID_HOST;
 
 const QString User::INVALID_USERNAME;
@@ -39,7 +40,6 @@ Host::Host(QHostAddress address, quint16 port, QObject* parent)
 		: QObject(parent), m_address(address), m_hostname(INVALID_HOSTNAME), m_port(port)
 {
 	m_address_state = isAddressValid(address) ? VALID : INVALID;
-	m_reachability = updateReachability();
 }
 Host::Host(QString hostname, quint16 port, QObject* parent)
 		: QObject(parent), m_port(port)
@@ -54,12 +54,10 @@ Host::Host(QString hostname, quint16 port, QObject* parent)
 		m_address_state = LOOKUP_PENDING;
 		m_hostname = hostname;
 	}
-	m_reachability = updateReachability();
 }
 Host::Host(QObject * parent)
 		: QObject(parent), m_address(INVALID_ADDRESS), m_address_state(INVALID), m_hostname(INVALID_HOSTNAME), m_port(0)
 {
-	m_reachability = updateReachability();
 }
 Host::Host(const Host& other)
 		: QObject(other.parent())
@@ -68,7 +66,6 @@ Host::Host(const Host& other)
 	m_address_state = other.m_address_state;
 	m_hostname = QString(other.m_hostname);
 	m_port = other.m_port;
-	m_reachability = other.m_reachability;
 }
 
 Host& Host::operator=(const Host& other)
@@ -77,7 +74,6 @@ Host& Host::operator=(const Host& other)
 	m_address_state = other.m_address_state;
 	m_hostname = QString(other.m_hostname);
 	m_port = other.m_port;
-	m_reachability = other.m_reachability;
 	return *this;
 }
 bool Host::operator==(const Host& other) const
@@ -135,35 +131,15 @@ quint16 Host::port() const
 
 Host::HostReachability Host::reachability() const
 {
-	return m_reachability;
+	return m_port < LOWEST_UNREACHABLE_PORT ? REACHABLE : UNREACHABLE;
 }
 bool Host::isReachable() const
 {
-	return m_reachability == REACHABLE;
+	return reachability() == REACHABLE;
 }
 bool Host::isUnreachable() const
 {
-	return m_reachability == UNREACHABLE;
-}
-
-Host::HostReachability Host::updateReachability()
-{
-	{
-		static bool fuck = true;
-		if (fuck == true) {
-			fuck = false;
-			if (!isReachable() && Config::instance()->isHost(*this, Config::LOCALHOST))
-				log.debug("isUnreachable()=%1, isHost(*this,LOCALHOST)=%2", QString::number(!isReachable()),
-						QString::number(Config::instance()->isHost(*this, Config::LOCALHOST)));
-			fuck = true;
-		}
-	}
-
-	if (m_port < 32768) {
-		return REACHABLE;
-	} else {
-		return UNREACHABLE;
-	}
+	return reachability() == UNREACHABLE;
 }
 
 Host::HostScope Host::scope() const
@@ -211,20 +187,19 @@ Host Host::deserialize(QString _str)
 		QString str = _str.mid(5);
 		str = str.left(str.size() - 1);
 		QStringList parts = str.split(QRegExp("[:~]"), QString::SkipEmptyParts);
-		// foreach (QString p, parts) id.logger().debug("deserialization: %1", p);
 		if (parts.size() == 2) {
 			Host obj = Host(QHostAddress(parts[0]), parts[1].toInt());
-			id.logger().debug("deserialization successful: %1 = %2", _str, Log::print(obj));
+			// id.logger().debug("deserialization successful: %1 = %2", _str, Log::print(obj));
 			return obj;
 		}
 		if (parts.size() == 3) {
 			if (parts[0].isEmpty()) {
 				Host obj = Host(QHostAddress(parts[1]), parts[2].toInt());
-				id.logger().debug("deserialization successful: %1 = %2", _str, Log::print(obj));
+				// id.logger().debug("deserialization successful: %1 = %2", _str, Log::print(obj));
 				return obj;
 			} else {
 				Host obj = Host(parts[0], parts[2].toInt());
-				id.logger().debug("deserialization successful: %1 = %2", _str, Log::print(obj));
+				// id.logger().debug("deserialization successful: %1 = %2", _str, Log::print(obj));
 				return obj;
 			}
 		}
@@ -334,7 +309,7 @@ User User::deserialize(QString _str)
 		QStringList parts = str.split(QRegExp("[@=]"));
 		if (parts.size() == 2) {
 			User obj = User(parts[0], parts[1]);
-			id.logger().debug("deserialization successful: %1 = %2", _str, Log::print(obj));
+			// id.logger().debug("deserialization successful: %1 = %2", _str, Log::print(obj));
 			return obj;
 		}
 	}
@@ -470,7 +445,7 @@ Contact Contact::deserialize(QString _str)
 			Host host = Host::deserialize(parts[1]);
 			User user = User::deserialize(parts[0]);
 			Contact obj = Contact(user, host);
-			id.logger().debug("deserialization successful: %1 = %2", _str, Log::print(obj));
+			// id.logger().debug("deserialization successful: %1 = %2", _str, Log::print(obj));
 			return obj;
 		}
 	}

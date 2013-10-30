@@ -142,50 +142,40 @@ QStringList Config::hostnames(HostType type)
 	}
 	return hostnames;
 }
+
 QList<Host> Config::hosts(HostType type)
 {
-	// log.debug("%1", "4");
 	readHostConfig(type);
 	return m_hosts[type];
 }
+
 bool Config::isHost(Host host, HostType type)
 {
-	// log.debug("%1", "5");
 	readHostConfig(type);
 	return m_hosts[type].contains(host);
 }
+
 void Config::addHost(Host host, HostType type)
 {
-	// log.debug("%1", "7");
 	static QMutex lock;
 	QMutexLocker locker(&lock);
 
-	if (host == Host::INVALID_HOST) {
-		// ignore
-	} else if (type == LOCALHOST) {
-		readHostConfig(LOCALHOST);
-		if (!m_hosts[LOCALHOST].contains(host)) {
-			m_hosts[LOCALHOST] << host;
-			writeHostConfig();
+	if (host != Host::INVALID_HOST) {
+		if (type == KNOWN_HOST || type == UNKNOWN_HOST) {
+			readHostConfig(KNOWN_HOST);
+			readHostConfig(UNKNOWN_HOST);
+			m_hosts[KNOWN_HOST].removeAll(host);
+			m_hosts[UNKNOWN_HOST].removeAll(host);
 		}
-	} else if (type == KNOWN_HOST) {
-		readHostConfig(KNOWN_HOST);
-		readHostConfig(UNKNOWN_HOST);
-		m_hosts[UNKNOWN_HOST].removeAll(host);
-		if (!m_hosts[KNOWN_HOST].contains(host) && host.isReachable()) {
-			m_hosts[KNOWN_HOST].prepend(host);
-			writeHostConfig();
-		}
-	} else if (type == UNKNOWN_HOST) {
-		readHostConfig(KNOWN_HOST);
-		readHostConfig(UNKNOWN_HOST);
-		m_hosts[KNOWN_HOST].removeAll(host);
-		if (!m_hosts[UNKNOWN_HOST].contains(host) && host.isReachable()) {
-			m_hosts[UNKNOWN_HOST].prepend(host);
+
+		readHostConfig(type);
+		if (!m_hosts[type].contains(host) && host.isReachable()) {
+			m_hosts[type].prepend(host);
 			writeHostConfig();
 		}
 	}
 }
+
 void Config::addHosts(QList<Host> hosts, HostType type)
 {
 	// log.debug("%1", "8");

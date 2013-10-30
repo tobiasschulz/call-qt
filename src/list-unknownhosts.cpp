@@ -63,10 +63,10 @@ void UnknownHosts::rebuildItems()
 
 	qSort(unknownhosts.begin(), unknownhosts.end(), compareHostnamesAndAddresses);
 
-	foreach (QString host, unknownhosts)
-	{
-		log.debug("host = %1", host);
-	}
+	/*foreach (QString host, unknownhosts)
+	 {
+	 log.debug("host = %1", host);
+	 }*/
 
 	emit beginListReset(m_unknownhosts.size(), unknownhosts.size());
 	{

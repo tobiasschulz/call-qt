@@ -62,6 +62,7 @@ public:
 	static const QHostAddress INVALID_ADDRESS;
 	static const QString INVALID_HOSTNAME;
 	static const quint16 INVALID_PORT;
+	static const quint16 LOWEST_UNREACHABLE_PORT;
 
 signals:
 
@@ -74,13 +75,10 @@ private:
 		VALID, INVALID, LOOKUP_PENDING
 	};
 
-	HostReachability updateReachability();
-
 	QHostAddress m_address;
 	FieldState m_address_state;
 	QString m_hostname;
 	quint16 m_port;
-	HostReachability m_reachability;
 };
 
 class User: public QObject, public ID
