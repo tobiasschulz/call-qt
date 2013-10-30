@@ -258,7 +258,7 @@ void ChatTab::printChatMessage(QString message)
 
 QString ChatTab::tabname() const
 {
-	return m_user.toString();
+	return m_user.fullname() + "@" + m_user.computername();
 }
 QIcon ChatTab::tabicon() const
 {

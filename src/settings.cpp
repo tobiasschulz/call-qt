@@ -10,21 +10,32 @@
 
 #include "settings.h"
 
-ButtonListener::ButtonListener(QAbstractButton* button, QString name, QObject* parent)
-		: QObject(parent), m_name(name)
+QHash<ButtonGroup, QList<ButtonOption>> ButtonGroup::m_buttonoptions;
+
+ButtonListener::ButtonListener(QAbstractButton* button, QString optionname, QObject* parent)
+		: QObject(parent), m_optionname(optionname), m_valuename()
+{
+	QObject::connect(button, SIGNAL(toggled(bool)), this, SLOT(onOptionChanged(bool)));
+}
+
+ButtonListener::ButtonListener(QAbstractButton* button, QString optionname, QString valuename, QObject* parent)
+		: QObject(parent), m_optionname(optionname), m_valuename(valuename)
 {
 	QObject::connect(button, SIGNAL(toggled(bool)), this, SLOT(onOptionChanged(bool)));
 }
 QString ButtonListener::id() const
 {
-	return "ButtonOption<" + m_name + ">";
+	return "ButtonOption<" + m_optionname + ">";
 }
 void ButtonListener::onOptionChanged(bool value)
 {
-	emit optionChanged(m_name, value);
+	emit optionChanged(m_optionname, value);
+	if (value && !m_valuename.isEmpty()) {
+		emit optionChanged(m_optionname, m_valuename);
+	}
 }
 
-ButtonOption::ButtonOption(QAbstractButton* button, QString name, QVariant defaultValue)
+ButtonOption::ButtonOption(QAbstractButton* button, QString name, bool defaultValue)
 		: QObject(), m_button(button), m_name(name), m_defaultValue(defaultValue)
 {
 }
@@ -61,9 +72,101 @@ QString ButtonOption::name() const
 {
 	return m_name;
 }
-QVariant ButtonOption::defaultValue() const
+bool ButtonOption::defaultValue() const
 {
 	return m_defaultValue;
+}
+bool ButtonOption::value() const
+{
+	return m_button->isChecked();
+}
+void ButtonOption::setValue(bool value) const
+{
+	m_button->setChecked(value);
+}
+
+ButtonGroup::ButtonGroup(Settings* settings, QString optionname)
+		: QObject(), m_optionname(optionname), m_settings(settings)
+{
+	if (settings) {
+		settings->addGroup(*this);
+	}
+}
+ButtonGroup::ButtonGroup(const ButtonGroup& other)
+		: QObject(), m_optionname(other.m_optionname), m_settings(other.m_settings)
+{
+}
+ButtonGroup& ButtonGroup::operator=(const ButtonGroup& other)
+{
+	m_optionname = other.m_optionname;
+	m_settings = other.m_settings;
+	return *this;
+}
+QString ButtonGroup::id() const
+{
+	return "ButtonGroup<" + m_optionname + ">";
+}
+bool ButtonGroup::operator==(const ButtonGroup& other) const
+{
+	return m_optionname == other.m_optionname;
+}
+bool ButtonGroup::operator!=(const ButtonGroup& other) const
+{
+	return !(*this == other);
+}
+
+QString ButtonGroup::optionname() const
+{
+	return m_optionname;
+}
+QString ButtonGroup::defaultValue() const
+{
+	foreach (const ButtonOption& option, m_buttonoptions[*this])
+	{
+		if (option.defaultValue()) {
+			return option.name();
+		}
+	}
+	return QString();
+}
+QString ButtonGroup::value() const
+{
+	foreach (const ButtonOption& option, m_buttonoptions[*this])
+	{
+		if (option.value() == true) {
+			return option.name();
+		}
+	}
+	return QString();
+}
+void ButtonGroup::setValue(QString value) const
+{
+	foreach (const ButtonOption& option, m_buttonoptions[*this])
+	{
+		if (option.name() == value) {
+			return option.setValue(true);
+		} else {
+			return option.setValue(false);
+		}
+	}
+}
+
+void ButtonGroup::addOption(ButtonOption option)
+{
+	if (m_settings) {
+		m_buttonoptions[*this] << option;
+		ButtonListener* listener = new ButtonListener(option.button(), m_optionname, option.name(), m_settings.data());
+		QObject::connect(listener, SIGNAL(optionChanged(QString, QString)), m_settings.data(),
+		SLOT(onStringOptionChanged(QString, QString)));
+	} else {
+		log.error("addOption(%1): m_settings in NULL!", Log::print(option));
+	}
+}
+
+ButtonGroup& operator<<(ButtonGroup& group, const ButtonOption& option)
+{
+	group.addOption(option);
+	return group;
 }
 
 Settings::Settings(QString group)
@@ -94,9 +197,20 @@ Settings& operator<<(Settings& settings, const ButtonOption& option)
 	return settings;
 }
 
+void Settings::addGroup(ButtonGroup group)
+{
+	m_buttongroups << group;
+}
+
 void Settings::onBooleanOptionChanged(QString name, bool value)
 {
 	emit booleanOptionChanged(name, value);
+	saveSettings();
+}
+
+void Settings::onStringOptionChanged(QString name, QString value)
+{
+	emit stringOptionChanged(name, value);
 	saveSettings();
 }
 
@@ -109,7 +223,12 @@ void Settings::loadSettings()
 	foreach (const ButtonOption& option, m_buttonoptions)
 	{
 		log.debug("loadSettings: %1 = %2", option.name(), settings.value(option.name()).toString());
-		option.button()->setChecked(settings.value(option.name(), option.defaultValue()).toBool());
+		option.setValue(settings.value(option.name(), option.defaultValue()).toBool());
+	}
+	foreach (const ButtonGroup& group, m_buttongroups)
+	{
+		log.debug("loadSettings: %1 = %2", group.optionname(), settings.value(group.optionname()).toString());
+		group.setValue(settings.value(group.optionname(), group.defaultValue()).toString());
 	}
 	if (m_group.size() > 0)
 		settings.endGroup();
@@ -123,8 +242,13 @@ void Settings::saveSettings()
 			settings.beginGroup(m_group);
 		foreach (const ButtonOption& option, m_buttonoptions)
 		{
-			settings.setValue(option.name(), option.button()->isChecked());
-			log.debug("saveSettings: %1 = %2", option.name(), QVariant(option.button()->isChecked()).toString());
+			log.debug("saveSettings: %1 = %2", option.name(), QVariant(option.value()).toString());
+			settings.setValue(option.name(), option.value());
+		}
+		foreach (const ButtonGroup& group, m_buttongroups)
+		{
+			log.debug("saveSettings: %1 = %2", group.optionname(), group.value());
+			settings.setValue(group.optionname(), group.value());
 		}
 		if (m_group.size() > 0)
 			settings.endGroup();
@@ -143,9 +267,17 @@ void Settings::pushValue(QString name)
 	foreach (const ButtonOption& option, m_buttonoptions)
 	{
 		if (option.name() == name) {
-			bool value = option.button()->isChecked();
+			bool value = option.value();
 			log.debug("pushValue: %1 = %2", name, value);
 			emit booleanOptionChanged(name, value);
+		}
+	}
+	foreach (const ButtonGroup& group, m_buttongroups)
+	{
+		if (group.optionname() == name) {
+			QString value = group.value();
+			log.debug("pushValue: %1 = %2", name, value);
+			emit stringOptionChanged(name, value);
 		}
 	}
 }
@@ -154,6 +286,7 @@ OptionCatcher::OptionCatcher(Settings* settings, QString name)
 		: QObject(settings), m_settings(settings), m_name(name)
 {
 	QObject::connect(settings, &Settings::booleanOptionChanged, this, &OptionCatcher::onBooleanOptionChanged);
+	QObject::connect(settings, &Settings::stringOptionChanged, this, &OptionCatcher::onStringOptionChanged);
 }
 QString OptionCatcher::id() const
 {
@@ -167,9 +300,21 @@ void OptionCatcher::onBooleanOptionChanged(QString name, bool value)
 	}
 }
 
+void OptionCatcher::onStringOptionChanged(QString name, QString value)
+{
+	if (name == m_name) {
+		emit stringOptionChanged(value);
+	}
+}
+
 OptionCatcher* OptionCatcher::connect(const QObject* obj, const char* method)
 {
-	QObject::connect(this, SIGNAL(booleanOptionChanged(bool)), obj, method);
+	QString methodStr(QString::fromLocal8Bit(method));
+	log.debug("connect(%1)", methodStr);
+	if (methodStr.contains("bool"))
+		QObject::connect(this, SIGNAL(booleanOptionChanged(bool)), obj, method);
+	else
+		QObject::connect(this, SIGNAL(stringOptionChanged(QString)), obj, method);
 	return this;
 }
 
