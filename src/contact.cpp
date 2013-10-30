@@ -208,27 +208,32 @@ Host Host::deserialize(QString _str)
 	return Host::INVALID_HOST;
 }
 
-User::User(QString username, QString computername, QObject* parent)
-		: QObject(parent), m_username(username), m_computername(computername)
+User::User(QString username, QString fullname, QString computername, QObject* parent)
+		: QObject(parent), m_username(username), m_fullname(fullname), m_computername(computername)
 {
 	if (username.size() == 0) {
 		m_username = INVALID_USERNAME;
 	}
+	if (fullname.size() == 0) {
+		m_fullname = INVALID_USERNAME;
+	}
 }
 User::User(QObject * parent)
-		: QObject(parent), m_username(INVALID_USERNAME), m_computername()
+		: QObject(parent), m_username(INVALID_USERNAME), m_fullname(INVALID_USERNAME), m_computername()
 {
 }
 User::User(const User& other)
 		: QObject(other.parent())
 {
 	m_username = other.m_username;
+	m_fullname = other.m_fullname;
 	m_computername = other.m_computername;
 }
 
 User& User::operator=(const User& other)
 {
 	m_username = QString(other.m_username);
+	m_fullname = QString(other.m_fullname);
 	m_computername = QString(other.m_computername);
 	return *this;
 }
@@ -244,6 +249,14 @@ bool User::operator!=(const User& other) const
 QString User::username() const
 {
 	return m_username;
+}
+QString User::fullname() const
+{
+	return m_fullname;
+}
+QString User::firstname() const
+{
+	return m_fullname.split(' ')[0];
 }
 QString User::computername() const
 {
@@ -298,7 +311,7 @@ QString User::print(PrintFormat format) const
 }
 QString User::serialize() const
 {
-	return "User<" + m_username + "@" + m_computername + ">";
+	return "User<" + m_username + "=" + m_fullname + "@" + m_computername + ">";
 }
 User User::deserialize(QString _str)
 {
@@ -307,8 +320,13 @@ User User::deserialize(QString _str)
 		QString str = _str.mid(5);
 		str = str.left(str.size() - 1);
 		QStringList parts = str.split(QRegExp("[@=]"));
+		if (parts.size() == 3) {
+			User obj = User(parts[0], parts[1], parts[2]);
+			// id.logger().debug("deserialization successful: %1 = %2", _str, Log::print(obj));
+			return obj;
+		}
 		if (parts.size() == 2) {
-			User obj = User(parts[0], parts[1]);
+			User obj = User(parts[0], "", parts[1]);
 			// id.logger().debug("deserialization successful: %1 = %2", _str, Log::print(obj));
 			return obj;
 		}
@@ -501,11 +519,11 @@ QDataStream& operator<<(QDataStream& out, const Host& myObj)
 }
 QDataStream & operator>>(QDataStream & in, Host & myObj)
 {
-	QHostAddress address;
-	quint32 port;
 	QString type;
 	in >> type;
 	if (type == "Host") {
+		QHostAddress address;
+		quint32 port;
 		in >> address >> port;
 		myObj = Host(address, port);
 	} else {
@@ -517,18 +535,19 @@ QDataStream & operator>>(QDataStream & in, Host & myObj)
 
 QDataStream& operator<<(QDataStream& out, const User& myObj)
 {
-	out << QString("User") << myObj.username() << myObj.computername();
+	out << QString("User") << myObj.username() << myObj.fullname() << myObj.computername();
 	return out;
 }
 QDataStream & operator>>(QDataStream & in, User & myObj)
 {
-	QString username;
-	QString computername;
 	QString type;
 	in >> type;
 	if (type == "User") {
-		in >> username >> computername;
-		myObj = User(username, computername);
+		QString username;
+		QString fullname;
+		QString computername;
+		in >> username >> fullname >> computername;
+		myObj = User(username, fullname, computername);
 	} else {
 		qDebug() << "Error in deserialization of type User: invalid type '" + type + "'!";
 		myObj = User::INVALID_USER;
@@ -543,11 +562,11 @@ QDataStream& operator<<(QDataStream& out, const Contact& myObj)
 }
 QDataStream & operator>>(QDataStream & in, Contact & myObj)
 {
-	User user;
-	Host host;
 	QString type;
 	in >> type;
 	if (type == "Contact") {
+		User user;
+		Host host;
 		in >> user >> host;
 		myObj = Contact(user, host);
 	} else {

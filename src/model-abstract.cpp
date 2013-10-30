@@ -100,6 +100,14 @@ void Abstract::onStateChanged(int i)
 	}
 }
 
+void Abstract::refresh()
+{
+	if (visible()) {
+		//log.debug("onStateChanged: %1", i);
+		changeItems(0, size());
+	}
+}
+
 void Abstract::beginSetItems(int oldcount, int newcount)
 {
 	// in child model

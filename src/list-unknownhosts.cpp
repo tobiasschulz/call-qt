@@ -35,7 +35,7 @@ QString UnknownHosts::id() const
 	return "List::UnknownHosts";
 }
 
-const QString& UnknownHosts::get(int index) const
+QString UnknownHosts::get(int index) const
 {
 	QMutexLocker locker(&m_lock);
 	return index < m_unknownhosts.size() ? m_unknownhosts.at(index) : "";

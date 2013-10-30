@@ -10,12 +10,19 @@
 using namespace Model;
 
 Users::Users(Abstract* parentmodel, QObject* parent)
-		: Abstract(parentmodel, parent)
+		: Abstract(parentmodel, parent), m_username_format(FORMAT_FIRST)
 {
 	List::Users* userlist = UserList();
 	QObject::connect(userlist, &List::Users::beginListReset, this, &Users::beginSetItems);
 	QObject::connect(userlist, &List::Users::endListReset, this, &Users::endSetItems);
 	QObject::connect(userlist, &List::Users::itemChanged, this, &Users::onStateChanged);
+
+	Main::instance()->settingsContactList()->listen("user-name-format-system")->connect(this,
+	SLOT(setUsernameFormatSystem(bool)))->pushValue();
+	Main::instance()->settingsContactList()->listen("user-name-format-first")->connect(this,
+	SLOT(setUsernameFormatFirst(bool)))->pushValue();
+	Main::instance()->settingsContactList()->listen("user-name-format-full")->connect(this,
+	SLOT(setUsernameFormatFull(bool)))->pushValue();
 }
 
 QString Users::id() const
@@ -69,6 +76,36 @@ User Users::getUser(const QModelIndex& index) const
 	}
 }
 
+void Users::setUsernameFormatSystem(bool value)
+{
+	m_username_format = FORMAT_SYSTEM;
+	refresh();
+}
+
+void Users::setUsernameFormatFirst(bool value)
+{
+	m_username_format = FORMAT_FIRST;
+	refresh();
+}
+
+void Users::setUsernameFormatFull(bool value)
+{
+	m_username_format = FORMAT_FULL;
+	refresh();
+}
+
+QString Users::formatUserName(const User& user) const
+{
+	switch (m_username_format) {
+	case FORMAT_SYSTEM:
+		return user.username();
+	case FORMAT_FIRST:
+		return user.firstname();
+	case FORMAT_FULL:
+		return user.fullname();
+	}
+}
+
 UsersWithComputername::UsersWithComputername(Abstract* parentmodel, QObject* parent)
 		: Users(parentmodel, parent)
 {
@@ -77,7 +114,7 @@ UsersWithComputername::UsersWithComputername(Abstract* parentmodel, QObject* par
 
 QString UsersWithComputername::formatUser(const User& user) const
 {
-	return user.toString();
+	return formatUserName(user) + "@" + user.computername();
 }
 
 UsersWithoutComputername::UsersWithoutComputername(Abstract* parentmodel, QObject* parent)
@@ -88,5 +125,6 @@ UsersWithoutComputername::UsersWithoutComputername(Abstract* parentmodel, QObjec
 
 QString UsersWithoutComputername::formatUser(const User& user) const
 {
-	return user.username();
+	return formatUserName(user);
 }
+

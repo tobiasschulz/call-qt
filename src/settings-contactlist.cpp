@@ -17,6 +17,9 @@ SettingsContactList::SettingsContactList()
 	m_settings << ButtonOption(ui->radioHostList, "show-hosts", false);
 	m_settings << ButtonOption(ui->radioUserCompnameList, "show-users-computernames", true);
 	m_settings << ButtonOption(ui->radioUserList, "show-users", false);
+	m_settings << ButtonOption(ui->radioUserNameSystem, "user-name-format-system", false);
+	m_settings << ButtonOption(ui->radioUserNameFirst, "user-name-format-first", true);
+	m_settings << ButtonOption(ui->radioUserNameFull, "user-name-format-full", false);
 	m_settings.loadSettings();
 }
 

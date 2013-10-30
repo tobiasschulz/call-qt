@@ -149,8 +149,9 @@ void Connection::onSocketConnected()
 
 	if (m_headers.contains("user")) {
 		QString username = m_headers.value("user", User::INVALID_USERNAME);
+		QString fullname = m_headers.value("fullname", User::INVALID_USERNAME);
 		QString computername = m_headers.value("computername", User::INVALID_COMPUTERNAME);
-		User user(username, computername);
+		User user(username, fullname, computername);
 		m_contact = Contact(user, m_host);
 		if (m_contact != Contact::INVALID_CONTACT) {
 			//	m_contact = m_contact.reachableContact();

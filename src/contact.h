@@ -85,7 +85,7 @@ class User: public QObject, public ID
 {
 Q_OBJECT
 public:
-	explicit User(QString username, QString computername, QObject* parent = 0);
+	explicit User(QString username, QString fullname, QString computername, QObject* parent = 0);
 	explicit User(QObject* parent = 0);
 	User(const User& other);
 	User& operator=(const User& other);
@@ -93,6 +93,8 @@ public:
 	bool operator!=(const User& other) const;
 
 	QString username() const;
+	QString fullname() const;
+	QString firstname() const;
 	QString computername() const;
 
 	QString toString() const;
@@ -111,6 +113,7 @@ public:
 
 private:
 	QString m_username;
+	QString m_fullname;
 	QString m_computername;
 
 	static QHash<User, QList<Host>> m_hosts;

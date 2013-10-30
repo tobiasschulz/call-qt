@@ -25,7 +25,7 @@ namespace List
 		static UnknownHosts& instance();
 		QString id() const;
 
-		const QString& get(int index) const;
+		QString get(int index) const;
 		int size() const;
 		QList<QString> toList() const;
 

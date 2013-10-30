@@ -21,7 +21,21 @@ namespace Model
 		Contact getContact(const QModelIndex& index) const;
 		User getUser(const QModelIndex& index) const;
 
+	public slots:
+		void setUsernameFormatSystem(bool value);
+		void setUsernameFormatFirst(bool value);
+		void setUsernameFormatFull(bool value);
+
+	protected:
 		virtual QString formatUser(const User& user) const = 0;
+		QString formatUserName(const User& user) const;
+
+	private:
+		enum UsernameFormat
+		{
+			FORMAT_SYSTEM, FORMAT_FIRST, FORMAT_FULL
+		};
+		UsernameFormat m_username_format;
 	};
 
 	class UsersWithComputername: public Users

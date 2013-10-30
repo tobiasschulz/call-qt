@@ -33,6 +33,7 @@ namespace Model
 		void beginSetItems(int oldcount, int newcount);
 		void endSetItems();
 		void onStateChanged(int i);
+		void refresh();
 
 		void setConnectionsVisible(bool state);
 		void setVisible(bool state);
