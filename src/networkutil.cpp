@@ -31,23 +31,28 @@
 const Log NetworkUtil::log(new StaticID("NetworkUtil"));
 NetworkUtil* NetworkUtil::m_instance;
 
-NetworkUtil::NetworkUtil(QObject *parent)
-		: QObject(parent)
+int catch_sigpipe()
 {
 #if !defined(Q_OS_WIN)
 	// install signal handler
-	{
-		struct sigaction act;
-		int r;
-		memset(&act, 0, sizeof(act));
-		act.sa_handler = SIG_IGN;
-		act.sa_flags = SA_RESTART;
-		r = sigaction(SIGPIPE, &act, NULL);
-		if (r) {
-			log.error("sigaction failed with return value = %1", QString::number(r));
-		}
-	}
+	struct sigaction act;
+	int r;
+	memset(&act, 0, sizeof(act));
+	act.sa_handler = SIG_IGN;
+	act.sa_flags = SA_RESTART;
+	r = sigaction(SIGPIPE, &act, NULL);
+	return r;
 #endif
+}
+
+NetworkUtil::NetworkUtil(QObject *parent)
+		: QObject(parent)
+{
+	// install signal handler
+	int r = catch_sigpipe();
+	if (r) {
+		log.error("sigaction failed with return value = %1", QString::number(r));
+	}
 }
 
 NetworkUtil* NetworkUtil::instance()
