@@ -2,7 +2,7 @@
 #include "chattab.h"
 
 Tabs::Tabs(QTabWidget* tabs)
-		: QObject(), m_tabs(tabs), m_tabhash()
+		: QObject(), m_tabs(tabs), m_tabset()
 {
 	QObject::connect(m_tabs.data(), &QTabWidget::currentChanged, this, &Tabs::onTabChanged);
 	QObject::connect(m_tabs.data(), SIGNAL(tabCloseRequested(int)), this, SLOT(closeTab(int)));
@@ -19,26 +19,27 @@ int Tabs::addTab(Tab* widget)
 	if (widget) {
 		index = m_tabs->indexOf(widget);
 		if (index == -1) {
-			m_tabhash[widget->tabname()] = widget;
+			m_tabset << widget;
 			m_tabs->setUpdatesEnabled(false);
 			index = m_tabs->addTab(widget, widget->tabicon(), widget->tabname());
 			m_tabs->setUpdatesEnabled(true);
 			QObject::connect(widget, &Tab::tabIconChanged, this, &Tabs::onTabIconChanged, Qt::UniqueConnection);
+			QObject::connect(widget, &Tab::tabNameChanged, this, &Tabs::onTabNameChanged, Qt::UniqueConnection);
 		}
 	}
 	return index;
 }
 
-void Tabs::openTab(const QString& tabname)
+void Tabs::_openTab(const QString& tabname)
 {
-	if (m_tabhash.contains(tabname)) {
-		openTab(m_tabhash[tabname]);
-	}
+	/*	if (m_tabhash.contains(tabname)) {
+	 openTab (m_tabhash[tabname]);
+	 }*/
 }
 
 void Tabs::openTab(Tab* widget)
 {
-	if (!m_tabhash.contains(widget->tabname())) {
+	if (!m_tabset.contains(widget)) {
 		addTab(widget);
 	}
 
@@ -57,14 +58,14 @@ void Tabs::openTab(Tab* widget)
 	m_tabs->setUpdatesEnabled(true);
 }
 
-void Tabs::closeTab(const QString& tabname)
+void Tabs::_closeTab(const QString& tabname)
 {
-	if (m_tabhash.contains(tabname)) {
-		log.debug("close tab <tabname=%1>...", tabname);
-		closeTab(m_tabhash[tabname]);
-	} else {
-		log.debug("close tab <tabname=%1>: error: tabname not found", tabname);
-	}
+	/*if (m_tabhash.contains(tabname)) {
+	 log.debug("close tab <tabname=%1>...", tabname);
+	 closeTab (m_tabhash[tabname]);
+	 } else {
+	 log.debug("close tab <tabname=%1>: error: tabname not found", tabname);
+	 }*/
 }
 
 void Tabs::closeTab(Tab* widget)
@@ -130,3 +131,14 @@ void Tabs::onTabIconChanged()
 		}
 	}
 }
+
+void Tabs::onTabNameChanged()
+{
+	for (int i = 0; i < m_tabs->count(); ++i) {
+		Tab* widget = qobject_cast<Tab*>(m_tabs->widget(i));
+		if (widget) {
+			m_tabs->setTabText(i, widget->tabname());
+		}
+	}
+}
+

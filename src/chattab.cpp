@@ -44,7 +44,7 @@ ChatTab* ChatTab::instance(const Contact& contact)
 
 ChatTab::ChatTab(const User& user)
 		: Tab("Chat", QIcon()), ui(new Ui::ChatTab), m_user(user), m_contact(Contact::INVALID_CONTACT), m_chatclient(),
-			m_thread("ChatThread")
+			m_thread("ChatThread"), m_usernameFormat(FORMAT_FULL)
 {
 	ui->setupUi(this);
 	m_thread.start();
@@ -72,6 +72,10 @@ ChatTab::ChatTab(const User& user)
 	bool showStats = settings.value("window/show-stats", true).toBool();
 	QObject::connect(ui->actionShowStats, &QCheckBox::toggled, Main::instance(), &Main::onShowStatsToggled);
 	ui->actionShowStats->setChecked(showStats);
+
+	// tab-related signals
+	Main::instance()->settingsContactList()->listen("user-name-format")->connect(this,
+	SLOT(setUsernameFormat(QString)))->pushValue();
 }
 
 void ChatTab::addContact(Contact contact)
@@ -256,9 +260,17 @@ void ChatTab::printChatMessage(QString message)
 	ui->chatlog->append(BEFORE_MESSAGE + message.trimmed().toHtmlEscaped() + AFTER_MESSAGE);
 }
 
+void ChatTab::setUsernameFormat(QString value)
+{
+	m_usernameFormat = value == "system" ? FORMAT_SYSTEM : value == "first" ? FORMAT_FIRST : FORMAT_FULL;
+	log.debug("setUsernameFormat(%1) = %2", value, QString::number(m_usernameFormat));
+	emit tabNameChanged();
+}
+
 QString ChatTab::tabname() const
 {
-	return m_user.fullname() + "@" + m_user.computername();
+	return (m_usernameFormat == FORMAT_SYSTEM ? m_user.username() :
+			m_usernameFormat == FORMAT_FIRST ? m_user.firstname() : m_user.fullname()) + "@" + m_user.computername();
 }
 QIcon ChatTab::tabicon() const
 {

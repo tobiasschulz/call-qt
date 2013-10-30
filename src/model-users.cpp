@@ -10,7 +10,7 @@
 using namespace Model;
 
 Users::Users(Abstract* parentmodel, QObject* parent)
-		: Abstract(parentmodel, parent), m_usernameFormat(FORMAT_FIRST)
+		: Abstract(parentmodel, parent), m_usernameFormat(FORMAT_FULL)
 {
 	List::Users* userlist = UserList();
 	QObject::connect(userlist, &List::Users::beginListReset, this, &Users::beginSetItems);

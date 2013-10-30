@@ -29,18 +29,20 @@ public:
 	void closeTab(Tab* widget);
 
 public slots:
-	void openTab(const QString& tabname);
-	void closeTab(const QString& tabname);
+	void _openTab(const QString& tabname);
+	void _closeTab(const QString& tabname);
 	void closeTab(int index);
 	void onTabChanged(int index);
 	void onTabIconChanged();
+	void onTabNameChanged();
 
 	void addContactTab(Contact contact);
 	void openContactTab(Contact contact);
 
 private:
 	QPointer<QTabWidget> m_tabs;
-	QHash<QString, Tab*> m_tabhash;
+	//QHash<QString, Tab*> m_tabhash;
+	QSet<Tab*> m_tabset;
 };
 
 #endif // TABS_H

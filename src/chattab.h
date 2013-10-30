@@ -36,6 +36,7 @@ public slots:
 	void setContact(Contact contact);
 
 private slots:
+	void setUsernameFormat(QString format);
 	void addContact(Contact contact);
 	void fillContactCombobox();
 	void onComboboxContactChanged(int index);
@@ -61,6 +62,12 @@ private:
 	Contact m_contact;
 	QHash<Contact, ChatClient*> m_chatclient;
 	Thread m_thread;
+
+	enum UsernameFormat
+	{
+		FORMAT_SYSTEM, FORMAT_FIRST, FORMAT_FULL
+	};
+	UsernameFormat m_usernameFormat;
 
 	static const QString BEFORE_MESSAGE;
 	static const QString AFTER_MESSAGE;

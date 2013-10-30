@@ -22,6 +22,7 @@ public:
 signals:
 	void focus();
 	void tabIconChanged();
+	void tabNameChanged();
 
 public slots:
 	virtual void opened();
