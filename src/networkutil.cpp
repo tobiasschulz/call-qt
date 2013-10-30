@@ -18,22 +18,24 @@
 
 // setsockopt -- has to be after Qt includes for Q_OS_WIN definition
 #if defined(Q_OS_WIN)
-#include <winsock2.h>
-#include <Ws2tcpip.h>
-#include <stdio.h>
-#include <unistd.h> // for socket code on Q_OS_WIN
+#  include <winsock2.h>
+#  include <Ws2tcpip.h>
+#  include <stdio.h>
+#  include <unistd.h> // for socket code on Q_OS_WIN
 #else
-#include <sys/socket.h>
-#include <unistd.h>
+#  include <sys/socket.h>
+#  include <unistd.h>
+#  include <signal.h>
 #endif
-#include <signal.h>
 
 const Log NetworkUtil::log(new StaticID("NetworkUtil"));
 NetworkUtil* NetworkUtil::m_instance;
 
 int catch_sigpipe()
 {
-#if !defined(Q_OS_WIN)
+#if defined(Q_OS_WIN)
+	return 0;
+#else
 	// install signal handler
 	struct sigaction act;
 	int r;
@@ -96,7 +98,7 @@ void NetworkUtil::writeHeaders(QTcpSocket* socket, Connection::Type type, const 
 	logger->debug("waiting for connected");
 	socket->waitForConnected();
 	logger->debug("start writing headers");
-	writeLine(socket, "User: ", SystemUtil::instance()->getUserName());
+	writeLine(socket, "User: ", SystemUtil::instance()->getUserFullName());
 	writeLine(socket, "UID: ", QVariant::fromValue(Config::instance()->uid()));
 	writeLine(socket, "Computername: ", SystemUtil::instance()->getComputerName());
 	writeLine(socket, "Uptime: ", QVariant::fromValue(Config::instance()->uptime()));

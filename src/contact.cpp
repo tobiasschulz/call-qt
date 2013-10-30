@@ -404,7 +404,7 @@ Contact Contact::reachableContact() const
 
 bool Contact::isMe() const
 {
-	return username() == SystemUtil::instance()->getUserName()
+	return username() == SystemUtil::instance()->getUserFullName()
 			&& computername() == SystemUtil::instance()->getComputerName();
 }
 

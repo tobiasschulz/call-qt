@@ -111,13 +111,13 @@ Debug:RCC_DIR = build/debug/.rcc
 Debug:UI_DIR = build/debug/.ui
 
 win32 {
-	LIBS += -lws2_32
+	LIBS += -lws2_32 -lnetapi32
 #	CONFIG += debug
 	CONFIG += console
 }
 
 # The application version                                                          ## VERSION
-VERSION = 0.1323                                                                      ## VERSION
+VERSION = 0.1329                                                                      ## VERSION
 # Define the preprocessor macro to get the application version in our application. ## VERSION
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"                                           ## VERSION
-DEFINES += APP_BUILD=\\\"1323\\\"                                             ## VERSION
+DEFINES += APP_BUILD=\\\"1329\\\"                                             ## VERSION
